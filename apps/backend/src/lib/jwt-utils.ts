@@ -1,17 +1,21 @@
-import jwt from 'jsonwebtoken';
-import dotenv from 'dotenv';
+import jwt from 'jsonwebtoken'
+import dotenv from 'dotenv'
 
-dotenv.config();
+dotenv.config()
 
 // Get JWT secret from environment variables or use a default for development
-const JWT_SECRET = process.env.JWT_SECRET || 'super-secret-jwt-token-with-at-least-32-characters-long';
-const TOKEN_EXPIRY = process.env.JWT_EXPIRY ? parseInt(process.env.JWT_EXPIRY) : 86400; // 24 hours in seconds
+const JWT_SECRET =
+  process.env.JWT_SECRET ||
+  'super-secret-jwt-token-with-at-least-32-characters-long'
+const TOKEN_EXPIRY = process.env.JWT_EXPIRY
+  ? parseInt(process.env.JWT_EXPIRY)
+  : 86400 // 24 hours in seconds
 
 interface ChatAccessPayload {
-  chatId: string;
-  userId: string;
-  iat?: number;
-  exp?: number;
+  chatId: string
+  userId: string
+  iat?: number
+  exp?: number
 }
 
 /**
@@ -20,40 +24,45 @@ interface ChatAccessPayload {
  * @param userId - The ID of the user
  * @returns JWT token
  */
-export const generateChatAccessToken = (chatId: string, userId: string): string => {
+export const generateChatAccessToken = (
+  chatId: string,
+  userId: string
+): string => {
   const payload: ChatAccessPayload = {
     chatId,
     userId
-  };
+  }
 
   return jwt.sign(payload, JWT_SECRET, {
     expiresIn: TOKEN_EXPIRY
-  });
-};
+  })
+}
 
 /**
  * Verify and decode a JWT token
  * @param token - JWT token to verify
  * @returns The decoded payload or null if invalid
  */
-export const verifyToken = (token: string): ChatAccessPayload | null => {
+export const verifyToken = (token: string): ChatAccessPayload | undefined => {
   try {
-    return jwt.verify(token, JWT_SECRET) as ChatAccessPayload;
+    return jwt.verify(token, JWT_SECRET) as ChatAccessPayload
   } catch (error) {
-    console.error('JWT verification failed:', error);
-    return null;
+    console.error('JWT verification failed:', error)
+    return undefined
   }
-};
+}
 
 /**
  * Extract token from Authorization header
  * @param authHeader - Authorization header value
  * @returns The JWT token or null if not found
  */
-export const extractTokenFromHeader = (authHeader?: string): string | null => {
+export const extractTokenFromHeader = (
+  authHeader?: string
+): string | undefined => {
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    return null;
+    return undefined
   }
-  
-  return authHeader.substring(7); // Remove 'Bearer ' prefix
-}; 
+
+  return authHeader.substring(7) // Remove 'Bearer ' prefix
+}

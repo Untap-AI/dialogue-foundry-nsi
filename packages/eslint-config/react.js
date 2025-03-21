@@ -1,38 +1,32 @@
-import eslintReactPlugin from 'eslint-plugin-react';
-import eslintReactHooksPlugin from 'eslint-plugin-react-hooks';
-import eslintReactCompilerPlugin from 'eslint-plugin-react-compiler';
-import babelPluginSyntaxJSX from '@babel/plugin-syntax-jsx';
-import baseConfig from './index.js';
+const baseConfig = require("./index.js");
 
-// React-specific configuration
-const reactConfig = [
-  {
-    files: ['**/*.{jsx,tsx}'],
-    plugins: {
-      react: eslintReactPlugin,
-      'react-hooks': eslintReactHooksPlugin,
-      // TODO: Update this dep when stable version is released
-      'react-compiler': eslintReactCompilerPlugin,
-    },
-    languageOptions: {
-      parserOptions: {
-        babelOptions: {
-          plugins: [babelPluginSyntaxJSX]
-        }
-      }
-    },
-    settings: {
-      react: {
-        version: 'detect',
-      },
-    },
-    rules: {
-      'react-hooks/exhaustive-deps': 'error',
-      'react/react-in-jsx-scope': 'off',
-      'react-compiler/react-compiler': 'warn',
+module.exports = {
+  ...baseConfig,
+  extends: [
+    ...baseConfig.extends,
+    "plugin:react/recommended",
+    "plugin:react-hooks/recommended",
+  ],
+  plugins: [
+    ...baseConfig.plugins,
+    // TODO: Update this dep when stable version is released
+    "react-compiler"
+  ],
+  parserOptions: {
+    ...baseConfig.parserOptions,
+    babelOptions: {
+      plugins: ["@babel/plugin-syntax-jsx"]
+    }
+  },
+  rules: {
+    ...baseConfig.rules,
+    "react-hooks/exhaustive-deps": "error",
+    "react/react-in-jsx-scope": "off",
+    "react-compiler/react-compiler": "warn"
+  },
+  settings: {
+    react: {
+      version: "detect",
     },
   },
-];
-
-// Combine base config with React-specific config
-export default [...baseConfig, ...reactConfig]; 
+};

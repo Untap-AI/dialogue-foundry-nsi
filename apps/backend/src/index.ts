@@ -14,23 +14,29 @@ const port = process.env.PORT || 3000
 app.use(express.json())
 
 // Configure CORS
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || ['http://localhost:3000']
-app.use(cors({
-  origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps or curl requests)
-    if (!origin) return callback(null, true)
-    
-    if (allowedOrigins.indexOf(origin) === -1) {
-      const msg = `The CORS policy for this site does not allow access from the specified Origin: ${origin}`
-      return callback(new Error(msg), false)
-    }
-    return callback(null, true)
-  },
-  credentials: true
-}))
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
+  'http://localhost:3000'
+]
+app.use(
+  cors({
+    origin: (thisOrigin, callback) => {
+      // Allow requests with no origin (like mobile apps or curl requests)
+      // eslint-disable-next-line no-null/no-null
+      if (!thisOrigin) return callback(null, true)
+
+      if (allowedOrigins.indexOf(thisOrigin) === -1) {
+        const msg = `The CORS policy for this site does not allow access from the specified Origin: ${thisOrigin}`
+        return callback(new Error(msg), false)
+      }
+      // eslint-disable-next-line no-null/no-null
+      return callback(null, true)
+    },
+    credentials: true
+  })
+)
 
 // Health check endpoint
-app.get('/health', (req, res) => {
+app.get('/health', (_, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() })
 })
 
@@ -38,7 +44,7 @@ app.get('/health', (req, res) => {
 app.use('/api/chats', chatRoutes)
 
 // Error handling middleware
-app.use((err: Error, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: Error, _: express.Request, res: express.Response) => {
   console.error(err.stack)
   res.status(500).json({
     error: 'An unexpected error occurred',
@@ -48,8 +54,8 @@ app.use((err: Error, req: express.Request, res: express.Response, next: express.
 
 // Start the server
 app.listen(port, () => {
-  console.log(`Server is running on port ${port}`)
-  console.log(`Health check: http://localhost:${port}/health`)
+  console.info(`Server is running on port ${port}`)
+  console.info(`Health check: http://localhost:${port}/health`)
 })
 
-export default app 
+export default app
