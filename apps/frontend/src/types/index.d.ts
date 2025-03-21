@@ -1,3 +1,3 @@
-declare module 'axios';
-declare module '@nlux/core';
-declare module '@nlux/themes'; 
+declare module 'axios'
+declare module '@nlux/core'
+declare module '@nlux/themes'

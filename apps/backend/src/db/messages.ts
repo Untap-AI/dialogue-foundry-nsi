@@ -1,11 +1,8 @@
-import { supabase } from "../lib/supabase-client"
-import { TablesInsert, TablesUpdate } from "../types/database"
 import { v4 as uuidv4 } from 'uuid'
-
-// Import the service client from chats.ts
 import { createClient } from '@supabase/supabase-js'
-import { Database } from '../types/database'
 import dotenv from 'dotenv'
+import { supabase } from '../lib/supabase-client'
+import type { Database, TablesInsert, TablesUpdate } from '../types/database'
 
 dotenv.config()
 
@@ -13,24 +10,21 @@ const supabaseUrl = process.env.SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
 // Create a Supabase client with the service role key to bypass RLS for admin operations
-const serviceSupabase = supabaseUrl && supabaseServiceKey
-  ? createClient<Database>(
-      supabaseUrl,
-      supabaseServiceKey,
-      {
+const serviceSupabase =
+  supabaseUrl && supabaseServiceKey
+    ? createClient<Database>(supabaseUrl, supabaseServiceKey, {
         auth: {
           autoRefreshToken: false,
           persistSession: false
         }
-      }
-    )
-  : null;
+      })
+    : undefined
 
 export const getMessageById = async (messageId: string) => {
   const { data: message, error } = await supabase
-    .from("messages")
-    .select("*")
-    .eq("id", messageId)
+    .from('messages')
+    .select('*')
+    .eq('id', messageId)
     .single()
 
   if (error) {
@@ -43,12 +37,12 @@ export const getMessageById = async (messageId: string) => {
 export const getMessagesByChatId = async (chatId: string) => {
   // Use serviceSupabase to bypass RLS if available, otherwise fall back to regular client
   const client = serviceSupabase || supabase
-  
+
   const { data: messages, error } = await client
-    .from("messages")
-    .select("*")
-    .eq("chat_id", chatId)
-    .order("sequence_number", { ascending: true })
+    .from('messages')
+    .select('*')
+    .eq('chat_id', chatId)
+    .order('sequence_number', { ascending: true })
 
   if (error) {
     throw new Error(error.message)
@@ -57,11 +51,11 @@ export const getMessagesByChatId = async (chatId: string) => {
   return messages || []
 }
 
-export const createMessage = async (message: TablesInsert<"messages">) => {
+export const createMessage = async (message: TablesInsert<'messages'>) => {
   const { data: createdMessage, error } = await supabase
-    .from("messages")
+    .from('messages')
     .insert([message])
-    .select("*")
+    .select('*')
     .single()
 
   if (error) {
@@ -75,9 +69,13 @@ export const createMessage = async (message: TablesInsert<"messages">) => {
  * Create a message with admin privileges (bypasses RLS)
  * Use this when creating messages on behalf of users
  */
-export const createMessageAdmin = async (message: Omit<TablesInsert<"messages">, "id">) => {
+export const createMessageAdmin = async (
+  message: Omit<TablesInsert<'messages'>, 'id'>
+) => {
   if (!serviceSupabase) {
-    throw new Error('Service role client not initialized. Check your environment variables.')
+    throw new Error(
+      'Service role client not initialized. Check your environment variables.'
+    )
   }
 
   const messageWithDefaults = {
@@ -88,9 +86,9 @@ export const createMessageAdmin = async (message: Omit<TablesInsert<"messages">,
   }
 
   const { data: createdMessage, error } = await serviceSupabase
-    .from("messages")
+    .from('messages')
     .insert([messageWithDefaults])
-    .select("*")
+    .select('*')
     .single()
 
   if (error) {
@@ -100,11 +98,11 @@ export const createMessageAdmin = async (message: Omit<TablesInsert<"messages">,
   return createdMessage
 }
 
-export const createMessages = async (messages: TablesInsert<"messages">[]) => {
+export const createMessages = async (messages: TablesInsert<'messages'>[]) => {
   const { data: createdMessages, error } = await supabase
-    .from("messages")
+    .from('messages')
     .insert(messages)
-    .select("*")
+    .select('*')
 
   if (error) {
     throw new Error(error.message)
@@ -117,9 +115,13 @@ export const createMessages = async (messages: TablesInsert<"messages">[]) => {
  * Create multiple messages with admin privileges (bypasses RLS)
  * Use this when creating messages on behalf of users
  */
-export const createMessagesAdmin = async (messages: Omit<TablesInsert<"messages">, "id">[]) => {
+export const createMessagesAdmin = async (
+  messages: Omit<TablesInsert<'messages'>, 'id'>[]
+) => {
   if (!serviceSupabase) {
-    throw new Error('Service role client not initialized. Check your environment variables.')
+    throw new Error(
+      'Service role client not initialized. Check your environment variables.'
+    )
   }
 
   const messagesWithDefaults = messages.map(message => ({
@@ -130,9 +132,9 @@ export const createMessagesAdmin = async (messages: Omit<TablesInsert<"messages"
   }))
 
   const { data: createdMessages, error } = await serviceSupabase
-    .from("messages")
+    .from('messages')
     .insert(messagesWithDefaults)
-    .select("*")
+    .select('*')
 
   if (error) {
     throw new Error(`Failed to create messages: ${error.message}`)
@@ -143,13 +145,13 @@ export const createMessagesAdmin = async (messages: Omit<TablesInsert<"messages"
 
 export const updateMessage = async (
   messageId: string,
-  message: TablesUpdate<"messages">
+  message: TablesUpdate<'messages'>
 ) => {
   const { data: updatedMessage, error } = await supabase
-    .from("messages")
+    .from('messages')
     .update(message)
-    .eq("id", messageId)
-    .select("*")
+    .eq('id', messageId)
+    .select('*')
     .single()
 
   if (error) {
@@ -160,7 +162,7 @@ export const updateMessage = async (
 }
 
 export const deleteMessage = async (messageId: string) => {
-  const { error } = await supabase.from("messages").delete().eq("id", messageId)
+  const { error } = await supabase.from('messages').delete().eq('id', messageId)
 
   if (error) {
     throw new Error(error.message)
@@ -170,17 +172,19 @@ export const deleteMessage = async (messageId: string) => {
 }
 
 export const getLatestSequenceNumber = async (chatId: string) => {
-  const { data, error } = await supabase
-    .from("messages")
-    .select("sequence_number")
-    .eq("chat_id", chatId)
-    .order("sequence_number", { ascending: false })
-    .limit(1)
-    .single()
+  const client = serviceSupabase || supabase
 
-  if (error && error.code !== "PGRST116") { // PGRST116 is the error code for no rows returned
+  const { data, error } = await client
+    .from('messages')
+    .select('sequence_number')
+    .eq('chat_id', chatId)
+    .order('sequence_number', { ascending: false })
+    .limit(1)
+
+  if (error) {
     throw new Error(error.message)
   }
 
-  return data?.sequence_number || 0
-} 
+  // If no messages exist yet, return 0
+  return data && data.length > 0 ? data[0]?.sequence_number || 0 : 0
+}
