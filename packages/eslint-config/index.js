@@ -51,7 +51,7 @@ module.exports = {
     "no-restricted-globals": ["error", "isNaN"],
     "prefer-template": "error"
   },
-  ignorePatterns: ["src/index.html", "src/entry/index.d.ts"],
+  ignorePatterns: ["src/index.html", "src/entry/index.d.ts", "dist/**/*", "node_modules/**/*", "**/*.cjs", "**/*.cjs.map"],
   overrides: [
     {
       files: ["**/*.ts", "**/*.tsx"],
@@ -88,4 +88,9 @@ module.exports = {
       },
     },
   ],
+  settings: {
+    'import/resolver': {
+      typescript: {}
+    }
+  }
 };
