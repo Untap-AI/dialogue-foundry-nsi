@@ -1,0 +1,13 @@
+{
+  "name": "@dialogue-foundry/tsconfig",
+  "version": "0.0.0",
+  "description": "tsconfig file",
+  "main": "base.json",
+  "files": [
+    "base.json",
+    "react.json"
+  ],
+  "devDependencies": {
+    "typescript": "^5.5.2"
+  }
+}

@@ -6,24 +6,24 @@ import {
   updateChat,
   deleteChat,
   createChatAdmin
-} from '../db/chats'
+} from '../db/chats.js'
 import {
   getMessagesByChatId,
   getLatestSequenceNumber,
   createMessageAdmin
-} from '../db/messages'
+} from '../db/messages.js'
 import {
   generateChatCompletion,
   generateStreamingChatCompletion,
   DEFAULT_SETTINGS
-} from '../services/openai-service'
-import { generateChatAccessToken } from '../lib/jwt-utils'
+} from '../services/openai-service.js'
+import { generateChatAccessToken } from '../lib/jwt-utils.js'
 import {
   authenticateChatAccess,
   authenticateUser
-} from '../middleware/auth-middleware'
-import type { CustomRequest } from '../middleware/auth-middleware'
-import type { Message, ChatSettings } from '../services/openai-service'
+} from '../middleware/auth-middleware.js'
+import type { CustomRequest } from '../middleware/auth-middleware.js'
+import type { Message, ChatSettings } from '../services/openai-service.js'
 
 const router = express.Router()
 

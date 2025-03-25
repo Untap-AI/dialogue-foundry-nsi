@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "workspaces": [
-    "eslint-config"
+    "eslint-config",
+    "tsconfig",
+    "chat-core",
+    "widget"
   ]
 } 

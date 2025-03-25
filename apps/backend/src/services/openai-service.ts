@@ -3,7 +3,7 @@ import dotenv from 'dotenv'
 import {
   isOpenAIResponseDeltaChunk,
   validateOpenAIResponseChunk
-} from '../util/openai-chunk-validators'
+} from '../util/openai-chunk-validators.js'
 
 dotenv.config()
 

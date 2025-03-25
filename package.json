@@ -1,9 +1,11 @@
 {
-  "name": "dialogue-foundry",
+  "name": "@dialogue-foundry/workspace",
   "private": true,
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
+    "dev:backend": "turbo dev --filter=@dialogue-foundry/backend",
+    "dev:playground": "turbo dev --filter=@dialogue-foundry/playground",
     "lint": "turbo lint",
     "clean": "turbo clean",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
@@ -16,6 +18,7 @@
   },
   "packageManager": "pnpm@8.0.0",
   "workspaces": [
-    "apps/*"
+    "apps/*",
+    "packages/*"
   ]
 }
