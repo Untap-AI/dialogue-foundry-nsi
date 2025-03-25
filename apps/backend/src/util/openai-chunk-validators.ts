@@ -1,8 +1,7 @@
 import { z } from 'zod'
 
-// Base schema for all OpenAI response chunks
+// Base schema for all OpenAI response chunks (doesn't include type field, which will be specified in each variant)
 const openAIResponseChunkBaseSchema = z.object({
-  type: z.string(),
   item_id: z.string().optional(),
   output_index: z.number().optional(),
   content_index: z.number().optional()
@@ -111,7 +110,7 @@ const openAIResponseCompletedSchema = openAIResponseChunkBaseSchema.extend({
     .catchall(z.unknown()) // For other potential fields
 })
 
-// Union schema for all possible chunk types
+// Union schema for all possible chunk types - removing the base schema from union
 export const openAIResponseChunkSchema = z.discriminatedUnion('type', [
   openAIResponseDeltaSchema,
   openAIResponseDoneSchema,
@@ -121,8 +120,7 @@ export const openAIResponseChunkSchema = z.discriminatedUnion('type', [
   openAIResponseContentPartAddedSchema,
   openAIResponseContentPartDoneSchema,
   openAIResponseOutputItemDoneSchema,
-  openAIResponseCompletedSchema,
-  openAIResponseChunkBaseSchema
+  openAIResponseCompletedSchema
 ])
 
 // Define types based on the schemas

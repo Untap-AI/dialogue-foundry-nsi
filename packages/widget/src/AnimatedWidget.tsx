@@ -37,6 +37,8 @@ export const AnimatedWidget = ({
         clearTimeout(timer)
       }
     }
+
+    return () => {}
   }, [visible, pulseButton])
 
   if (!visible) return undefined

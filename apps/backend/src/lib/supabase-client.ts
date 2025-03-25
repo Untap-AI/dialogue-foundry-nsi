@@ -2,7 +2,7 @@ import path from 'path'
 import fs from 'fs'
 import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
-import type { Database } from '../types/database'
+import type { Database } from '../types/database.js'
 
 // Load the appropriate environment file based on NODE_ENV
 const env = process.env.NODE_ENV || 'development'
