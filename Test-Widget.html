@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot Widget Prototype</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            background-color: #f5f5f5;
+        }
+
+        /* Chat Widget Container */
+        .chat-widget-container {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        /* Chat Icon Button */
+        .chat-icon {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background-color: #222;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease;
+            position: relative;
+            z-index: 2;
+        }
+
+        .chat-icon:hover {
+            transform: scale(1.05);
+        }
+
+        .chat-icon svg {
+            width: 30px;
+            height: 30px;
+            fill: #fff;
+        }
+
+        /* Chat Window - Increased size and responsiveness */
+        .chat-window {
+            position: absolute;
+            bottom: 70px;
+            right: 0;
+            width: 385px;
+            /* Increased base width */
+            height: 555px;
+            /* Increased base height */
+            max-width: 90vw;
+            /* Prevent overflow on small screens */
+            max-height: 80vh;
+            /* Prevent overflow on small screens */
+            background-color: #222;
+            border-radius: 10px;
+            box-shadow: 0 5px 25px rgba(0, 0, 0, 0.2);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            will-change: transform, opacity;
+            /* Optimize for animations */
+            transform-origin: bottom right;
+            transform: scale(0);
+            opacity: 0;
+            /* Smoother genie effect with bottom-right origin */
+            clip-path: inset(100% 0 0 100%);
+            transition: clip-path 0s, transform 0s, opacity 0s;
+        }
+
+        .chat-window.open {
+            transform: scale(1);
+            opacity: 1;
+            clip-path: inset(0 0 0 0);
+            /* Use more optimized animation properties */
+            transition: clip-path 0.4s cubic-bezier(0.22, 0.61, 0.36, 1),
+                transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1),
+                opacity 0.3s ease;
+        }
+
+        .chat-window.closing {
+            transform: scale(0.1);
+            opacity: 0;
+            clip-path: inset(100% 0 0 100%);
+            /* Smoother exit animation */
+            transition: clip-path 0.4s cubic-bezier(0.22, 0.61, 0.36, 1),
+                transform 0.4s cubic-bezier(0.22, 0.61, 0.36, 1),
+                opacity 0.3s ease;
+        }
+
+        /* Chat Header */
+        .chat-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 15px;
+            background-color: #333;
+            color: white;
+        }
+
+        /* Group branding elements so they're centered together */
+        .chat-branding {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-grow: 1;
+        }
+
+        .brand-logo {
+            height: 30px;
+            /* Adjust size as needed */
+            margin-right: 10px;
+        }
+
+        .chat-title {
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .chat-controls {
+            display: flex;
+            gap: 15px;
+        }
+
+        .chat-controls span {
+            cursor: pointer;
+            color: #ccc;
+        }
+
+        .chat-controls span:hover {
+            color: white;
+        }
+
+        /* Chat Messages */
+        .chat-messages {
+            flex: 1;
+            padding: 15px;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            color: #eee;
+        }
+
+        .message {
+            max-width: 80%;
+            padding: 10px 12px;
+            border-radius: 15px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .bot-message {
+            background-color: #444;
+            align-self: flex-start;
+            border-bottom-left-radius: 5px;
+        }
+
+        .user-message {
+            background-color: #0084ff;
+            align-self: flex-end;
+            border-bottom-right-radius: 5px;
+        }
+
+        /* Quick Actions - Single row with horizontal scroll */
+        .quick-actions {
+            display: flex;
+            gap: 8px;
+            padding: 10px 15px;
+            overflow-x: auto;
+            white-space: nowrap;
+            scrollbar-width: thin;
+            scrollbar-color: #555 #333;
+        }
+
+        .quick-actions::-webkit-scrollbar {
+            height: 6px;
+        }
+
+        .quick-actions::-webkit-scrollbar-track {
+            background: #333;
+            border-radius: 3px;
+        }
+
+        .quick-actions::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 3px;
+        }
+
+        .quick-action {
+            background-color: #333;
+            color: #eee;
+            padding: 8px 12px;
+            border-radius: 15px;
+            font-size: 13px;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            flex-shrink: 0;
+        }
+
+        .quick-action:hover {
+            background-color: #444;
+        }
+
+        /* Typing Indicator - Positioned at bottom of messages */
+        .typing-indicator {
+            display: none;
+            padding: 10px 12px;
+            background-color: #444;
+            border-radius: 15px;
+            border-bottom-left-radius: 5px;
+            align-self: flex-start;
+            width: fit-content;
+            margin-top: 10px;
+        }
+
+        .typing-indicator span {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background-color: #ccc;
+            margin-right: 5px;
+            animation: typing 1.4s infinite ease-in-out both;
+        }
+
+        .typing-indicator span:nth-child(1) {
+            animation-delay: 0s;
+        }
+
+        .typing-indicator span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .typing-indicator span:nth-child(3) {
+            animation-delay: 0.4s;
+            margin-right: 0;
+        }
+
+        @keyframes typing {
+
+            0%,
+            100% {
+                transform: translateY(0);
+                opacity: 0.6;
+            }
+
+            50% {
+                transform: translateY(-5px);
+                opacity: 1;
+            }
+        }
+
+        /* Chat Input */
+        .chat-input {
+            padding: 15px;
+            border-top: 1px solid #444;
+            display: flex;
+            gap: 10px;
+        }
+
+        .chat-input input {
+            flex: 1;
+            padding: 10px 15px;
+            border-radius: 20px;
+            border: none;
+            background-color: #333;
+            color: white;
+        }
+
+        .chat-input input:focus {
+            outline: none;
+            background-color: #3a3a3a;
+        }
+
+        .chat-input button {
+            background-color: #0084ff;
+            color: white;
+            border: none;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .chat-input button:hover {
+            background-color: #0066cc;
+        }
+
+        .chat-input button svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        /* Menu */
+        .menu-dropdown {
+            position: absolute;
+            top: 50px;
+            right: 15px;
+            background-color: #333;
+            border-radius: 5px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+            display: none;
+            z-index: 10;
+        }
+
+        .menu-dropdown.active {
+            display: block;
+        }
+
+        .menu-item {
+            padding: 10px 15px;
+            color: #eee;
+            cursor: pointer;
+            font-size: 14px;
+            transition: background-color 0.2s;
+        }
+
+        .menu-item:hover {
+            background-color: #444;
+        }
+
+        .menu-item:first-child {
+            border-top-left-radius: 5px;
+            border-top-right-radius: 5px;
+        }
+
+        .menu-item:last-child {
+            border-bottom-left-radius: 5px;
+            border-bottom-right-radius: 5px;
+        }
+
+        /* Ripple Effect for Icon */
+        .ripple {
+            position: absolute;
+            border-radius: 50%;
+            background-color: rgba(255, 255, 255, 0.3);
+            transform: scale(0);
+            animation: ripple 0.6s linear;
+            pointer-events: none;
+        }
+
+        @keyframes ripple {
+            to {
+                transform: scale(4);
+                opacity: 0;
+            }
+        }
+
+        /* Blob animation for icon when clicked */
+        .blob {
+            position: absolute;
+            border-radius: 50%;
+            background-color: #222;
+            transform: scale(0);
+            z-index: 1;
+        }
+
+        .blob.animate {
+            animation: blob-grow 0.6s cubic-bezier(0.22, 0.61, 0.36, 1) forwards;
+        }
+
+        @keyframes blob-grow {
+            0% {
+                transform: scale(0);
+            }
+
+            50% {
+                transform: scale(1.1);
+            }
+
+            100% {
+                transform: scale(1);
+                opacity: 0;
+            }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 480px) {
+            .chat-window {
+                width: 100vw;
+                height: 100vh;
+                max-height: 100vh;
+                max-width: 100vw;
+                bottom: 0;
+                right: 0;
+                border-radius: 0;
+            }
+
+            .chat-icon {
+                width: 50px;
+                height: 50px;
+            }
+
+            .chat-icon svg {
+                width: 25px;
+                height: 25px;
+            }
+
+            .chat-messages {
+                padding: 10px;
+            }
+
+            .message {
+                max-width: 85%;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <div class="chat-widget-container">
+        <!-- Chat Icon Button -->
+        <div class="chat-icon" id="chat-toggle">
+            <svg viewBox="0 0 24 24">
+                <path
+                    d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z" />
+                <path d="M7 9h10v2H7z" />
+                <path d="M7 12h7v2H7z" />
+            </svg>
+        </div>
+
+        <!-- Chat Window -->
+        <div class="chat-window" id="chat-window">
+            <!-- Chat Header -->
+            <div class="chat-header">
+                <div class="chat-branding">
+                    <img src="data:image/webp;base64,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" alt="Brand Logo" class="brand-logo">
+                    <div class="chat-title">West Hills Vineyard</div>
+                </div>
+                <div class="chat-controls">
+                    <span id="menu-button">⋮</span>
+                    <span id="minimize-chat">—</span>
+                </div>
+            </div>
+
+            <!-- Menu Dropdown -->
+            <div class="menu-dropdown" id="menu-dropdown">
+                <div class="menu-item" id="new-chat">New Chat</div>
+                <div class="menu-item" id="end-chat">End Chat</div>
+                <div class="menu-item" id="recent-chats">Recent Chats</div>
+            </div>
+
+            <!-- Chat Messages -->
+            <div class="chat-messages" id="chat-messages">
+                <!-- Typing indicator will be added to the end when needed -->
+            </div>
+
+            <!-- Quick Actions - Single row with horizontal scroll -->
+            <div class="quick-actions">
+                <div class="quick-action">Winery Hours</div>
+                <div class="quick-action">Wine Tastings</div>
+                <div class="quick-action">Event Spaces</div>
+                <div class="quick-action">Wine Club</div>
+                <div class="quick-action">Vineyard Tours</div>
+                <div class="quick-action">Directions</div>
+            </div>
+
+            <!-- Chat Input -->
+            <div class="chat-input">
+                <input type="text" placeholder="Type a message..." id="message-input">
+                <button id="send-button">
+                    <svg viewBox="0 0 24 24" fill="white">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // DOM Elements
+            const chatIcon = document.getElementById('chat-toggle');
+            const chatWindow = document.getElementById('chat-window');
+            const minimizeChat = document.getElementById('minimize-chat');
+            const menuButton = document.getElementById('menu-button');
+            const menuDropdown = document.getElementById('menu-dropdown');
+            const newChatButton = document.getElementById('new-chat');
+            const endChatButton = document.getElementById('end-chat');
+            const recentChatsButton = document.getElementById('recent-chats');
+            const messageInput = document.getElementById('message-input');
+            const sendButton = document.getElementById('send-button');
+            const chatMessages = document.getElementById('chat-messages');
+            const quickActions = document.querySelectorAll('.quick-action');
+            const chatWidgetContainer = document.querySelector('.chat-widget-container');
+
+            // Track chat window state
+            let isChatOpen = false;
+
+            // Function to create ripple effect
+            function createRipple(event) {
+                const button = event.currentTarget;
+                const ripple = document.createElement('span');
+                ripple.classList.add('ripple');
+
+                const diameter = Math.max(button.clientWidth, button.clientHeight);
+                const radius = diameter / 2;
+
+                ripple.style.width = ripple.style.height = `${diameter}px`;
+                ripple.style.left = `${event.clientX - button.getBoundingClientRect().left - radius}px`;
+                ripple.style.top = `${event.clientY - button.getBoundingClientRect().top - radius}px`;
+
+                button.appendChild(ripple);
+
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            }
+
+            // Function to create blob effect
+            function createBlob() {
+                const blob = document.createElement('div');
+                blob.classList.add('blob');
+
+                blob.style.width = blob.style.height = `${chatIcon.offsetWidth * 1.2}px`;
+                blob.style.left = `${(chatIcon.offsetWidth - chatIcon.offsetWidth * 1.2) / 2}px`;
+                blob.style.top = `${(chatIcon.offsetHeight - chatIcon.offsetHeight * 1.2) / 2}px`;
+
+                chatIcon.appendChild(blob);
+                blob.classList.add('animate');
+
+                setTimeout(() => {
+                    blob.remove();
+                }, 600);
+            }
+
+            // Function to toggle chat window with fluid animation
+            function toggleChat(event) {
+                if (event) {
+                    createRipple(event);
+                }
+
+                if (!isChatOpen) {
+                    // Opening the chat
+                    createBlob();
+
+                    // Force a reflow before adding the open class
+                    void chatWindow.offsetWidth;
+
+                    requestAnimationFrame(() => {
+                        chatWindow.classList.remove('closing');
+                        chatWindow.classList.add('open');
+                        isChatOpen = true;
+
+                        // Show greeting message when first opened
+                        if (chatMessages.children.length === 0) {
+                            setTimeout(() => {
+                                sendBotMessage("Hi there! 🍷 I'm West Hills Vineyard's virtual assistant. Ask me anything about our winery, event spaces, tastings, or whatever you'd like to know!");
+                            }, 400);
+                        }
+                    });
+                } else {
+                    // Closing the chat
+                    chatWindow.classList.add('closing');
+                    chatWindow.classList.remove('open');
+                    isChatOpen = false;
+
+                    // Reset the class after animation completes
+                    setTimeout(() => {
+                        if (!isChatOpen) {
+                            chatWindow.classList.remove('closing');
+                        }
+                    }, 400);
+                }
+            }
+
+            // Create typing indicator element
+            function createTypingIndicator() {
+                const indicator = document.createElement('div');
+                indicator.className = 'typing-indicator';
+                indicator.id = 'typing-indicator';
+
+                for (let i = 0; i < 3; i++) {
+                    const dot = document.createElement('span');
+                    indicator.appendChild(dot);
+                }
+
+                return indicator;
+            }
+
+            // Function to show typing indicator
+            function showTypingIndicator() {
+                // Remove any existing typing indicators
+                const existingIndicator = document.getElementById('typing-indicator');
+                if (existingIndicator) {
+                    existingIndicator.remove();
+                }
+
+                // Add fresh typing indicator at the end of messages
+                const typingIndicator = createTypingIndicator();
+                chatMessages.appendChild(typingIndicator);
+                typingIndicator.style.display = 'block';
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            // Function to hide typing indicator
+            function hideTypingIndicator() {
+                const typingIndicator = document.getElementById('typing-indicator');
+                if (typingIndicator) {
+                    typingIndicator.remove();
+                }
+            }
+
+            // Function to add bot message with typing animation
+            function sendBotMessage(text) {
+                showTypingIndicator();
+
+                setTimeout(() => {
+                    hideTypingIndicator();
+
+                    const messageElement = document.createElement('div');
+                    messageElement.className = 'message bot-message';
+                    chatMessages.appendChild(messageElement);
+
+                    // Simulate typing animation
+                    let i = 0;
+                    const typingEffect = setInterval(() => {
+                        if (i < text.length) {
+                            messageElement.textContent += text.charAt(i);
+                            i++;
+                            chatMessages.scrollTop = chatMessages.scrollHeight;
+                        } else {
+                            clearInterval(typingEffect);
+                        }
+                    }, 20);
+
+                    chatMessages.scrollTop = chatMessages.scrollHeight;
+                }, 1500);
+            }
+
+            // Function to add user message
+            function sendUserMessage(text) {
+                const messageElement = document.createElement('div');
+                messageElement.className = 'message user-message';
+                messageElement.textContent = text;
+                chatMessages.appendChild(messageElement);
+                chatMessages.scrollTop = chatMessages.scrollHeight;
+            }
+
+            // Function to send message
+            function sendMessage() {
+                const message = messageInput.value.trim();
+                if (message) {
+                    sendUserMessage(message);
+                    messageInput.value = '';
+
+                    // Simulate bot response
+                    setTimeout(() => {
+                        let response;
+                        if (message.toLowerCase().includes('tasting')) {
+                            response = "Our wine tastings are available daily from 11am to 5pm. We offer several options including our Signature Tasting ($25), Reserve Tasting ($40), and Wine & Cheese Pairing ($55). Would you like to book a tasting?";
+                        } else if (message.toLowerCase().includes('event') || message.toLowerCase().includes('space')) {
+                            response = "We have beautiful event spaces for weddings, corporate events, and private parties. Our Barrel Room can accommodate up to 80 guests, while our Vineyard Terrace offers stunning views for up to 150 people. Would you like more information about our packages?";
+                        } else if (message.toLowerCase().includes('hours') || message.toLowerCase().includes('open')) {
+                            response = "West Hills Vineyard is open 7 days a week! Our hours are 11am-6pm Sunday through Thursday, and 11am-8pm on Friday and Saturday.";
+                        } else {
+                            response = "Thanks for your message! We offer premium wine tastings, vineyard tours, event spaces for special occasions, and a wine club with exclusive benefits. How can I help you today?";
+                        }
+                        sendBotMessage(response);
+                    }, 500);
+                }
+            }
+
+            // Function to handle quick action clicks
+            function handleQuickAction(actionText) {
+                sendUserMessage(actionText);
+
+                // Simulate bot response based on the quick action
+                setTimeout(() => {
+                    let response;
+                    switch (actionText) {
+                        case 'Winery Hours':
+                            response = "West Hills Vineyard is open 7 days a week! Our hours are 11am-6pm Sunday through Thursday, and 11am-8pm on Friday and Saturday.";
+                            break;
+                        case 'Wine Tastings':
+                            response = "We offer several tasting options: Signature Tasting ($25), Reserve Tasting ($40), and Wine & Cheese Pairing ($55). All tastings include 5 wines and are available without appointment for groups under 8.";
+                            break;
+                        case 'Event Spaces':
+                            response = "We have two main event spaces: the Barrel Room (indoor, up to 80 guests) and the Vineyard Terrace (outdoor, up to 150 guests). Both can be reserved for weddings, corporate events, and private parties.";
+                            break;
+                        case 'Wine Club':
+                            response = "Our Wine Club members enjoy quarterly shipments, 20% off all wine purchases, complimentary tastings for members and up to 3 guests, and exclusive access to limited release wines and events!";
+                            break;
+                        case 'Vineyard Tours':
+                            response = "We offer guided vineyard tours daily at 11am and 3pm. The tour lasts approximately 45 minutes and includes a brief tasting of our estate wines. Tours are $30 per person or complimentary with any tasting package.";
+                            break;
+                        case 'Directions':
+                            response = "West Hills Vineyard is located at 1234 Vineyard Road, West Hills, CA. We're approximately 30 minutes from downtown and easily accessible via Highway 101. Free parking is available on-site.";
+                            break;
+                    }
+                    sendBotMessage(response);
+                }, 500);
+            }
+
+            // Event Listeners
+            chatIcon.addEventListener('click', toggleChat);
+            minimizeChat.addEventListener('click', toggleChat);
+
+            menuButton.addEventListener('click', function () {
+                menuDropdown.classList.toggle('active');
+            });
+
+            // Close menu when clicking elsewhere
+            document.addEventListener('click', function (event) {
+                if (!event.target.closest('#menu-button') && menuDropdown.classList.contains('active')) {
+                    menuDropdown.classList.remove('active');
+                }
+            });
+
+            // Menu actions
+            newChatButton.addEventListener('click', function () {
+                // Clear chat history and show greeting
+                chatMessages.innerHTML = '';
+                menuDropdown.classList.remove('active');
+                sendBotMessage("Hi there! 🍷 I'm West Hills Vineyard's virtual assistant. Ask me anything about our winery, event spaces, tastings, or whatever you'd like to know!");
+            });
+
+            endChatButton.addEventListener('click', function () {
+                chatMessages.innerHTML = '';
+                menuDropdown.classList.remove('active');
+                toggleChat();
+            });
+
+            // Handle send button click
+            sendButton.addEventListener('click', sendMessage);
+
+            // Handle enter key in input
+            messageInput.addEventListener('keypress', function (event) {
+                if (event.key === 'Enter') {
+                    sendMessage();
+                }
+            });
+
+            // Handle quick action clicks
+            quickActions.forEach(action => {
+                action.addEventListener('click', function () {
+                    handleQuickAction(this.textContent);
+                });
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import { AiChat, useAsStreamAdapter, type ChatItem } from '@nlux/react'
 import '@nlux/themes/nova.css'
 
@@ -26,19 +26,54 @@ export const ChatInterface = ({
   const [chatId, setChatId] = useState<string | undefined>(undefined)
   const [messages, setMessages] = useState<ChatItem[]>(initialMessages)
 
-  // Initialize services
-  const apiService = useMemo(() => new ChatApiService(chatConfig), [chatConfig])
-  const streamingService = useMemo(
-    () => new ChatStreamingService(chatConfig),
-    [chatConfig]
-  )
+  // Store service instances in refs to avoid dependency changes
+  // eslint-disable-next-line no-null/no-null
+  const apiServiceRef = useRef<ChatApiService | null>(null)
+  // eslint-disable-next-line no-null/no-null
+  const streamingServiceRef = useRef<ChatStreamingService | null>(null)
+
+  // Initialize services with useMemo, but store them in refs
+  const apiService = useMemo(() => {
+    const service = new ChatApiService(chatConfig)
+    apiServiceRef.current = service
+    return service
+  }, [chatConfig])
+
+  const streamingService = useMemo(() => {
+    const service = new ChatStreamingService(chatConfig)
+    streamingServiceRef.current = service
+    return service
+  }, [chatConfig])
+
+  // Create adapter at the top level
+  const adapter = useAsStreamAdapter((userMessage: string, observer) => {
+    // Call the streaming service with the message content
+    streamingService.streamMessage(
+      userMessage,
+      // On each chunk update
+      chunk => observer.next(chunk),
+      // On complete
+      () => observer.complete(),
+      // On error
+      error => observer.error(error)
+    )
+  }, messages)
 
   useEffect(() => {
+    console.log('ChatInterface useEffect')
     // Initialize chat on component mount
     const setupChat = async () => {
       try {
         setIsLoading(true)
-        const chatInit = await apiService.initializeChat()
+        // Use the current ref value, which is guaranteed to be set by now
+        const service = apiServiceRef.current
+
+        // TODO: Handle this better
+        if (!service) {
+          return
+        }
+
+        const chatInit = await service.initializeChat()
         setChatId(chatInit.chatId)
         setMessages(chatInit.messages)
 
@@ -56,22 +91,12 @@ export const ChatInterface = ({
 
     // Cleanup
     return () => {
-      streamingService.cancelStream()
+      if (streamingServiceRef.current) {
+        streamingServiceRef.current.cancelStream()
+      }
     }
-  }, [apiService, onChatInitialized, streamingService])
-
-  // Create adapter using our streaming service
-  const adapter = useAsStreamAdapter((message, observer) => {
-    streamingService.streamMessage(
-      message,
-      // On each chunk update
-      chunk => observer.next(chunk),
-      // On complete
-      () => observer.complete(),
-      // On error
-      error => observer.error(error)
-    )
-  }, messages)
+    // Only include onChatInitialized in dependencies, use refs for services
+  }, [onChatInitialized])
 
   // Handle starting a new chat
   const handleNewChat = async () => {

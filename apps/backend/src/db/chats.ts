@@ -1,8 +1,8 @@
 import { v4 as uuidv4 } from 'uuid'
 import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
-import { supabase } from '../lib/supabase-client.js'
-import type { Database, TablesInsert, TablesUpdate } from '../types/database.js'
+import { supabase } from '../lib/supabase-client'
+import type { Database, TablesInsert, TablesUpdate } from '../types/database'
 
 dotenv.config()
 

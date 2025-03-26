@@ -1,7 +1,8 @@
 import { z } from 'zod'
 
-// Base schema for all OpenAI response chunks (doesn't include type field, which will be specified in each variant)
+// Base schema for all OpenAI response chunks
 const openAIResponseChunkBaseSchema = z.object({
+  type: z.string(),
   item_id: z.string().optional(),
   output_index: z.number().optional(),
   content_index: z.number().optional()
@@ -110,17 +111,40 @@ const openAIResponseCompletedSchema = openAIResponseChunkBaseSchema.extend({
     .catchall(z.unknown()) // For other potential fields
 })
 
-// Union schema for all possible chunk types - removing the base schema from union
-export const openAIResponseChunkSchema = z.discriminatedUnion('type', [
-  openAIResponseDeltaSchema,
-  openAIResponseDoneSchema,
-  openAIResponseCreatedSchema,
-  openAIResponseInProgressSchema,
-  openAIResponseOutputItemAddedSchema,
-  openAIResponseContentPartAddedSchema,
-  openAIResponseContentPartDoneSchema,
-  openAIResponseOutputItemDoneSchema,
-  openAIResponseCompletedSchema
+// Add a fallback schema for unknown chunk types
+const openAIResponseUnknownSchema = openAIResponseChunkBaseSchema.extend({
+  type: z
+    .string()
+    .refine(
+      val =>
+        ![
+          'response.created',
+          'response.in_progress',
+          'response.output_text.delta',
+          'response.output_text.done',
+          'response.output_item.added',
+          'response.content_part.added',
+          'response.content_part.done',
+          'response.output_item.done',
+          'response.completed'
+        ].includes(val)
+    )
+})
+
+// Union schema for all possible chunk types
+export const openAIResponseChunkSchema = z.union([
+  z.discriminatedUnion('type', [
+    openAIResponseDeltaSchema,
+    openAIResponseDoneSchema,
+    openAIResponseCreatedSchema,
+    openAIResponseInProgressSchema,
+    openAIResponseOutputItemAddedSchema,
+    openAIResponseContentPartAddedSchema,
+    openAIResponseContentPartDoneSchema,
+    openAIResponseOutputItemDoneSchema,
+    openAIResponseCompletedSchema
+  ]),
+  openAIResponseUnknownSchema // Fallback for unknown types
 ])
 
 // Define types based on the schemas
@@ -149,6 +173,9 @@ export type OpenAIResponseOutputItemDoneChunk = z.infer<
 >
 export type OpenAIResponseCompletedChunk = z.infer<
   typeof openAIResponseCompletedSchema
+>
+export type OpenAIResponseUnknownChunk = z.infer<
+  typeof openAIResponseUnknownSchema
 >
 export type OpenAIResponseChunk = z.infer<typeof openAIResponseChunkSchema>
 
@@ -207,11 +234,22 @@ export const isOpenAIResponseCompletedChunk = (
   return openAIResponseCompletedSchema.safeParse(chunk).success
 }
 
+// Type guard for unknown chunks
+export const isOpenAIResponseUnknownChunk = (
+  chunk: unknown
+): chunk is OpenAIResponseUnknownChunk => {
+  return openAIResponseUnknownSchema.safeParse(chunk).success
+}
+
 export const validateOpenAIResponseChunk = (
   chunk: unknown
 ): OpenAIResponseChunk => {
   const result = openAIResponseChunkSchema.safeParse(chunk)
   if (!result.success) {
+    // Log the error details for debugging
+    console.error(`Invalid OpenAI response chunk: ${result.error.message}`, {
+      chunk
+    })
     throw new Error(`Invalid OpenAI response chunk: ${result.error.message}`)
   }
   return result.data

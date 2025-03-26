@@ -8,6 +8,9 @@ importers:
 
   .:
     devDependencies:
+      '@babel/plugin-syntax-jsx':
+        specifier: ^7.25.9
+        version: 7.25.9(@babel/core@7.26.10)
       eslint:
         specifier: ^8.57.1
         version: 8.57.1
@@ -72,12 +75,6 @@ importers:
       globals:
         specifier: ^16.0.0
         version: 16.0.0
-      nodemon:
-        specifier: ^3.1.9
-        version: 3.1.9
-      ts-node:
-        specifier: ^10.9.2
-        version: 10.9.2(@types/node@20.17.25)(typescript@5.8.2)
       ts-node-dev:
         specifier: ^2.0.0
         version: 2.0.0(@types/node@20.17.25)(typescript@5.8.2)
@@ -85,17 +82,11 @@ importers:
         specifier: ^5.3.3
         version: 5.8.2
 
-  apps/playground:
+  apps/frontend:
     dependencies:
-      '@dialogue-foundry/chat-core':
-        specifier: workspace:*
-        version: link:../../packages/chat-core
       '@dialogue-foundry/tailwind-config':
         specifier: workspace:*
         version: link:../../packages/tailwind-config
-      '@dialogue-foundry/widget':
-        specifier: workspace:*
-        version: link:../../packages/widget
       '@nlux/react':
         specifier: ^2
         version: 2.17.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -107,16 +98,13 @@ importers:
         version: 4.0.15
       '@tailwindcss/vite':
         specifier: ^4.0.16
-        version: 4.0.16(vite@6.2.2(@types/node@20.17.25)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.39.0))
+        version: 4.0.16(vite@6.2.3(@types/node@20.17.25)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.39.0)(yaml@2.7.0))
       autoprefixer:
         specifier: ^10.4.21
         version: 10.4.21(postcss@8.5.3)
       axios:
         specifier: ^1.8.4
         version: 1.8.4
-      postcss:
-        specifier: ^8.5.3
-        version: 8.5.3
       react:
         specifier: ^19.0.0
         version: 19.0.0
@@ -125,17 +113,17 @@ importers:
         version: 19.0.0(react@19.0.0)
       tailwindcss:
         specifier: ^4.0.15
-        version: 4.0.15
+        version: 4.0.16
     devDependencies:
       '@babel/plugin-syntax-jsx':
         specifier: ^7.23.3
         version: 7.25.9(@babel/core@7.26.10)
-      '@crossingminds/tsconfig':
-        specifier: ^0.2.0
-        version: 0.2.0
       '@dialogue-foundry/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
+      '@dialogue-foundry/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
       '@types/react':
         specifier: ^19.0.10
         version: 19.0.12
@@ -144,7 +132,7 @@ importers:
         version: 19.0.4(@types/react@19.0.12)
       '@vitejs/plugin-react':
         specifier: ^4.3.4
-        version: 4.3.4(vite@6.2.2(@types/node@20.17.25)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.39.0))
+        version: 4.3.4(vite@6.2.3(@types/node@20.17.25)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.39.0)(yaml@2.7.0))
       eslint:
         specifier: ^8.57.1
         version: 8.57.1
@@ -153,71 +141,7 @@ importers:
         version: 5.3.3
       vite:
         specifier: ^6.2.0
-        version: 6.2.2(@types/node@20.17.25)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.39.0)
-
-  packages/chat-core:
-    dependencies:
-      '@dialogue-foundry/tailwind-config':
-        specifier: workspace:*
-        version: link:../tailwind-config
-      '@nlux/react':
-        specifier: ^2
-        version: 2.17.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      '@nlux/themes':
-        specifier: ^2
-        version: 2.17.1
-      '@tailwindcss/postcss':
-        specifier: ^4.0.15
-        version: 4.0.15
-      autoprefixer:
-        specifier: ^10.4.21
-        version: 10.4.21(postcss@8.5.3)
-      axios:
-        specifier: ^1.8.4
-        version: 1.8.4
-      postcss:
-        specifier: ^8.5.3
-        version: 8.5.3
-      react:
-        specifier: ^18.0.0 || ^19.0.0
-        version: 19.0.0
-      react-dom:
-        specifier: ^18.0.0 || ^19.0.0
-        version: 19.0.0(react@19.0.0)
-      tailwindcss:
-        specifier: ^4.0.14
-        version: 4.0.15
-    devDependencies:
-      '@babel/plugin-syntax-jsx':
-        specifier: ^7.23.3
-        version: 7.25.9(@babel/core@7.26.10)
-      '@crossingminds/tsconfig':
-        specifier: ^0.2.0
-        version: 0.2.0
-      '@dialogue-foundry/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
-      '@dialogue-foundry/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-      '@types/node':
-        specifier: ^20.11.5
-        version: 20.17.25
-      '@types/react':
-        specifier: ^19.0.10
-        version: 19.0.12
-      '@types/react-dom':
-        specifier: ^19.0.4
-        version: 19.0.4(@types/react@19.0.12)
-      eslint:
-        specifier: ^8.57.1
-        version: 8.57.1
-      tslib:
-        specifier: ^2.6.2
-        version: 2.8.1
-      typescript:
-        specifier: ~5.3.3
-        version: 5.3.3
+        version: 6.2.3(@types/node@20.17.25)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.39.0)(yaml@2.7.0)
 
   packages/eslint-config:
     dependencies:
@@ -279,103 +203,18 @@ importers:
 
   packages/tailwind-config:
     devDependencies:
-      '@babel/plugin-syntax-jsx':
-        specifier: ^7.23.3
-        version: 7.25.9(@babel/core@7.26.10)
-      '@dialogue-foundry/eslint-config':
+      '@dialogue-foundry/tsconfig':
         specifier: workspace:*
-        version: link:../eslint-config
-      '@tailwindcss/postcss':
-        specifier: ^4.0.15
-        version: 4.0.15
-      autoprefixer:
-        specifier: ^10.4.21
-        version: 10.4.21(postcss@8.5.3)
-      eslint:
-        specifier: ^8.57.1
-        version: 8.57.1
-      postcss:
-        specifier: ^8.5.3
-        version: 8.5.3
+        version: link:../tsconfig
       tailwindcss:
-        specifier: ^4.0.14
-        version: 4.0.15
+        specifier: ^4.0.16
+        version: 4.0.16
 
   packages/tsconfig:
     devDependencies:
       typescript:
         specifier: ^5.5.2
         version: 5.8.2
-
-  packages/widget:
-    dependencies:
-      '@dialogue-foundry/chat-core':
-        specifier: workspace:*
-        version: link:../chat-core
-      '@dialogue-foundry/tailwind-config':
-        specifier: workspace:*
-        version: link:../tailwind-config
-      '@nlux/react':
-        specifier: ^2
-        version: 2.17.1(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
-      '@nlux/themes':
-        specifier: ^2
-        version: 2.17.1
-      '@tailwindcss/postcss':
-        specifier: ^4.0.15
-        version: 4.0.15
-      autoprefixer:
-        specifier: ^10.4.21
-        version: 10.4.21(postcss@8.5.3)
-      axios:
-        specifier: ^1.8.4
-        version: 1.8.4
-      postcss:
-        specifier: ^8.5.3
-        version: 8.5.3
-      react:
-        specifier: ^18.0.0 || ^19.0.0
-        version: 19.0.0
-      react-dom:
-        specifier: ^18.0.0 || ^19.0.0
-        version: 19.0.0(react@19.0.0)
-      tailwindcss:
-        specifier: ^4.0.15
-        version: 4.0.15
-    devDependencies:
-      '@babel/plugin-syntax-jsx':
-        specifier: ^7.23.3
-        version: 7.25.9(@babel/core@7.26.10)
-      '@dialogue-foundry/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
-      '@dialogue-foundry/tsconfig':
-        specifier: workspace:*
-        version: link:../tsconfig
-      '@types/node':
-        specifier: ^20.11.5
-        version: 20.17.25
-      '@types/react':
-        specifier: ^19.0.10
-        version: 19.0.12
-      '@types/react-dom':
-        specifier: ^19.0.4
-        version: 19.0.4(@types/react@19.0.12)
-      eslint:
-        specifier: ^8.57.1
-        version: 8.57.1
-      eslint-import-resolver-typescript:
-        specifier: ^4.2.2
-        version: 4.2.2(eslint-plugin-import@2.31.0)(eslint@8.57.1)
-      globals:
-        specifier: ^15.15.0
-        version: 15.15.0
-      tslib:
-        specifier: ^2.6.2
-        version: 2.8.1
-      typescript:
-        specifier: ~5.3.3
-        version: 5.3.3
 
 packages:
 
@@ -513,9 +352,6 @@ packages:
   '@babel/types@7.26.10':
     resolution: {integrity: sha512-emqcG3vHrpxUKTrxcblR36dcrcoRDvKmnL/dCL6ZsHaShW80qxCAcNhzQZrpeM765VzEos+xOi4s+r4IXzTwdQ==}
     engines: {node: '>=6.9.0'}
-
-  '@crossingminds/tsconfig@0.2.0':
-    resolution: {integrity: sha512-5vn2pdWXCIHRcFdLKYB/ZKdvVabrn7Sfa6AZQCLSrGBHVn+JpBsW2P148Kxd4WDfwSSYzCEuQ6Ff8UuNHDFcsQ==}
 
   '@cspotcode/source-map-support@0.8.1':
     resolution: {integrity: sha512-IchNf6dN4tHoMFIn/7OE8LWZ19Y6q/67Bmf6vnGREv8RSbBVb9LPJxEcnwrcwX6ixSvaiGoomAUvu4YSxXrVgw==}
@@ -1976,10 +1812,6 @@ packages:
     resolution: {integrity: sha512-AhO5QUcj8llrbG09iWhPU2B204J1xnPeL8kQmVorSsy+Sjj1sk8gIyh6cUocGmH4L0UuhAJy+hJMRA4mgA4mFQ==}
     engines: {node: '>=8'}
 
-  globals@15.15.0:
-    resolution: {integrity: sha512-7ACyT3wmyp3I61S4fG682L0VA2RGD9otkqGJIwNUMF1SWUombIIk+af1unuDYgMm082aHYwD+mzJvv9Iu8dsgg==}
-    engines: {node: '>=18'}
-
   globals@16.0.0:
     resolution: {integrity: sha512-iInW14XItCXET01CQFqudPOWP2jYMl7T+QRQT+UNcR/iQncN/F0UNpgd76iFkBPgNQb4+X3LV9tLJYzwh+Gl3A==}
     engines: {node: '>=18'}
@@ -2005,10 +1837,6 @@ packages:
   has-bigints@1.1.0:
     resolution: {integrity: sha512-R3pbpkcIqv2Pm3dUwgjclDRVmWpTJW2DcMzcIhEXEx1oh/CEMObMm3KLmRJOdvhM7o4uQBnwr8pzRK2sJWIqfg==}
     engines: {node: '>= 0.4'}
-
-  has-flag@3.0.0:
-    resolution: {integrity: sha512-sKJf1+ceQBr4SMkvQnBDNDtf4TXpVhVGateu0t918bl30FnbE2m4vNLX+VWe/dpjlb+HugGYzW7uQXH98HPEYw==}
-    engines: {node: '>=4'}
 
   has-flag@4.0.0:
     resolution: {integrity: sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==}
@@ -2049,9 +1877,6 @@ packages:
   iconv-lite@0.4.24:
     resolution: {integrity: sha512-v3MXnZAcvnywkTUEZomIActle7RXXeedOR31wwl7VlyoXO4Qi9arvSenNQWne1TcRwhCL1HwLI21bEqdpj8/rA==}
     engines: {node: '>=0.10.0'}
-
-  ignore-by-default@1.0.1:
-    resolution: {integrity: sha512-Ius2VYcGNk7T90CppJqcIkS5ooHUZyIQK+ClZfMfMNFEF9VSE73Fq+906u/CWu92x4gzZMWOwfFYckPObzdEbA==}
 
   ignore@5.3.2:
     resolution: {integrity: sha512-hsBTNUqQTDwkWtcdYI2i06Y/nUBEsNEDJKjWdigLvegy8kDuJAS8uRlpkkcQpyEXL0Z/pjDy5HBmMjRCJ2gq+g==}
@@ -2440,11 +2265,6 @@ packages:
   node-releases@2.0.19:
     resolution: {integrity: sha512-xxOWJsBKtzAq7DY0J+DTzuz58K8e7sJbdgwkbMWQe8UYB6ekmsQ45q0M/tJDsGaZmbC+l7n57UV8Hl5tHxO9uw==}
 
-  nodemon@3.1.9:
-    resolution: {integrity: sha512-hdr1oIb2p6ZSxu3PB2JWWYS7ZQ0qvaZsc3hK8DR8f02kRzc8rjYmxAIvdz+aYC+8F2IjNaB7HMcSDg8nQpJxyg==}
-    engines: {node: '>=10'}
-    hasBin: true
-
   normalize-path@3.0.0:
     resolution: {integrity: sha512-6eZs5Ls3WtCisHWp9S2GUy8dqkpGi4BVSz3GaqiE6ezub0512ESztXUwUB6C6IKbQkY2Pnb/mD4WYojCRwcwLA==}
     engines: {node: '>=0.10.0'}
@@ -2594,9 +2414,6 @@ packages:
 
   proxy-from-env@1.1.0:
     resolution: {integrity: sha512-D+zkORCbA9f1tdWRK0RaCR3GPv50cMxcrz4X8k5LTSUD1Dkw47mKJEZQNunItRTkWwgtaUSo1RVFRIG9ZXiFYg==}
-
-  pstree.remy@1.1.8:
-    resolution: {integrity: sha512-77DZwxQmxKnu3aR542U+X8FypNzbfJ+C5XQDk3uWjWxn6151aIMGthWYRXTqT1E5oJvg+ljaa2OJi+VfvCOQ8w==}
 
   punycode@2.3.1:
     resolution: {integrity: sha512-vYt7UD1U9Wg6138shLtLOvdAu+8DsC/ilFtEVHcH+wydcSpNE20AfSOduf6MkRFahL5FY7X1oU7nKVZFtfq8Fg==}
@@ -2767,10 +2584,6 @@ packages:
     resolution: {integrity: sha512-ZX99e6tRweoUXqR+VBrslhda51Nh5MTQwou5tnUDgbtyM0dBgmhEDtWGP/xbKn6hqfPRHujUNwz5fy/wbbhnpw==}
     engines: {node: '>= 0.4'}
 
-  simple-update-notifier@2.0.0:
-    resolution: {integrity: sha512-a2B9Y0KlNXl9u/vsW6sTIu9vGEpfKu2wRV6l1H3XEas/0gUIzGzBoP/IouTcUQbm9JWZLH3COxyn03TYlFax6w==}
-    engines: {node: '>=10'}
-
   slash@3.0.0:
     resolution: {integrity: sha512-g9Q1haeby36OSStwb4ntCGGGaKsaVSjQ68fBxoQcutl5fS1vuY18H3wSt3jFyFtrkx+Kz0V1G85A4MyAdDMi2Q==}
     engines: {node: '>=8'}
@@ -2837,10 +2650,6 @@ packages:
     resolution: {integrity: sha512-6fPc+R4ihwqP6N/aIv2f1gMH8lOVtWQHoqC4yK6oSDVVocumAsfCqjkXnqiYMhmMwS/mEHLp7Vehlt3ql6lEig==}
     engines: {node: '>=8'}
 
-  supports-color@5.5.0:
-    resolution: {integrity: sha512-QjVjwdXIt408MIiAqCX4oUKsgU2EqAGzs2Ppkm4aQYbjm+ZEWEcW4SfFNTr4uMNZma0ey4f5lgLrkB0aX0QMow==}
-    engines: {node: '>=4'}
-
   supports-color@7.2.0:
     resolution: {integrity: sha512-qpCAvRl9stuOHveKsn7HncJRvv501qIacKzQlO/+Lwxc9+0q2wLyv4Dfvt80/DPn2pqOBsJdDiogXGR9+OvwRw==}
     engines: {node: '>=8'}
@@ -2882,10 +2691,6 @@ packages:
   toidentifier@1.0.1:
     resolution: {integrity: sha512-o5sSPKEkg/DIQNmH43V0/uerLrpzVedkUh8tGNvaeXpfpuwjKenlSox/2O/BTlZUtEe+JG7s5YhEz608PlAHRA==}
     engines: {node: '>=0.6'}
-
-  touch@3.1.1:
-    resolution: {integrity: sha512-r0eojU4bI8MnHr8c5bNo7lJDdI2qXlWWJk6a9EAFG7vbhTjElYhBVS3/miuE0uOuoLdb8Mc/rVfsmm6eo5o9GA==}
-    hasBin: true
 
   tr46@0.0.3:
     resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
@@ -3010,9 +2815,6 @@ packages:
     resolution: {integrity: sha512-nWJ91DjeOkej/TA8pXQ3myruKpKEYgqvpw9lz4OPHj/NWFNluYrjbz9j01CJ8yKQd2g4jFoOkINCTW2I5LEEyw==}
     engines: {node: '>= 0.4'}
 
-  undefsafe@2.0.5:
-    resolution: {integrity: sha512-WxONCrssBM8TSPRqN5EmsjVrsv4A8X12J4ArBiiayv3DyyG3ZlIg6yysuuSYdZsVz3TKcTg2fd//Ujd4CHV1iA==}
-
   undici-types@5.26.5:
     resolution: {integrity: sha512-JlCMO+ehdEIKqlFxk6IfVoAUVmgz7cU7zD/h9XZ0qzeosSHmUJVOzSQvvYSYWXkFXC+IfLKSIffhv0sVZup6pA==}
 
@@ -3047,8 +2849,8 @@ packages:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
     engines: {node: '>= 0.8'}
 
-  vite@6.2.2:
-    resolution: {integrity: sha512-yW7PeMM+LkDzc7CgJuRLMW2Jz0FxMOsVJ8Lv3gpgW9WLcb9cTW+121UEr1hvmfR7w3SegR5ItvYyzVz1vxNJgQ==}
+  vite@6.2.3:
+    resolution: {integrity: sha512-IzwM54g4y9JA/xAeBPNaDXiBF8Jsgl3VBQ2YQ/wOY6fyW3xMdSoltIV3Bo59DErdqdE6RxUfv8W69DvUorE4Eg==}
     engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
     hasBin: true
     peerDependencies:
@@ -3144,6 +2946,11 @@ packages:
   yallist@3.1.1:
     resolution: {integrity: sha512-a4UGQaWPH59mOXUYnAG2ewncQS4i4F43Tv3JoAM+s2VDAmS9NsK8GpDMLrCHPksFT7h3K6TOoUNn2pb7RoXx4g==}
 
+  yaml@2.7.0:
+    resolution: {integrity: sha512-+hSoy/QHluxmC9kCIJyL/uyFmLmc+e5CFR5Wa+bpIhIj85LVb9ZH2nVnqrHoSvKogwODv0ClqZkmiSSaIH5LTA==}
+    engines: {node: '>= 14'}
+    hasBin: true
+
   yn@3.1.1:
     resolution: {integrity: sha512-Ux4ygGWsu2c7isFWe8Yu1YluJmqVhxqK2cLXNQA5AcC3QfbGNpM7fu0Y8b/z16pXLnFxZYvWhd3fhBY9DLmC6Q==}
     engines: {node: '>=6'}
@@ -3191,7 +2998,7 @@ snapshots:
       '@babel/traverse': 7.26.10
       '@babel/types': 7.26.10
       convert-source-map: 2.0.0
-      debug: 4.4.0(supports-color@5.5.0)
+      debug: 4.4.0
       gensync: 1.0.0-beta.2
       json5: 2.2.3
       semver: 6.3.1
@@ -3335,7 +3142,7 @@ snapshots:
       '@babel/parser': 7.26.10
       '@babel/template': 7.26.9
       '@babel/types': 7.26.10
-      debug: 4.4.0(supports-color@5.5.0)
+      debug: 4.4.0
       globals: 11.12.0
     transitivePeerDependencies:
       - supports-color
@@ -3344,8 +3151,6 @@ snapshots:
     dependencies:
       '@babel/helper-string-parser': 7.25.9
       '@babel/helper-validator-identifier': 7.25.9
-
-  '@crossingminds/tsconfig@0.2.0': {}
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -3458,7 +3263,7 @@ snapshots:
   '@eslint/eslintrc@2.1.4':
     dependencies:
       ajv: 6.12.6
-      debug: 4.4.0(supports-color@5.5.0)
+      debug: 4.4.0
       espree: 9.6.1
       globals: 13.24.0
       ignore: 5.3.2
@@ -3474,7 +3279,7 @@ snapshots:
   '@humanwhocodes/config-array@0.13.0':
     dependencies:
       '@humanwhocodes/object-schema': 2.0.3
-      debug: 4.4.0(supports-color@5.5.0)
+      debug: 4.4.0
       minimatch: 3.1.2
     transitivePeerDependencies:
       - supports-color
@@ -3762,13 +3567,13 @@ snapshots:
       postcss: 8.5.3
       tailwindcss: 4.0.15
 
-  '@tailwindcss/vite@4.0.16(vite@6.2.2(@types/node@20.17.25)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.39.0))':
+  '@tailwindcss/vite@4.0.16(vite@6.2.3(@types/node@20.17.25)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.39.0)(yaml@2.7.0))':
     dependencies:
       '@tailwindcss/node': 4.0.16
       '@tailwindcss/oxide': 4.0.16
       lightningcss: 1.29.2
       tailwindcss: 4.0.16
-      vite: 6.2.2(@types/node@20.17.25)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.39.0)
+      vite: 6.2.3(@types/node@20.17.25)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.39.0)(yaml@2.7.0)
 
   '@tsconfig/node10@1.0.11': {}
 
@@ -3918,7 +3723,7 @@ snapshots:
       '@typescript-eslint/types': 7.18.0
       '@typescript-eslint/typescript-estree': 7.18.0(typescript@5.8.2)
       '@typescript-eslint/visitor-keys': 7.18.0
-      debug: 4.4.0(supports-color@5.5.0)
+      debug: 4.4.0
       eslint: 8.57.1
     optionalDependencies:
       typescript: 5.8.2
@@ -3934,7 +3739,7 @@ snapshots:
     dependencies:
       '@typescript-eslint/typescript-estree': 7.18.0(typescript@5.8.2)
       '@typescript-eslint/utils': 7.18.0(eslint@8.57.1)(typescript@5.8.2)
-      debug: 4.4.0(supports-color@5.5.0)
+      debug: 4.4.0
       eslint: 8.57.1
       ts-api-utils: 1.4.3(typescript@5.8.2)
     optionalDependencies:
@@ -3948,7 +3753,7 @@ snapshots:
     dependencies:
       '@typescript-eslint/types': 7.18.0
       '@typescript-eslint/visitor-keys': 7.18.0
-      debug: 4.4.0(supports-color@5.5.0)
+      debug: 4.4.0
       globby: 11.1.0
       is-glob: 4.0.3
       minimatch: 9.0.5
@@ -4012,14 +3817,14 @@ snapshots:
   '@unrs/rspack-resolver-binding-win32-x64-msvc@1.2.2':
     optional: true
 
-  '@vitejs/plugin-react@4.3.4(vite@6.2.2(@types/node@20.17.25)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.39.0))':
+  '@vitejs/plugin-react@4.3.4(vite@6.2.3(@types/node@20.17.25)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.39.0)(yaml@2.7.0))':
     dependencies:
       '@babel/core': 7.26.10
       '@babel/plugin-transform-react-jsx-self': 7.25.9(@babel/core@7.26.10)
       '@babel/plugin-transform-react-jsx-source': 7.25.9(@babel/core@7.26.10)
       '@types/babel__core': 7.20.5
       react-refresh: 0.14.2
-      vite: 6.2.2(@types/node@20.17.25)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.39.0)
+      vite: 6.2.3(@types/node@20.17.25)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.39.0)(yaml@2.7.0)
     transitivePeerDependencies:
       - supports-color
 
@@ -4318,11 +4123,9 @@ snapshots:
     dependencies:
       ms: 2.1.3
 
-  debug@4.4.0(supports-color@5.5.0):
+  debug@4.4.0:
     dependencies:
       ms: 2.1.3
-    optionalDependencies:
-      supports-color: 5.5.0
 
   deep-is@0.1.4: {}
 
@@ -4531,7 +4334,7 @@ snapshots:
 
   eslint-import-resolver-typescript@4.2.2(eslint-plugin-import@2.31.0)(eslint@8.57.1):
     dependencies:
-      debug: 4.4.0(supports-color@5.5.0)
+      debug: 4.4.0
       eslint: 8.57.1
       get-tsconfig: 4.10.0
       rspack-resolver: 1.2.2
@@ -4592,7 +4395,7 @@ snapshots:
     dependencies:
       '@es-joy/jsdoccomment': 0.36.1
       comment-parser: 1.3.1
-      debug: 4.4.0(supports-color@5.5.0)
+      debug: 4.4.0
       escape-string-regexp: 4.0.0
       eslint: 8.57.1
       esquery: 1.6.0
@@ -4697,7 +4500,7 @@ snapshots:
       ajv: 6.12.6
       chalk: 4.1.2
       cross-spawn: 7.0.6
-      debug: 4.4.0(supports-color@5.5.0)
+      debug: 4.4.0
       doctrine: 3.0.0
       escape-string-regexp: 4.0.0
       eslint-scope: 7.2.2
@@ -4941,8 +4744,6 @@ snapshots:
     dependencies:
       type-fest: 0.20.2
 
-  globals@15.15.0: {}
-
   globals@16.0.0: {}
 
   globalthis@1.0.4:
@@ -4966,8 +4767,6 @@ snapshots:
   graphemer@1.4.0: {}
 
   has-bigints@1.1.0: {}
-
-  has-flag@3.0.0: {}
 
   has-flag@4.0.0: {}
 
@@ -5010,8 +4809,6 @@ snapshots:
   iconv-lite@0.4.24:
     dependencies:
       safer-buffer: 2.1.2
-
-  ignore-by-default@1.0.1: {}
 
   ignore@5.3.2: {}
 
@@ -5353,19 +5150,6 @@ snapshots:
 
   node-releases@2.0.19: {}
 
-  nodemon@3.1.9:
-    dependencies:
-      chokidar: 3.6.0
-      debug: 4.4.0(supports-color@5.5.0)
-      ignore-by-default: 1.0.1
-      minimatch: 3.1.2
-      pstree.remy: 1.1.8
-      semver: 7.7.1
-      simple-update-notifier: 2.0.0
-      supports-color: 5.5.0
-      touch: 3.1.1
-      undefsafe: 2.0.5
-
   normalize-path@3.0.0: {}
 
   normalize-range@0.1.2: {}
@@ -5512,8 +5296,6 @@ snapshots:
       ipaddr.js: 1.9.1
 
   proxy-from-env@1.1.0: {}
-
-  pstree.remy@1.1.8: {}
 
   punycode@2.3.1: {}
 
@@ -5752,10 +5534,6 @@ snapshots:
       side-channel-map: 1.0.1
       side-channel-weakmap: 1.0.2
 
-  simple-update-notifier@2.0.0:
-    dependencies:
-      semver: 7.7.1
-
   slash@3.0.0: {}
 
   source-map-js@1.2.1: {}
@@ -5834,10 +5612,6 @@ snapshots:
 
   strip-json-comments@3.1.1: {}
 
-  supports-color@5.5.0:
-    dependencies:
-      has-flag: 3.0.0
-
   supports-color@7.2.0:
     dependencies:
       has-flag: 4.0.0
@@ -5875,8 +5649,6 @@ snapshots:
       is-number: 7.0.0
 
   toidentifier@1.0.1: {}
-
-  touch@3.1.1: {}
 
   tr46@0.0.3: {}
 
@@ -6020,8 +5792,6 @@ snapshots:
       has-symbols: 1.1.0
       which-boxed-primitive: 1.1.1
 
-  undefsafe@2.0.5: {}
-
   undici-types@5.26.5: {}
 
   undici-types@6.19.8: {}
@@ -6046,7 +5816,7 @@ snapshots:
 
   vary@1.1.2: {}
 
-  vite@6.2.2(@types/node@20.17.25)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.39.0):
+  vite@6.2.3(@types/node@20.17.25)(jiti@2.4.2)(lightningcss@1.29.2)(terser@5.39.0)(yaml@2.7.0):
     dependencies:
       esbuild: 0.25.1
       postcss: 8.5.3
@@ -6057,6 +5827,7 @@ snapshots:
       jiti: 2.4.2
       lightningcss: 1.29.2
       terser: 5.39.0
+      yaml: 2.7.0
 
   web-streams-polyfill@4.0.0-beta.3: {}
 
@@ -6121,6 +5892,9 @@ snapshots:
   xtend@4.0.2: {}
 
   yallist@3.1.1: {}
+
+  yaml@2.7.0:
+    optional: true
 
   yn@3.1.1: {}
 
