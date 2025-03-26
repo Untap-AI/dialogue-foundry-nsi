@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { Widget, AnimatedWidget } from '@dialogue-foundry/widget'
-import { ChatInterface } from '@dialogue-foundry/chat-core'
+import { ChatWidget } from './components/ChatWidget'
+import { ChatInterface } from './components/ChatInterface'
 
 type TabType = 'chat' | 'widget'
 
@@ -10,7 +10,6 @@ export default function App() {
   const [position, setPosition] = useState<'bottom-right' | 'bottom-left'>(
     'bottom-right'
   )
-  const [showAnimated, setShowAnimated] = useState(true)
 
   return (
     <div className="min-h-screen bg-gray-50 p-8">
@@ -123,38 +122,6 @@ export default function App() {
                   </div>
                 </div>
 
-                <div className="mb-3">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Widget Type
-                  </label>
-                  <div className="flex space-x-4">
-                    <label className="inline-flex items-center">
-                      <input
-                        type="radio"
-                        name="widgetType"
-                        checked={showAnimated}
-                        onChange={() => setShowAnimated(true)}
-                        className="h-4 w-4 text-blue-600"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">
-                        Animated
-                      </span>
-                    </label>
-                    <label className="inline-flex items-center">
-                      <input
-                        type="radio"
-                        name="widgetType"
-                        checked={!showAnimated}
-                        onChange={() => setShowAnimated(false)}
-                        className="h-4 w-4 text-blue-600"
-                      />
-                      <span className="ml-2 text-sm text-gray-700">
-                        Standard
-                      </span>
-                    </label>
-                  </div>
-                </div>
-
                 <button
                   onClick={() => window.location.reload()}
                   className="text-sm px-3 py-1.5 bg-gray-100 hover:bg-gray-200 transition-colors rounded"
@@ -164,17 +131,11 @@ export default function App() {
               </div>
 
               {/* Widget */}
-              <div className="absolute right-0 bottom-0">
-                {showAnimated ? (
-                  <AnimatedWidget
-                    position={position}
-                    buttonColor={buttonColor}
-                    initialDelay={1000}
-                  />
-                ) : (
-                  <Widget position={position} buttonColor={buttonColor} />
-                )}
-              </div>
+                <ChatWidget
+                  position={position}
+                  buttonColor={buttonColor}
+                  defaultOpen={true}
+                />
             </div>
           )}
         </div>

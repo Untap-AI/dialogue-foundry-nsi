@@ -12,9 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@dialogue-foundry/chat-core": "workspace:*",
     "@dialogue-foundry/tailwind-config": "workspace:*",
-    "@dialogue-foundry/widget": "workspace:*",
     "@nlux/react": "^2",
     "@nlux/themes": "^2",
     "@tailwindcss/postcss": "^4.0.15",

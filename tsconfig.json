@@ -1,9 +1,0 @@
-{
-  "files": [],
-  "references": [
-    { "path": "./packages/chat-core" },
-    { "path": "./packages/widget" },
-    { "path": "./apps/playground" },
-    { "path": "./apps/backend" }
-  ]
-} 

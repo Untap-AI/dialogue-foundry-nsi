@@ -7,6 +7,6 @@
     "declarationDir": "dist",
     "sourceMap": true
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "../../apps/frontend/src/services"],
   "exclude": ["node_modules", "dist", "**/*.test.ts", "**/*.test.tsx"]
 } 

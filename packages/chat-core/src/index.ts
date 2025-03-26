@@ -3,12 +3,15 @@ export { ChatInterface } from './components/ChatInterface'
 export type { ChatInterfaceProps } from './components/ChatInterface'
 
 // Export services
-export { ChatApiService } from './services/api'
-export { ChatStreamingService } from './services/streaming'
+export { ChatApiService } from '../../../apps/frontend/src/services/api'
+export { ChatStreamingService } from '../../../apps/frontend/src/services/streaming'
 export type {
   ChatConfig,
   ChatInit,
   Message,
   MessageResponse
-} from './services/api'
-export type { StreamingConfig } from './services/streaming'
+} from '../../../apps/frontend/src/services/api'
+export type { StreamingConfig } from '../../../apps/frontend/src/services/streaming'
+
+// Export styles
+import './styles.css'
