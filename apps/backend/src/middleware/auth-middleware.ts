@@ -1,4 +1,4 @@
-import { extractTokenFromHeader, verifyToken } from '../lib/jwt-utils.js'
+import { extractTokenFromHeader, verifyToken } from '../lib/jwt-utils'
 import type * as express from 'express'
 
 // Create a custom interface extending Express Request

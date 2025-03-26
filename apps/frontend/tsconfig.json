@@ -1,12 +1,9 @@
 {
-  "extends": "@crossingminds/tsconfig/lib/vite.json",
+  "extends": "@dialogue-foundry/tsconfig/react.json",
   "compilerOptions": {
     "outDir": "dist",
     "jsx": "react-jsx",
     "baseUrl": ".",
-    "paths": {
-      "@dialogue-foundry/*": ["../../packages/*/src"]
-    }
   },
   "include": ["src", "src/@types"]
 } 

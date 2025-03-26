@@ -25,8 +25,8 @@
   },
   "devDependencies": {
     "@babel/plugin-syntax-jsx": "^7.23.3",
-    "@crossingminds/tsconfig": "^0.2.0",
     "@dialogue-foundry/eslint-config": "workspace:*",
+    "@dialogue-foundry/tsconfig": "workspace:*",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",

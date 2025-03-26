@@ -1,0 +1,6 @@
+{
+  "esm": true,
+  "transpileOnly": true,
+  "respawn": true,
+  "ignore": ["node_modules"]
+} 

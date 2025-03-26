@@ -131,11 +131,11 @@ export default function App() {
               </div>
 
               {/* Widget */}
-                <ChatWidget
-                  position={position}
-                  buttonColor={buttonColor}
-                  defaultOpen={true}
-                />
+              <ChatWidget
+                position={position}
+                buttonColor={buttonColor}
+                defaultOpen={true}
+              />
             </div>
           )}
         </div>

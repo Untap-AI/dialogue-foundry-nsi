@@ -83,9 +83,9 @@ const ChatWindow = forwardRef<HTMLDivElement, ChatWindowProps>(
     }
 
     // Function to handle quick action clicks
-    const handleQuickAction = (actionText: string) => {
-      sendUserMessage(actionText)
-    }
+    // const handleQuickAction = (actionText: string) => {
+    //   sendUserMessage(actionText)
+    // }
 
     // Chat window animation classes
     const chatWindowAnimationClasses = isClosing
@@ -115,7 +115,7 @@ const ChatWindow = forwardRef<HTMLDivElement, ChatWindowProps>(
 
         <ChatInterface />
 
-            {/* <ChatMessages messages={messages} isTyping={isTyping} />
+        {/* <ChatMessages messages={messages} isTyping={isTyping} />
 
             <QuickActions onActionClick={handleQuickAction} />
 
