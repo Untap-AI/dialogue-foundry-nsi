@@ -112,6 +112,7 @@ export class ChatStreamingService {
       }
 
       onError(
+        // TODO: Need better error messages
         error instanceof Error ? error : new Error('Failed to stream message')
       )
     } finally {

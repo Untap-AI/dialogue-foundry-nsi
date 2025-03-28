@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 import ChatIcon from './ChatIcon'
-import ChatWindow from './ChatWindow'
+import ChatWindow from './ChatWindow/ChatWindow'
 
 export interface ChatWidgetProps {
   position?: 'bottom-right' | 'bottom-left'
@@ -65,17 +65,16 @@ export const ChatWidget = ({
   return (
     <div className={`fixed z-[9999] ${positionClasses}`}>
       {/* Chat window */}
-      {(isOpen || isClosing) && (
-        <ChatWindow
-          ref={chatWindowRef}
-          isOpen={isOpen}
-          isClosing={isClosing}
-          title={title}
-          logoUrl={logoUrl}
-          position={position}
-          onClose={toggleChat}
-        />
-      )}
+
+      <ChatWindow
+        ref={chatWindowRef}
+        isOpen={isOpen}
+        isClosing={isClosing}
+        title={title}
+        logoUrl={logoUrl}
+        position={position}
+        onClose={toggleChat}
+      />
 
       {/* Chat button */}
       <ChatIcon
