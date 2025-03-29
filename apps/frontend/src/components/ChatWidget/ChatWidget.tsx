@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import ChatIcon from './ChatIcon'
-import ChatWindow from './ChatWindow/ChatWindow'
+import ChatIcon from '../ChatIcon/ChatIcon'
+import ChatWindow from '../ChatWindow/ChatWindow'
+import { useConfig } from '../../contexts/ConfigContext'
+import './ChatWidget.css'
 
 export interface ChatWidgetProps {
   position?: 'bottom-right' | 'bottom-left'
@@ -11,13 +13,23 @@ export interface ChatWidgetProps {
 }
 
 export const ChatWidget = ({
-  position = 'bottom-right',
-  buttonColor = '#222',
-  title = 'West Hills Vineyard',
+  position,
+  buttonColor,
+  title,
   logoUrl,
-  defaultOpen = false
+  defaultOpen
 }: ChatWidgetProps) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen)
+  // Get configuration from context
+  const { config } = useConfig()
+  
+  // Use props if provided, otherwise use config values with fallbacks
+  const widgetPosition = position || config.widget?.position || 'bottom-right'
+  const widgetButtonColor = buttonColor || config.widget?.buttonColor || '#2563eb'
+  const widgetTitle = title || config.personaOptions?.assistant?.name || 'West Hills Vineyard'
+  const widgetLogoUrl = logoUrl || config.personaOptions?.assistant?.avatar
+  const widgetDefaultOpen = defaultOpen !== undefined ? defaultOpen : config.widget?.defaultOpen || false
+  
+  const [isOpen, setIsOpen] = useState(widgetDefaultOpen)
   const [isClosing, setIsClosing] = useState(false)
   // eslint-disable-next-line no-null/no-null
   const chatWindowRef = useRef<HTMLDivElement | null>(null)
@@ -58,30 +70,32 @@ export const ChatWidget = ({
     }
   }, [isOpen, toggleChat])
 
-  // Position classes based on the position prop
-  const positionClasses =
-    position === 'bottom-right' ? 'right-5 bottom-5' : 'left-5 bottom-5'
+  const widgetClassName = `chat-widget ${widgetPosition}`
 
   return (
-    <div className={`fixed z-[9999] ${positionClasses}`}>
+    <div className={widgetClassName}>
+      {/* Chat Icon button with custom color */}
+      <style>
+        {`
+          .chat-button {
+            background-color: ${widgetButtonColor};
+          }
+        `}
+      </style>
+      
       {/* Chat window */}
-
       <ChatWindow
         ref={chatWindowRef}
         isOpen={isOpen}
         isClosing={isClosing}
-        title={title}
-        logoUrl={logoUrl}
-        position={position}
+        title={widgetTitle}
+        logoUrl={widgetLogoUrl}
+        position={widgetPosition}
         onClose={toggleChat}
       />
 
       {/* Chat button */}
-      <ChatIcon
-        onClick={toggleChat}
-        buttonColor={buttonColor}
-        isOpen={isOpen}
-      />
+      <ChatIcon onClick={toggleChat} isOpen={isOpen} />
     </div>
   )
 }

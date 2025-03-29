@@ -104,3 +104,7 @@
     --nlux-ConversationStarter--Width: 160px;
     --nlux-ConversationStarter--Height: 101px;
 }
+
+.nlux-conversationStarters-container {
+    overflow-y: auto;
+}

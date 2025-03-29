@@ -1,10 +1,11 @@
 import { useState, useEffect, useMemo, useRef } from 'react'
-import { AiChat, useAsStreamAdapter, type ChatItem } from '@nlux/react'
+import { AiChat, useAsStreamAdapter, type ChatItem, AssistantPersona } from '@nlux/react'
 import '@nlux/themes/unstyled.css'
 import './css/main.css' // Import our custom theme CSS
 
 import { ChatApiService, type ChatConfig } from '../../services/api'
 import { ChatStreamingService } from '../../services/streaming'
+import { useConfig } from '../../contexts/ConfigContext'
 
 type ColorScheme = 'light' | 'dark'
 
@@ -40,27 +41,37 @@ export interface ChatInterfaceProps {
 }
 
 export const ChatInterface = ({
-  chatConfig = {},
-  initialMessages = [],
+  chatConfig,
+  initialMessages,
   height = '100%',
   width = '100%',
   onChatInitialized,
   className,
-  theme = {},
-  colorScheme = 'light'
+  colorScheme
 }: ChatInterfaceProps) => {
-  const [isLoading, setIsLoading] = useState(false)
+  // Get config from context
+  const { config } = useConfig()
+  
+  // Merge props with context config
+  const mergedChatConfig = useMemo(() => ({
+    ...(config || {}),
+    ...(chatConfig || {})
+  }), [config, chatConfig])
+  
+  const mergedInitialMessages = initialMessages || config.initialMessages || []
+  const mergedColorScheme = colorScheme || config.theme?.colorScheme || 'light'
+  
   const [chatId, setChatId] = useState<string | undefined>(undefined)
-  const [messages, setMessages] = useState<ChatItem[]>(initialMessages)
+  const [messages, setMessages] = useState<ChatItem[]>(mergedInitialMessages)
 
   // eslint-disable-next-line no-null/no-null
   const streamingServiceRef = useRef<ChatStreamingService | null>(null)
 
   const streamingService = useMemo(() => {
-    const service = new ChatStreamingService(chatConfig)
+    const service = new ChatStreamingService(mergedChatConfig)
     streamingServiceRef.current = service
     return service
-  }, [chatConfig])
+  }, [mergedChatConfig])
 
   // Create adapter at the top level
   const adapter = useAsStreamAdapter((userMessage: string, observer) => {
@@ -81,10 +92,8 @@ export const ChatInterface = ({
     // Initialize chat on component mount
     const setupChat = async () => {
       try {
-        setIsLoading(true)
-
-        // For now, we're using a hardcoded chat config
-        const chatInit = await new ChatApiService(chatConfig).initializeChat()
+        // Initialize service
+        const chatInit = await new ChatApiService(mergedChatConfig).initializeChat()
         setChatId(chatInit.chatId)
         setMessages(chatInit.messages)
 
@@ -93,8 +102,6 @@ export const ChatInterface = ({
         }
       } catch (error) {
         console.error('Failed to initialize chat:', error)
-      } finally {
-        setIsLoading(false)
       }
     }
 
@@ -109,22 +116,36 @@ export const ChatInterface = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onChatInitialized])
 
+  // Get persona from config and ensure it meets the AssistantPersona type requirements
+  const persona: AssistantPersona = {
+    name: config?.personaOptions?.assistant?.name || 'Wine Hills Expert',
+    avatar: config?.personaOptions?.assistant?.avatar || 'https://i.pravatar.cc/300',
+    tagline: config?.personaOptions?.assistant?.tagline || 'How may I assist you today?'
+  }
+
+  // TODO: ConversationStarter
   return (
     <div
       style={{
         width,
         height
       }}
-      className={`flex flex-col ${className}`}
+      className={`chat-interface-wrapper ${className || ''}`}
     >
-      <div className="flex-1 overflow-hidden">
+      <div className="chat-interface-content">
         <AiChat
           adapter={adapter}
           key={chatId} // Add a key to force re-render when chatId changes
-          initialConversation={initialMessages}
+          initialConversation={mergedInitialMessages.length > 0 ? mergedInitialMessages : undefined}
           displayOptions={{
             themeId: 'dialogue-foundry',
-            colorScheme
+            colorScheme: mergedColorScheme
+          }}
+          conversationOptions={{
+            showWelcomeMessage: true,
+          }}
+          personaOptions={{
+            assistant: persona
           }}
         />
       </div>

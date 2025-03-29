@@ -1,0 +1,14 @@
+.chat-widget {
+  position: fixed;
+  z-index: 9999;
+}
+
+.chat-widget.bottom-right {
+  right: 1.25rem; /* 5px */
+  bottom: 1.25rem; /* 5px */
+}
+
+.chat-widget.bottom-left {
+  left: 1.25rem; /* 5px */
+  bottom: 1.25rem; /* 5px */
+} 

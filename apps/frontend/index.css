@@ -1,17 +1,16 @@
+@import "tailwindcss";
+
 :root {
   /* Core colors that can be customized by customers */
   --df-primary-color: #007bff;
-  --df-secondary-color: #6c757d;
-  --df-accent-color: #28a745;
   
   /* Background colors */
   --df-bg-primary: #ffffff;
   --df-bg-secondary: #f4f4f5;
-  --df-bg-contrast: #18181b;
   
   /* Text colors */
   --df-text-primary: #09090b;
-  --df-text-secondary: #71717a;
+  --df-text-secondary: rgba(91,97,110,0.2);
   --df-text-contrast: #ffffff;
   
   /* Alert/Exception colors */
@@ -25,15 +24,8 @@
   
   /* Common transparency */
   --df-transparent: transparent;
-}
-
-/* Utility classes for transparent elements */
-.df-transparent-bg {
-  background-color: var(--df-transparent);
-}
-
-.df-transparent-border {
-  border-color: var(--df-transparent);
+  /* Need slightly darker gray for disabled text */
+  --df-disabled: rgba(0, 123, 255, 0.5)
 }
 
 /* Dark mode overrides */
@@ -41,7 +33,6 @@
   /* Background colors */
   --df-bg-primary: #151515;
   --df-bg-secondary: #494949;
-  --df-bg-contrast: #323232;
   
   /* Text colors */
   --df-text-primary: #ffffff;

@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { ChatWidget } from './components/ChatWidget'
+import { ChatWidget } from './components/ChatWidget/ChatWidget'
 import { ChatInterface } from './components/ChatInterface/ChatInterface'
 
 type TabType = 'chat' | 'widget'
