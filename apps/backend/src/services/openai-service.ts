@@ -114,6 +114,8 @@ export const generateStreamingChatCompletion = async (
 
       let text = ''
 
+      console.log('chunk', chunk)
+
       // Use our type guard function instead of checking the type directly
       if (isOpenAIResponseDeltaChunk(chunk)) {
         text = chunk.delta

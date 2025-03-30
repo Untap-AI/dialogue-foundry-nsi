@@ -6,19 +6,14 @@ import './ChatWindow.css'
 interface ChatWindowProps {
   isOpen: boolean
   isClosing: boolean
-  title: string
-  logoUrl?: string
-  position: 'bottom-right' | 'bottom-left'
   onClose: () => void
 }
 
-const ChatWindow = forwardRef<HTMLDivElement, ChatWindowProps>(
-  ({ isOpen, isClosing, title, logoUrl, position, onClose }, ref) => {
+export const ChatWindow = forwardRef<HTMLDivElement, ChatWindowProps>(
+  ({ isOpen, isClosing, onClose }, ref) => {
     // Generate CSS class names based on component state
     const getClassName = () => {
       const baseClass = 'chat-window'
-      const positionClass =
-        position === 'bottom-right' ? 'bottom-right' : 'bottom-left' 
       let stateClass = 'is-closed'
 
       if (isClosing) {
@@ -27,18 +22,12 @@ const ChatWindow = forwardRef<HTMLDivElement, ChatWindowProps>(
         stateClass = 'is-open'
       }
 
-      return `${baseClass} ${positionClass} ${stateClass}`
+      return `${baseClass} ${stateClass}`
     }
 
     return (
       <div ref={ref} className={getClassName()} aria-hidden={!isOpen}>
-        <ChatHeader
-          title={title}
-          logoUrl={logoUrl}
-          onClose={onClose}
-          onMinimize={onClose}
-        />
-
+        <ChatHeader onClose={onClose} />
         <ChatInterface />
       </div>
     )
@@ -46,5 +35,3 @@ const ChatWindow = forwardRef<HTMLDivElement, ChatWindowProps>(
 )
 
 ChatWindow.displayName = 'ChatWindow'
-
-export default ChatWindow

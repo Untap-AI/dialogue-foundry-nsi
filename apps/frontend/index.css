@@ -1,17 +1,18 @@
-@import "tailwindcss";
+
 
 :root {
   /* Core colors that can be customized by customers */
-  --df-primary-color: #007bff;
+  --df-primary-color: rgb(50, 79, 68);
+  --df-secondary-color: #F1CFBF;
   
   /* Background colors */
-  --df-bg-primary: #ffffff;
-  --df-bg-secondary: #f4f4f5;
+  --df-bg-primary: rgb(255, 244, 231);
+  --df-bg-secondary: #ffffff;
   
   /* Text colors */
-  --df-text-primary: #09090b;
+  --df-text-primary: rgb(25, 40, 34);
   --df-text-secondary: rgba(91,97,110,0.2);
-  --df-text-contrast: #ffffff;
+  --df-text-contrast: rgb(255, 244, 231);
   
   /* Alert/Exception colors */
   --df-alert-bg: tomato;
@@ -19,13 +20,21 @@
   --df-alert-text: white;
   
   /* Border and outline */
-  --df-border-color: transparent;
+  --df-border-color: black;
   --df-focus-outline: transparent;
   
   /* Common transparency */
   --df-transparent: transparent;
   /* Need slightly darker gray for disabled text */
-  --df-disabled: rgba(0, 123, 255, 0.5)
+  --df-disabled: rgb(242, 207, 191, 0.5);
+
+  --df-font-family: avenir-lt-w01_35-light1475496, sans-serif;
+  --df-mono-font-family: monospace;
+
+  --df-border-width: 0;
+  --df-border-radius: 20px;
+  --df-line-height: 1.4;
+  --df-flex-gap: 12px;
 }
 
 /* Dark mode overrides */

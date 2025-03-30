@@ -82,7 +82,7 @@ router.get('/:chatId', authenticateChatAccess, async (req, res) => {
 // Create a new chat and return access token
 router.post('/', async (req, res) => {
   try {
-    const { userId, name: chatName } = req.body
+    const { userId, name: chatName, systemPrompt } = req.body
 
     // Generate a new user ID if not provided
     const generatedUserId = userId ?? uuidv4()
@@ -90,7 +90,8 @@ router.post('/', async (req, res) => {
     // Create the chat using the admin function to bypass RLS
     const newChat = await createChatAdmin({
       user_id: generatedUserId,
-      name: chatName || 'New Chat'
+      name: chatName || 'New Chat',
+      system_prompt: systemPrompt
     })
 
     // Generate access token for this chat

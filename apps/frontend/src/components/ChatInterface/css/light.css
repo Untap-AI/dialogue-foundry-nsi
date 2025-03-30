@@ -18,7 +18,7 @@
     --nlux-ChatRoom--BackgroundColor: var(--df-bg-primary);
     --nlux-ChatRoom--BorderColor: var(--df-border-color);
     --nlux-ChatRoom--TextColor: var(--df-text-primary);
-    --nlux-ChatRoom-Divider--Color: var(--df-text-secondary);
+    --nlux-ChatRoom-Divider--Color: var(--df-border-color);
 
     /** Participant info in chat */
     --nlux-ChatItem-ParticipantName--Color: var(--df-text-primary);
@@ -54,13 +54,13 @@
     --nlux-PromptInput-Focus-Outline--Color: var(--df-focus-outline);
 
     /** Submit button colors */
-    --nlux-SubmitButton--BackgroundColor: var(--df-transparent);
-    --nlux-SubmitButton--BorderColor: var(--df-transparent);
-    --nlux-SubmitButton--TextColor: var(--df-primary-color);
+    --nlux-SubmitButton--BackgroundColor: var(--df-bg-primary);
+    --nlux-SubmitButton--BorderColor: var(--df-border-color);
+    --nlux-SubmitButton--TextColor: var(--df-secondary-color);
 
-    --nlux-SubmitButton-Active--BackgroundColor: var(--df-transparent);
-    --nlux-SubmitButton-Active--BorderColor: var(--df-transparent);
-    --nlux-SubmitButton-Active--TextColor: var(--df-primary-color);
+    --nlux-SubmitButton-Active--BackgroundColor: var(--df-bg-primary);
+    --nlux-SubmitButton-Active--BorderColor: var(--df-border-color);
+    --nlux-SubmitButton-Active--TextColor: var(--df-secondary-color);
 
     --nlux-SubmitButton-Disabled--BackgroundColor: var(--df-transparent);
     --nlux-SubmitButton-Disabled--BorderColor: var(--df-transparent);

@@ -14,17 +14,10 @@
   transition: all 300ms ease-out 50ms;
   background-color: var(--df-bg-primary);
   color: var(--df-text-primary);
-}
 
-/* Position variants */
-.chat-window.bottom-right {
+  /* Position */
   right: 0;
   transform-origin: bottom right;
-}
-
-.chat-window.bottom-left {
-  left: 0;
-  transform-origin: bottom left;
 }
 
 /* State: Open */

@@ -1,13 +1,11 @@
-import { useState, useRef, useEffect } from 'react'
-import './ChatIcon.css'
+import './ChatButton.css'
 
-interface ChatIconProps {
+interface ChatButtonProps {
   onClick: () => void
   isOpen: boolean
 }
 
-const ChatIcon = ({ onClick, isOpen }: ChatIconProps) => {
-
+export const ChatButton = ({ onClick, isOpen }: ChatButtonProps) => {
   return (
     <button
       data-chat-button
@@ -24,5 +22,3 @@ const ChatIcon = ({ onClick, isOpen }: ChatIconProps) => {
     </button>
   )
 }
-
-export default ChatIcon

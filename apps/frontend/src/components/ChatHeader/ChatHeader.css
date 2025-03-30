@@ -4,7 +4,7 @@
   justify-content: space-between;
   padding: 15px;
   background-color: var(--df-primary-color);
-  color: white;
+  color: var(--df-text-contrast);
 }
 
 .chat-header-branding {
@@ -21,6 +21,7 @@
 .chat-header-title {
   font-weight: bold;
   font-size: 16px;
+  line-height: 30px;
 }
 
 .chat-header-controls {

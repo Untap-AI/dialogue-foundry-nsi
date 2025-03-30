@@ -3,15 +3,13 @@ import type { AxiosError } from 'axios'
 import type { ChatItem } from '@nlux/react'
 
 // Default config values (can be overridden)
-export const DEFAULT_API_BASE_URL = 'http://localhost:3000/api'
-export const DEFAULT_TOKEN_STORAGE_KEY = 'chat_access_token'
-export const DEFAULT_CHAT_ID_STORAGE_KEY = 'chat_id'
+export const DEFAULT_TOKEN_STORAGE_KEY = 'dialogue_foundry_token'
+export const DEFAULT_CHAT_ID_STORAGE_KEY = 'dialogue_foundry_chat_id'
 
 export interface ChatConfig {
-  apiBaseUrl?: string
+  apiBaseUrl: string
   tokenStorageKey?: string
   chatIdStorageKey?: string
-  storage?: Storage
 }
 
 export interface Message {
@@ -43,12 +41,12 @@ export class ChatApiService {
   private storage: Storage
   private api: ReturnType<typeof axios.create>
 
-  constructor(config: ChatConfig = {}) {
-    this.apiBaseUrl = config.apiBaseUrl || DEFAULT_API_BASE_URL
+  constructor(config: ChatConfig) {
+    this.apiBaseUrl = config.apiBaseUrl
     this.tokenStorageKey = config.tokenStorageKey || DEFAULT_TOKEN_STORAGE_KEY
     this.chatIdStorageKey =
       config.chatIdStorageKey || DEFAULT_CHAT_ID_STORAGE_KEY
-    this.storage = config.storage || localStorage
+    this.storage = localStorage
 
     // Create axios instance
     this.api = axios.create({
@@ -85,10 +83,15 @@ export class ChatApiService {
     const storedToken = this.storage.getItem(this.tokenStorageKey)
     const storedChatId = this.storage.getItem(this.chatIdStorageKey)
 
+    console.log('storedToken', storedToken)
+    console.log('storedChatId', storedChatId)
+
     // If we have both a token and chat ID, try to load the existing chat
     if (storedToken && storedChatId) {
       try {
         const response = await this.api.get(`/chats/${storedChatId}`)
+
+        console.log('response', response)
 
         return {
           chatId: storedChatId,
@@ -125,51 +128,6 @@ export class ChatApiService {
       }
     } catch (error) {
       console.error('Error creating new chat:', error)
-      throw error
-    }
-  }
-
-  /**
-   * Send a message to the chat and get the AI response
-   * @param content - Message content
-   */
-  async sendMessage(content: string): Promise<MessageResponse> {
-    const chatId = this.storage.getItem(this.chatIdStorageKey)
-
-    if (!chatId) {
-      throw new Error('Chat ID not found. Please initialize a chat first.')
-    }
-
-    try {
-      const response = await this.api.post(`/chats/${chatId}/messages`, {
-        content
-      })
-
-      return response.data as MessageResponse
-    } catch (error) {
-      console.error('Error sending message:', error)
-
-      // If there's an authentication error, try to create a new chat
-      if (
-        typeof error === 'object' &&
-        error &&
-        'response' in error &&
-        typeof error.response === 'object' &&
-        error.response &&
-        'status' in error.response &&
-        typeof error.response.status === 'number' &&
-        (error.response.status === 401 || error.response.status === 403)
-      ) {
-        this.storage.removeItem(this.tokenStorageKey)
-        this.storage.removeItem(this.chatIdStorageKey)
-
-        // Re-initialize the chat
-        await this.initializeChat()
-
-        // Try sending the message again
-        return this.sendMessage(content)
-      }
-
       throw error
     }
   }
