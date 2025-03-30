@@ -26,6 +26,7 @@ export type Message = {
 export type ChatSettings = {
   model: string
   temperature: number
+  systemPrompt?: string // Add systemPrompt as an optional parameter
 }
 
 // Default settings to use if none are provided
@@ -40,15 +41,11 @@ export const generateChatCompletion = async (
   settings: ChatSettings = DEFAULT_SETTINGS
 ) => {
   try {
-    // Extract system message if present
-    const systemMessage = messages.find(msg => msg.role === 'system')
-    const otherMessages = messages.filter(msg => msg.role !== 'system')
-
     const response = await openai.responses.create({
       model: settings.model,
-      input: otherMessages,
+      input: messages,
       temperature: settings.temperature,
-      instructions: systemMessage?.content ?? '',
+      instructions: settings.systemPrompt,
       stream: false,
       text: {
         format: {
@@ -87,17 +84,12 @@ export const generateStreamingChatCompletion = async (
   // TODO: Implement token checking and context cutoff
   // TODO: Implement rate limiting
   try {
-    // Extract system message if present
-    const systemMessage = messages.find(msg => msg.role === 'system')
-    const otherMessages = messages.filter(msg => msg.role !== 'system')
-
     // Create the response with streaming enabled
     const response = await openai.responses.create({
       model: settings.model,
-      input: otherMessages,
+      input: messages,
       temperature: settings.temperature,
-      // TODO: Change how we do instructions here
-      instructions: systemMessage?.content ?? '',
+      instructions: settings.systemPrompt,
       stream: true,
       text: {
         format: {
@@ -113,8 +105,6 @@ export const generateStreamingChatCompletion = async (
       const chunk = validateOpenAIResponseChunk(rawChunk)
 
       let text = ''
-
-      console.log('chunk', chunk)
 
       // Use our type guard function instead of checking the type directly
       if (isOpenAIResponseDeltaChunk(chunk)) {

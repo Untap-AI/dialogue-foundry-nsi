@@ -91,7 +91,7 @@ router.post('/', async (req, res) => {
     const newChat = await createChatAdmin({
       user_id: generatedUserId,
       name: chatName || 'New Chat',
-      system_prompt: systemPrompt
+      system_prompt: systemPrompt || undefined
     })
 
     // Generate access token for this chat
@@ -116,10 +116,11 @@ router.put('/:chatId', authenticateChatAccess, async (req, res) => {
       return res.status(400).json({ error: 'Chat ID is required' })
     }
 
-    const { name: chatName } = req.body
+    const { name: chatName, systemPrompt } = req.body
 
     const updatedChat = await updateChat(chatId, {
       name: chatName,
+      system_prompt: systemPrompt,
       updated_at: new Date().toISOString()
     })
 
@@ -175,7 +176,8 @@ router.post(
       // Get chat settings - using request parameters or defaults
       const chatSettings: ChatSettings = {
         model: model || DEFAULT_SETTINGS.model,
-        temperature: temperature || DEFAULT_SETTINGS.temperature
+        temperature: temperature || DEFAULT_SETTINGS.temperature,
+        systemPrompt: chat.system_prompt || undefined
       }
 
       // Get all previous messages in this chat
@@ -279,7 +281,8 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       model: model || DEFAULT_SETTINGS.model,
       temperature: temperature
         ? parseFloat(temperature)
-        : DEFAULT_SETTINGS.temperature
+        : DEFAULT_SETTINGS.temperature,
+      systemPrompt: chat.system_prompt || undefined
     }
 
     // Get all previous messages in this chat

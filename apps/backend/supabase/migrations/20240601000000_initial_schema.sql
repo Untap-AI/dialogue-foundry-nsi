@@ -23,7 +23,10 @@ CREATE TABLE IF NOT EXISTS chats (
     updated_at TIMESTAMPTZ,
     
     -- REQUIRED
-    name TEXT NOT NULL CHECK (char_length(name) <= 500)
+    name TEXT NOT NULL CHECK (char_length(name) <= 500),
+    
+    -- OPTIONAL
+    system_prompt TEXT
 );
 
 -- Create indexes for chats
