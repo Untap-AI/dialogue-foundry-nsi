@@ -79,19 +79,18 @@ export class ChatApiService {
    * - If not found, creates a new chat
    * - Returns the chat data and conversation history
    */
-  async initializeChat(): Promise<ChatInit> {
+  async initializeChat({
+    systemPrompt
+  }: {
+    systemPrompt: string
+  }): Promise<ChatInit> {
     const storedToken = this.storage.getItem(this.tokenStorageKey)
     const storedChatId = this.storage.getItem(this.chatIdStorageKey)
-
-    console.log('storedToken', storedToken)
-    console.log('storedChatId', storedChatId)
 
     // If we have both a token and chat ID, try to load the existing chat
     if (storedToken && storedChatId) {
       try {
         const response = await this.api.get(`/chats/${storedChatId}`)
-
-        console.log('response', response)
 
         return {
           chatId: storedChatId,
@@ -106,16 +105,18 @@ export class ChatApiService {
     }
 
     // Create a new chat
-    return this.createNewChat()
+    return this.createNewChat(systemPrompt)
   }
 
   /**
    * Create a new chat session
    */
-  async createNewChat(): Promise<ChatInit> {
+  async createNewChat(systemPrompt: string): Promise<ChatInit> {
     try {
       const response = await this.api.post('/chats', {
-        name: 'New Conversation'
+        // TODO: Make this dynamic
+        name: 'New Conversation',
+        systemPrompt
       })
 
       // Store token and chat ID
@@ -135,11 +136,11 @@ export class ChatApiService {
   /**
    * Clear the current chat session and create a new one
    */
-  async startNewChat(): Promise<ChatInit> {
+  async startNewChat(systemPrompt: string): Promise<ChatInit> {
     this.storage.removeItem(this.tokenStorageKey)
     this.storage.removeItem(this.chatIdStorageKey)
 
-    return this.createNewChat()
+    return this.createNewChat(systemPrompt)
   }
 
   /**

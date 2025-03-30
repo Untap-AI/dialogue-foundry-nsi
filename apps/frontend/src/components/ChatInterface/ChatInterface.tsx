@@ -18,7 +18,7 @@ export const ChatInterface = ({
   className
 }: ChatInterfaceProps) => {
   // Get config from context
-  const { conversationStarters, chatConfig, theme, personaOptions, getBasePrompt } =
+  const { conversationStarters, chatConfig, theme, personaOptions, systemPrompt } =
     useConfig()
 
   const [chatId, setChatId] = useState<string | undefined>(undefined)
@@ -37,7 +37,7 @@ export const ChatInterface = ({
   const adapter = useAsStreamAdapter((userMessage: string, observer) => {
     // Call the streaming service with the message content
     streamingService.streamMessage(
-      getBasePrompt(userMessage),
+      userMessage,
       // On each chunk update
       chunk => observer.next(chunk),
       // On complete
@@ -52,7 +52,9 @@ export const ChatInterface = ({
     const setupChat = async () => {
       try {
         // Initialize service
-        const chatInit = await new ChatApiService(chatConfig).initializeChat()
+        const chatInit = await new ChatApiService(chatConfig).initializeChat(
+          { systemPrompt }
+        )
         setChatId(chatInit.chatId)
         setMessages(chatInit.messages)
 
@@ -75,6 +77,8 @@ export const ChatInterface = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onChatInitialized])
 
+  console.log('messages', messages)
+
   // TODO: ConversationStarter UI
   // TODO: Loading State
   // TODO:
@@ -88,7 +92,7 @@ export const ChatInterface = ({
             themeId: 'dialogue-foundry',
             colorScheme: theme
           }}
-          initialConversation={messages?.length ? messages : []}
+          initialConversation={messages?.length ? messages : undefined}
           conversationOptions={{
             showWelcomeMessage: true,
             conversationStarters
