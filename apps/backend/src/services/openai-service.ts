@@ -4,6 +4,7 @@ import {
   isOpenAIResponseDeltaChunk,
   validateOpenAIResponseChunk
 } from '../util/openai-chunk-validators'
+import { MAX_MESSAGES_PER_CHAT } from '../db/messages'
 
 dotenv.config()
 
@@ -35,7 +36,7 @@ export const DEFAULT_SETTINGS: ChatSettings = {
   // TODO: Assess model performance
   model: 'gpt-4o',
   temperature: 0.7,
-  maxMessagesInContext: 50 // Default to last 50 messages
+  maxMessagesInContext: MAX_MESSAGES_PER_CHAT // Default to same limit as DB storage
 }
 
 /**
