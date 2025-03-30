@@ -153,7 +153,7 @@ router.post(
   async (req: CustomRequest, res) => {
     try {
       const { chatId } = req.params
-      const { content, model, temperature } = req.body
+      const { content, model, temperature, maxMessagesInContext } = req.body
 
       if (!chatId) {
         return res.status(400).json({ error: 'Chat ID is required' })
@@ -177,7 +177,10 @@ router.post(
       const chatSettings: ChatSettings = {
         model: model || DEFAULT_SETTINGS.model,
         temperature: temperature || DEFAULT_SETTINGS.temperature,
-        systemPrompt: chat.system_prompt || undefined
+        systemPrompt: chat.system_prompt || undefined,
+        maxMessagesInContext: maxMessagesInContext
+          ? parseInt(maxMessagesInContext)
+          : undefined
       }
 
       // Get all previous messages in this chat
@@ -257,6 +260,8 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     const content = req.body.content || req.query.content
     const model = req.body.model || req.query.model
     const temperature = req.body.temperature || req.query.temperature
+    const maxMessagesInContext =
+      req.body.maxMessagesInContext || req.query.maxMessagesInContext
 
     if (!chatId) {
       return res.status(400).json({ error: 'Chat ID is required' })
@@ -282,7 +287,10 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       temperature: temperature
         ? parseFloat(temperature)
         : DEFAULT_SETTINGS.temperature,
-      systemPrompt: chat.system_prompt || undefined
+      systemPrompt: chat.system_prompt || undefined,
+      maxMessagesInContext: maxMessagesInContext
+        ? parseInt(maxMessagesInContext as string)
+        : undefined
     }
 
     // Get all previous messages in this chat

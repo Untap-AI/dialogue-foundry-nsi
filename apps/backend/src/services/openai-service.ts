@@ -27,13 +27,39 @@ export type ChatSettings = {
   model: string
   temperature: number
   systemPrompt?: string // Add systemPrompt as an optional parameter
+  maxMessagesInContext?: number // Maximum number of messages to include in context
 }
 
 // Default settings to use if none are provided
 export const DEFAULT_SETTINGS: ChatSettings = {
   // TODO: Assess model performance
   model: 'gpt-4o',
-  temperature: 0.7
+  temperature: 0.7,
+  maxMessagesInContext: 50 // Default to last 50 messages
+}
+
+/**
+ * Limits the conversation context to the specified maximum number of messages
+ * while preserving the most recent conversation history
+ */
+const limitMessagesContext = (
+  messages: Message[],
+  maxMessages: number
+): Message[] => {
+  if (messages.length <= maxMessages) {
+    return messages
+  }
+
+  // Extract any system messages
+  const systemMessages = messages.filter(msg => msg.role === 'system')
+
+  // Get the most recent non-system messages
+  const nonSystemMessages = messages
+    .filter(msg => msg.role !== 'system')
+    .slice(-maxMessages + systemMessages.length)
+
+  // Return system messages first, followed by the most recent non-system messages
+  return [...systemMessages, ...nonSystemMessages]
 }
 
 export const generateChatCompletion = async (
@@ -41,9 +67,16 @@ export const generateChatCompletion = async (
   settings: ChatSettings = DEFAULT_SETTINGS
 ) => {
   try {
+    // Limit the number of messages to avoid exceeding token limits
+    const maxMessages =
+      settings.maxMessagesInContext ??
+      DEFAULT_SETTINGS.maxMessagesInContext ??
+      50
+    const limitedMessages = limitMessagesContext(messages, maxMessages)
+
     const response = await openai.responses.create({
       model: settings.model,
-      input: messages,
+      input: limitedMessages,
       temperature: settings.temperature,
       instructions: settings.systemPrompt,
       stream: false,
@@ -84,10 +117,17 @@ export const generateStreamingChatCompletion = async (
   // TODO: Implement token checking and context cutoff
   // TODO: Implement rate limiting
   try {
+    // Limit the number of messages to avoid exceeding token limits
+    const maxMessages =
+      settings.maxMessagesInContext ??
+      DEFAULT_SETTINGS.maxMessagesInContext ??
+      50
+    const limitedMessages = limitMessagesContext(messages, maxMessages)
+
     // Create the response with streaming enabled
     const response = await openai.responses.create({
       model: settings.model,
-      input: messages,
+      input: limitedMessages,
       temperature: settings.temperature,
       instructions: settings.systemPrompt,
       stream: true,
