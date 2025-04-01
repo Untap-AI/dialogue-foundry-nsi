@@ -28,15 +28,13 @@ export type ChatSettings = {
   model: string
   temperature: number
   systemPrompt?: string // Add systemPrompt as an optional parameter
-  maxMessagesInContext?: number // Maximum number of messages to include in context
 }
 
 // Default settings to use if none are provided
 export const DEFAULT_SETTINGS: ChatSettings = {
   // TODO: Assess model performance
   model: 'gpt-4o',
-  temperature: 0.7,
-  maxMessagesInContext: MAX_MESSAGES_PER_CHAT // Default to same limit as DB storage
+  temperature: 0.7
 }
 
 /**
@@ -69,11 +67,10 @@ export const generateChatCompletion = async (
 ) => {
   try {
     // Limit the number of messages to avoid exceeding token limits
-    const maxMessages =
-      settings.maxMessagesInContext ??
-      DEFAULT_SETTINGS.maxMessagesInContext ??
-      50
-    const limitedMessages = limitMessagesContext(messages, maxMessages)
+    const limitedMessages = limitMessagesContext(
+      messages,
+      MAX_MESSAGES_PER_CHAT
+    )
 
     const response = await openai.responses.create({
       model: settings.model,
@@ -119,11 +116,10 @@ export const generateStreamingChatCompletion = async (
   // TODO: Implement rate limiting
   try {
     // Limit the number of messages to avoid exceeding token limits
-    const maxMessages =
-      settings.maxMessagesInContext ??
-      DEFAULT_SETTINGS.maxMessagesInContext ??
-      50
-    const limitedMessages = limitMessagesContext(messages, maxMessages)
+    const limitedMessages = limitMessagesContext(
+      messages,
+      MAX_MESSAGES_PER_CHAT
+    )
 
     // Create the response with streaming enabled
     const response = await openai.responses.create({

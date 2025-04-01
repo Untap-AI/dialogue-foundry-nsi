@@ -2,7 +2,7 @@ import express from 'express'
 import { authenticateUser } from '../middleware/auth-middleware'
 import {
   getAllChatConfigs,
-  getChatConfigByDomain,
+  getChatConfigByCompanyId,
   createChatConfig,
   updateChatConfig,
   deleteChatConfig
@@ -12,7 +12,7 @@ import type { CustomRequest } from '../middleware/auth-middleware'
 const router = express.Router()
 
 // Get all chat configs (requires admin/user authentication)
-router.get('/', authenticateUser, async (req: CustomRequest, res) => {
+router.get('/', authenticateUser, async (_, res) => {
   try {
     const chatConfigs = await getAllChatConfigs()
     return res.json(chatConfigs)
@@ -24,16 +24,16 @@ router.get('/', authenticateUser, async (req: CustomRequest, res) => {
   }
 })
 
-// Get chat config by domain
-router.get('/:domain', async (req, res) => {
+// Get chat config by company ID
+router.get('/:companyId', async (req, res) => {
   try {
-    const { domain } = req.params
+    const { companyId } = req.params
 
-    if (!domain) {
-      return res.status(400).json({ error: 'Domain is required' })
+    if (!companyId) {
+      return res.status(400).json({ error: 'Company ID is required' })
     }
 
-    const chatConfig = await getChatConfigByDomain(domain)
+    const chatConfig = await getChatConfigByCompanyId(companyId)
 
     if (!chatConfig) {
       return res.status(404).json({ error: 'Chat configuration not found' })
@@ -42,7 +42,7 @@ router.get('/:domain', async (req, res) => {
     return res.json(chatConfig)
   } catch (error) {
     console.error(
-      `Error fetching chat config for domain ${req.params.domain}:`,
+      `Error fetching chat config for company ID ${req.params.companyId}:`,
       error
     )
     return res.status(500).json({ error: 'Failed to fetch chat configuration' })
@@ -52,24 +52,24 @@ router.get('/:domain', async (req, res) => {
 // Create a new chat config (requires admin authentication)
 router.post('/', authenticateUser, async (req: CustomRequest, res) => {
   try {
-    const { domain, system_prompt, pinecone_index_name } = req.body
+    const { company_id, system_prompt, pinecone_index_name } = req.body
 
-    if (!domain || !system_prompt) {
+    if (!company_id || !system_prompt) {
       return res
         .status(400)
-        .json({ error: 'Domain and system prompt are required' })
+        .json({ error: 'Company ID and system prompt are required' })
     }
 
-    // Check if domain already exists
-    const existingConfig = await getChatConfigByDomain(domain)
+    // Check if company ID already exists
+    const existingConfig = await getChatConfigByCompanyId(company_id)
     if (existingConfig) {
       return res
         .status(409)
-        .json({ error: 'A configuration for this domain already exists' })
+        .json({ error: 'A configuration for this company ID already exists' })
     }
 
     const newChatConfig = await createChatConfig({
-      domain,
+      company_id,
       system_prompt,
       pinecone_index_name: pinecone_index_name || undefined
     })
@@ -84,13 +84,13 @@ router.post('/', authenticateUser, async (req: CustomRequest, res) => {
 })
 
 // Update a chat config (requires admin authentication)
-router.put('/:domain', authenticateUser, async (req: CustomRequest, res) => {
+router.put('/:companyId', authenticateUser, async (req: CustomRequest, res) => {
   try {
-    const { domain } = req.params
+    const { companyId } = req.params
     const { system_prompt, pinecone_index_name } = req.body
 
-    if (!domain) {
-      return res.status(400).json({ error: 'Domain is required' })
+    if (!companyId) {
+      return res.status(400).json({ error: 'Company ID is required' })
     }
 
     // Check if at least one field to update is provided
@@ -100,8 +100,8 @@ router.put('/:domain', authenticateUser, async (req: CustomRequest, res) => {
         .json({ error: 'At least one field to update is required' })
     }
 
-    // Check if domain exists
-    const existingConfig = await getChatConfigByDomain(domain)
+    // Check if company ID exists
+    const existingConfig = await getChatConfigByCompanyId(companyId)
     if (!existingConfig) {
       return res.status(404).json({ error: 'Chat configuration not found' })
     }
@@ -119,12 +119,12 @@ router.put('/:domain', authenticateUser, async (req: CustomRequest, res) => {
       updates.pinecone_index_name = pinecone_index_name
     }
 
-    const updatedChatConfig = await updateChatConfig(domain, updates)
+    const updatedChatConfig = await updateChatConfig(companyId, updates)
 
     return res.json(updatedChatConfig)
   } catch (error) {
     console.error(
-      `Error updating chat config for domain ${req.params.domain}:`,
+      `Error updating chat config for company ID ${req.params.companyId}:`,
       error
     )
     return res
@@ -134,42 +134,46 @@ router.put('/:domain', authenticateUser, async (req: CustomRequest, res) => {
 })
 
 // Delete a chat config (requires admin authentication)
-router.delete('/:domain', authenticateUser, async (req: CustomRequest, res) => {
-  try {
-    const { domain } = req.params
+router.delete(
+  '/:companyId',
+  authenticateUser,
+  async (req: CustomRequest, res) => {
+    try {
+      const { companyId } = req.params
 
-    if (!domain) {
-      return res.status(400).json({ error: 'Domain is required' })
-    }
+      if (!companyId) {
+        return res.status(400).json({ error: 'Company ID is required' })
+      }
 
-    // Prevent deletion of the default config
-    if (domain === 'default') {
+      // Prevent deletion of the default config
+      if (companyId === 'default') {
+        return res
+          .status(403)
+          .json({ error: 'Cannot delete the default configuration' })
+      }
+
+      // Check if company ID exists
+      const existingConfig = await getChatConfigByCompanyId(companyId)
+      if (!existingConfig) {
+        return res.status(404).json({ error: 'Chat configuration not found' })
+      }
+
+      await deleteChatConfig(companyId)
+
+      return res.json({
+        success: true,
+        message: 'Chat configuration deleted successfully'
+      })
+    } catch (error) {
+      console.error(
+        `Error deleting chat config for company ID ${req.params.companyId}:`,
+        error
+      )
       return res
-        .status(403)
-        .json({ error: 'Cannot delete the default configuration' })
+        .status(500)
+        .json({ error: 'Failed to delete chat configuration' })
     }
-
-    // Check if domain exists
-    const existingConfig = await getChatConfigByDomain(domain)
-    if (!existingConfig) {
-      return res.status(404).json({ error: 'Chat configuration not found' })
-    }
-
-    await deleteChatConfig(domain)
-
-    return res.json({
-      success: true,
-      message: 'Chat configuration deleted successfully'
-    })
-  } catch (error) {
-    console.error(
-      `Error deleting chat config for domain ${req.params.domain}:`,
-      error
-    )
-    return res
-      .status(500)
-      .json({ error: 'Failed to delete chat configuration' })
   }
-})
+)
 
 export default router

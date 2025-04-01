@@ -11,25 +11,22 @@ export type Database = {
     Tables: {
       chat_configs: {
         Row: {
+          company_id: string
           created_at: string
-          domain: string
-          id: string
           pinecone_index_name: string | null
           system_prompt: string
           updated_at: string | null
         }
         Insert: {
+          company_id: string
           created_at?: string
-          domain: string
-          id?: string
           pinecone_index_name?: string | null
           system_prompt: string
           updated_at?: string | null
         }
         Update: {
+          company_id?: string
           created_at?: string
-          domain?: string
-          id?: string
           pinecone_index_name?: string | null
           system_prompt?: string
           updated_at?: string | null
@@ -41,7 +38,6 @@ export type Database = {
           created_at: string
           id: string
           name: string
-          system_prompt: string | null
           updated_at: string | null
           user_id: string
         }
@@ -49,7 +45,6 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
-          system_prompt?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -57,7 +52,6 @@ export type Database = {
           created_at?: string
           id?: string
           name?: string
-          system_prompt?: string | null
           updated_at?: string | null
           user_id?: string
         }

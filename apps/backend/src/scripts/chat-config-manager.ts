@@ -4,7 +4,7 @@ import readline from 'readline'
 import dotenv from 'dotenv'
 import {
   getAllChatConfigs,
-  getChatConfigByDomain,
+  getChatConfigByCompanyId,
   createChatConfig,
   updateChatConfig,
   deleteChatConfig
@@ -31,7 +31,7 @@ const promptUser = (question: string): Promise<string> => {
 async function displayMenu(): Promise<void> {
   console.log('\n===== Chat Configuration Manager =====')
   console.log('1. List all configurations')
-  console.log('2. Get configuration by domain')
+  console.log('2. Get configuration by company ID')
   console.log('3. Create new configuration')
   console.log('4. Update configuration')
   console.log('5. Delete configuration')
@@ -44,7 +44,7 @@ async function displayMenu(): Promise<void> {
       await listAllConfigs()
       break
     case '2':
-      await getConfigByDomain()
+      await getConfigByCompanyId()
       break
     case '3':
       await createNewConfig()
@@ -80,7 +80,7 @@ async function listAllConfigs(): Promise<void> {
     } else {
       configs.forEach((config, index) => {
         console.log(`\n--- Configuration ${index + 1} ---`)
-        console.log(`Domain: ${config.domain}`)
+        console.log(`Company ID: ${config.company_id}`)
         console.log(`System Prompt: ${config.system_prompt}`)
         console.log(
           `Pinecone Index: ${config.pinecone_index_name || 'Not set'}`
@@ -98,19 +98,19 @@ async function listAllConfigs(): Promise<void> {
   }
 }
 
-// Get configuration by domain
-async function getConfigByDomain(): Promise<void> {
+// Get configuration by company ID
+async function getConfigByCompanyId(): Promise<void> {
   try {
-    const domain = await promptUser('Enter domain: ')
-    const config = await getChatConfigByDomain(domain)
+    const companyId = await promptUser('Enter company ID: ')
+    const config = await getChatConfigByCompanyId(companyId)
 
     if (!config) {
-      console.log(`No configuration found for domain "${domain}".`)
+      console.log(`No configuration found for company ID "${companyId}".`)
       return
     }
 
     console.log('\n===== Configuration Details =====')
-    console.log(`Domain: ${config.domain}`)
+    console.log(`Company ID: ${config.company_id}`)
     console.log(`System Prompt: ${config.system_prompt}`)
     console.log(`Pinecone Index: ${config.pinecone_index_name || 'Not set'}`)
     console.log(`Created: ${new Date(config.created_at).toLocaleString()}`)
@@ -127,12 +127,14 @@ async function getConfigByDomain(): Promise<void> {
 // Create new configuration
 async function createNewConfig(): Promise<void> {
   try {
-    const domain = await promptUser('Enter domain (e.g., example.com): ')
+    const companyId = await promptUser('Enter company ID: ')
 
-    // Check if domain already exists
-    const existing = await getChatConfigByDomain(domain)
+    // Check if company ID already exists
+    const existing = await getChatConfigByCompanyId(companyId)
     if (existing) {
-      console.log(`A configuration for domain "${domain}" already exists.`)
+      console.log(
+        `A configuration for company ID "${companyId}" already exists.`
+      )
       return
     }
 
@@ -147,12 +149,14 @@ async function createNewConfig(): Promise<void> {
     )
 
     await createChatConfig({
-      domain,
+      company_id: companyId,
       system_prompt: systemPrompt,
       pinecone_index_name: pineconeIndex || undefined
     })
 
-    console.log(`Configuration for domain "${domain}" created successfully.`)
+    console.log(
+      `Configuration for company ID "${companyId}" created successfully.`
+    )
   } catch (error) {
     console.error('Error creating configuration:', error)
   }
@@ -161,12 +165,12 @@ async function createNewConfig(): Promise<void> {
 // Update configuration
 async function updateConfig(): Promise<void> {
   try {
-    const domain = await promptUser('Enter domain to update: ')
+    const companyId = await promptUser('Enter company ID to update: ')
 
-    // Check if domain exists
-    const existing = await getChatConfigByDomain(domain)
+    // Check if company ID exists
+    const existing = await getChatConfigByCompanyId(companyId)
     if (!existing) {
-      console.log(`No configuration found for domain "${domain}".`)
+      console.log(`No configuration found for company ID "${companyId}".`)
       return
     }
 
@@ -212,8 +216,10 @@ async function updateConfig(): Promise<void> {
       return
     }
 
-    await updateChatConfig(domain, updates)
-    console.log(`Configuration for domain "${domain}" updated successfully.`)
+    await updateChatConfig(companyId, updates)
+    console.log(
+      `Configuration for company ID "${companyId}" updated successfully.`
+    )
   } catch (error) {
     console.error('Error updating configuration:', error)
   }
@@ -222,22 +228,22 @@ async function updateConfig(): Promise<void> {
 // Delete configuration
 async function deleteConfig(): Promise<void> {
   try {
-    const domain = await promptUser('Enter domain to delete: ')
+    const companyId = await promptUser('Enter company ID to delete: ')
 
-    if (domain === 'default') {
+    if (companyId === 'default') {
       console.log('Cannot delete the default configuration.')
       return
     }
 
-    // Check if domain exists
-    const existing = await getChatConfigByDomain(domain)
+    // Check if company ID exists
+    const existing = await getChatConfigByCompanyId(companyId)
     if (!existing) {
-      console.log(`No configuration found for domain "${domain}".`)
+      console.log(`No configuration found for company ID "${companyId}".`)
       return
     }
 
     const confirmation = await promptUser(
-      `Are you sure you want to delete the configuration for "${domain}"? (y/n): `
+      `Are you sure you want to delete the configuration for "${companyId}"? (y/n): `
     )
 
     if (confirmation.toLowerCase() !== 'y') {
@@ -245,22 +251,23 @@ async function deleteConfig(): Promise<void> {
       return
     }
 
-    await deleteChatConfig(domain)
-    console.log(`Configuration for domain "${domain}" deleted successfully.`)
+    await deleteChatConfig(companyId)
+    console.log(
+      `Configuration for company ID "${companyId}" deleted successfully.`
+    )
   } catch (error) {
     console.error('Error deleting configuration:', error)
   }
 }
 
-// Start the application
-console.log('Starting Chat Configuration Manager...')
-displayMenu().catch(error => {
-  console.error('An error occurred:', error)
-  rl.close()
-})
+// Entry point
+async function main(): Promise<void> {
+  console.log('Welcome to the Chat Configuration Manager!')
+  await displayMenu()
+}
 
-// Handle application exit
-rl.on('close', () => {
-  console.log('Chat Configuration Manager closed.')
-  process.exit(0)
+// Run the script
+main().catch(error => {
+  console.error('Error running chat configuration manager:', error)
+  process.exit(1)
 })

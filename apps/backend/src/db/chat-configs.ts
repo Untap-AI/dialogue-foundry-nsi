@@ -20,18 +20,18 @@ const serviceSupabase =
     : undefined
 
 /**
- * Get a chat config by domain
- * @param domain The domain to lookup (e.g. "example.com")
+ * Get a chat config by company ID
+ * @param companyId The company ID to lookup
  * @returns The chat config or null if not found
  */
-export const getChatConfigByDomain = async (domain: string) => {
+export const getChatConfigByCompanyId = async (companyId: string) => {
   // Use serviceSupabase to bypass RLS if available, otherwise fall back to regular client
   const client = serviceSupabase || supabase
 
   const { data: chatConfig, error } = await client
     .from('chat_configs')
     .select('*')
-    .eq('domain', domain)
+    .eq('company_id', companyId)
     .maybeSingle()
 
   if (error) {
@@ -51,7 +51,7 @@ export const getAllChatConfigs = async () => {
   const { data: chatConfigs, error } = await client
     .from('chat_configs')
     .select('*')
-    .order('domain', { ascending: true })
+    .order('company_id', { ascending: true })
 
   if (error) {
     throw new Error(`Failed to get chat configs: ${error.message}`)
@@ -85,12 +85,12 @@ export const createChatConfig = async (
 
 /**
  * Update a chat config
- * @param domain The domain of the config to update
+ * @param companyId The company ID of the config to update
  * @param updates The fields to update
  * @returns The updated chat config
  */
 export const updateChatConfig = async (
-  domain: string,
+  companyId: string,
   updates: TablesUpdate<'chat_configs'>
 ) => {
   const client = serviceSupabase || supabase
@@ -98,7 +98,7 @@ export const updateChatConfig = async (
   const { data: updatedChatConfig, error } = await client
     .from('chat_configs')
     .update(updates)
-    .eq('domain', domain)
+    .eq('company_id', companyId)
     .select('*')
     .single()
 
@@ -111,16 +111,16 @@ export const updateChatConfig = async (
 
 /**
  * Delete a chat config
- * @param domain The domain of the config to delete
+ * @param companyId The company ID of the config to delete
  * @returns true if successful
  */
-export const deleteChatConfig = async (domain: string) => {
+export const deleteChatConfig = async (companyId: string) => {
   const client = serviceSupabase || supabase
 
   const { error } = await client
     .from('chat_configs')
     .delete()
-    .eq('domain', domain)
+    .eq('company_id', companyId)
 
   if (error) {
     throw new Error(`Failed to delete chat config: ${error.message}`)
@@ -130,23 +130,29 @@ export const deleteChatConfig = async (domain: string) => {
 }
 
 /**
- * Get a chat config by domain, falling back to the default if not found
- * @param domain The domain to lookup
- * @returns The chat config for the domain or the default config
+ * Get a chat config by company ID, falling back to the default if not found
+ * @param companyId The company ID to lookup
+ * @returns The chat config for the company ID or the default config
  */
-export const getChatConfigWithFallback = async (domain: string) => {
+export const getChatConfigWithFallback = async (companyId: string) => {
   try {
-    const chatConfig = await getChatConfigByDomain(domain)
+    const chatConfig = await getChatConfigByCompanyId(companyId)
 
     if (chatConfig) {
       return chatConfig
     }
 
     // If not found, return the default config
-    return await getChatConfigByDomain('default')
+    return await getChatConfigByCompanyId('default')
   } catch (error) {
-    console.error(`Error getting chat config for domain ${domain}:`, error)
+    console.error(
+      `Error getting chat config for company ID ${companyId}:`,
+      error
+    )
     // If anything fails, try to get the default config
-    return await getChatConfigByDomain('default').catch(() => undefined)
+    return await getChatConfigByCompanyId('default').catch(() => undefined)
   }
 }
+
+// For backwards compatibility during migration
+export const getChatConfigByDomain = getChatConfigByCompanyId
