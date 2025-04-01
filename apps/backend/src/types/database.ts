@@ -9,8 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      chat_configs: {
+        Row: {
+          company_id: string
+          created_at: string
+          pinecone_index_name: string | null
+          system_prompt: string
+          updated_at: string | null
+        }
+        Insert: {
+          company_id: string
+          created_at?: string
+          pinecone_index_name?: string | null
+          system_prompt: string
+          updated_at?: string | null
+        }
+        Update: {
+          company_id?: string
+          created_at?: string
+          pinecone_index_name?: string | null
+          system_prompt?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       chats: {
         Row: {
+          company_id: string | null
           created_at: string
           id: string
           name: string
@@ -18,6 +43,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          company_id?: string | null
           created_at?: string
           id?: string
           name: string
@@ -25,13 +51,22 @@ export type Database = {
           user_id: string
         }
         Update: {
+          company_id?: string | null
           created_at?: string
           id?: string
           name?: string
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "chats_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "chat_configs"
+            referencedColumns: ["company_id"]
+          },
+        ]
       }
       messages: {
         Row: {

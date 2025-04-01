@@ -1,15 +1,5 @@
-import {
-  DEFAULT_API_BASE_URL,
-  DEFAULT_TOKEN_STORAGE_KEY,
-  DEFAULT_CHAT_ID_STORAGE_KEY
-} from './api'
-
-export interface StreamingConfig {
-  apiBaseUrl?: string
-  tokenStorageKey?: string
-  chatIdStorageKey?: string
-  storage?: Storage
-}
+import { DEFAULT_TOKEN_STORAGE_KEY, DEFAULT_CHAT_ID_STORAGE_KEY } from './api'
+import type { ChatConfig } from './api'
 
 export class ChatStreamingService {
   private apiBaseUrl: string
@@ -18,12 +8,12 @@ export class ChatStreamingService {
   private storage: Storage
   private abortController: AbortController | undefined = undefined
 
-  constructor(config: StreamingConfig = {}) {
-    this.apiBaseUrl = config.apiBaseUrl || DEFAULT_API_BASE_URL
+  constructor(config: ChatConfig) {
+    this.apiBaseUrl = config.apiBaseUrl
     this.tokenStorageKey = config.tokenStorageKey || DEFAULT_TOKEN_STORAGE_KEY
     this.chatIdStorageKey =
       config.chatIdStorageKey || DEFAULT_CHAT_ID_STORAGE_KEY
-    this.storage = config.storage || localStorage
+    this.storage = localStorage
   }
 
   /**
@@ -93,14 +83,14 @@ export class ChatStreamingService {
       while (!isDone) {
         const { value, done } = await reader.read()
 
-        if (done) {
-          break
-        }
-
         const decodedValue = textDecoder.decode(value)
         if (decodedValue) {
           fullText += decodedValue
           onChunk(decodedValue)
+        }
+
+        if (done) {
+          break
         }
       }
 
@@ -112,6 +102,7 @@ export class ChatStreamingService {
       }
 
       onError(
+        // TODO: Need better error messages
         error instanceof Error ? error : new Error('Failed to stream message')
       )
     } finally {

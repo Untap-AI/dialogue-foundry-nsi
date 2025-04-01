@@ -1,0 +1,45 @@
+{
+  "apiBaseUrl": "https://api.example.com",
+  "tokenStorageKey": "custom_chat_token",
+  "chatIdStorageKey": "custom_chat_id",
+  "personaOptions": {
+    "assistant": {
+      "name": "Custom Assistant",
+      "avatar": "https://example.com/avatar.png",
+      "tagline": "I'm here to help with your custom needs"
+    }
+  },
+  "theme": {
+    "colorScheme": "light",
+    "fontFamily": "Arial, sans-serif",
+    "backgroundColor": "#ffffff",
+    "textColor": "#333333",
+    "userMessageBgColor": "#e6f7ff",
+    "userMessageTextColor": "#0055aa",
+    "assistantMessageBgColor": "#f0f0f0",
+    "assistantMessageTextColor": "#333333",
+    "primaryButtonBgColor": "#0066cc",
+    "primaryButtonTextColor": "#ffffff",
+    "darkMode": {
+      "backgroundColor": "#222222",
+      "textColor": "#f0f0f0",
+      "userMessageBgColor": "#003366",
+      "userMessageTextColor": "#e6f7ff",
+      "assistantMessageBgColor": "#444444",
+      "assistantMessageTextColor": "#f0f0f0"
+    }
+  },
+  "widget": {
+    "position": "bottom-right",
+    "buttonColor": "#0066cc",
+    "defaultOpen": false
+  },
+  "initialMessages": [
+    {
+      "id": "welcome-1",
+      "message": "Welcome to our custom chat! How can I help you today?",
+      "role": "assistant",
+      "timestamp": 1631234567890
+    }
+  ]
+} 

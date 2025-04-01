@@ -1,23 +1,10 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
-import ChatIcon from './ChatIcon'
-import ChatWindow from './ChatWindow'
+import { ChatButton } from '../ChatButton/ChatButton'
+import { ChatWindow } from '../ChatWindow/ChatWindow'
+import './ChatWidget.css'
 
-export interface ChatWidgetProps {
-  position?: 'bottom-right' | 'bottom-left'
-  buttonColor?: string
-  title?: string
-  logoUrl?: string
-  defaultOpen?: boolean
-}
-
-export const ChatWidget = ({
-  position = 'bottom-right',
-  buttonColor = '#222',
-  title = 'West Hills Vineyard',
-  logoUrl,
-  defaultOpen = false
-}: ChatWidgetProps) => {
-  const [isOpen, setIsOpen] = useState(defaultOpen)
+export const ChatWidget = () => {
+  const [isOpen, setIsOpen] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
   // eslint-disable-next-line no-null/no-null
   const chatWindowRef = useRef<HTMLDivElement | null>(null)
@@ -58,31 +45,18 @@ export const ChatWidget = ({
     }
   }, [isOpen, toggleChat])
 
-  // Position classes based on the position prop
-  const positionClasses =
-    position === 'bottom-right' ? 'right-5 bottom-5' : 'left-5 bottom-5'
-
   return (
-    <div className={`fixed z-[9999] ${positionClasses}`}>
+    <div className="chat-widget">
       {/* Chat window */}
-      {(isOpen || isClosing) && (
-        <ChatWindow
-          ref={chatWindowRef}
-          isOpen={isOpen}
-          isClosing={isClosing}
-          title={title}
-          logoUrl={logoUrl}
-          position={position}
-          onClose={toggleChat}
-        />
-      )}
+      <ChatWindow
+        ref={chatWindowRef}
+        isOpen={isOpen}
+        isClosing={isClosing}
+        onClose={toggleChat}
+      />
 
       {/* Chat button */}
-      <ChatIcon
-        onClick={toggleChat}
-        buttonColor={buttonColor}
-        isOpen={isOpen}
-      />
+      <ChatButton onClick={toggleChat} isOpen={isOpen} />
     </div>
   )
 }

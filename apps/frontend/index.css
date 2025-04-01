@@ -1,0 +1,50 @@
+
+
+:root {
+  /* Core colors that can be customized by customers */
+  --df-primary-color: rgb(50, 79, 68);
+  --df-secondary-color: #F1CFBF;
+  
+  /* Background colors */
+  --df-bg-primary: rgb(255, 244, 231);
+  --df-bg-secondary: #ffffff;
+  
+  /* Text colors */
+  --df-text-primary: rgb(25, 40, 34);
+  --df-text-secondary: rgba(91,97,110,0.2);
+  --df-text-contrast: rgb(255, 244, 231);
+  
+  /* Alert/Exception colors */
+  --df-alert-bg: tomato;
+  --df-alert-border: darkred;
+  --df-alert-text: white;
+  
+  /* Border and outline */
+  --df-border-color: black;
+  --df-focus-outline: transparent;
+  
+  /* Common transparency */
+  --df-transparent: transparent;
+  /* Need slightly darker gray for disabled text */
+  --df-disabled: rgb(242, 207, 191, 0.5);
+
+  --df-font-family: avenir-lt-w01_35-light1475496, sans-serif;
+  --df-mono-font-family: monospace;
+
+  --df-border-width: 0;
+  --df-border-radius: 20px;
+  --df-line-height: 1.4;
+  --df-flex-gap: 12px;
+}
+
+/* Dark mode overrides */
+[data-color-scheme='dark'] {
+  /* Background colors */
+  --df-bg-primary: #151515;
+  --df-bg-secondary: #494949;
+  
+  /* Text colors */
+  --df-text-primary: #ffffff;
+  --df-text-secondary: #71717a;
+  --df-text-contrast: #ffffff;
+} 

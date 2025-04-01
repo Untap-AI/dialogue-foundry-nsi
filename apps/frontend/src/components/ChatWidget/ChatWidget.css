@@ -1,0 +1,8 @@
+.chat-widget {
+  position: fixed;
+  z-index: 9999;
+
+  /* Position */
+  right: 1.25rem; /* 5px */
+  bottom: 1.25rem; /* 5px */
+}

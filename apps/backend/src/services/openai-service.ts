@@ -4,6 +4,7 @@ import {
   isOpenAIResponseDeltaChunk,
   validateOpenAIResponseChunk
 } from '../util/openai-chunk-validators'
+import { MAX_MESSAGES_PER_CHAT } from '../db/messages'
 
 dotenv.config()
 
@@ -26,6 +27,7 @@ export type Message = {
 export type ChatSettings = {
   model: string
   temperature: number
+  systemPrompt?: string // Add systemPrompt as an optional parameter
 }
 
 // Default settings to use if none are provided
@@ -35,20 +37,46 @@ export const DEFAULT_SETTINGS: ChatSettings = {
   temperature: 0.7
 }
 
+/**
+ * Limits the conversation context to the specified maximum number of messages
+ * while preserving the most recent conversation history
+ */
+const limitMessagesContext = (
+  messages: Message[],
+  maxMessages: number
+): Message[] => {
+  if (messages.length <= maxMessages) {
+    return messages
+  }
+
+  // Extract any system messages
+  const systemMessages = messages.filter(msg => msg.role === 'system')
+
+  // Get the most recent non-system messages
+  const nonSystemMessages = messages
+    .filter(msg => msg.role !== 'system')
+    .slice(-maxMessages + systemMessages.length)
+
+  // Return system messages first, followed by the most recent non-system messages
+  return [...systemMessages, ...nonSystemMessages]
+}
+
 export const generateChatCompletion = async (
   messages: Message[],
   settings: ChatSettings = DEFAULT_SETTINGS
 ) => {
   try {
-    // Extract system message if present
-    const systemMessage = messages.find(msg => msg.role === 'system')
-    const otherMessages = messages.filter(msg => msg.role !== 'system')
+    // Limit the number of messages to avoid exceeding token limits
+    const limitedMessages = limitMessagesContext(
+      messages,
+      MAX_MESSAGES_PER_CHAT
+    )
 
     const response = await openai.responses.create({
       model: settings.model,
-      input: otherMessages,
+      input: limitedMessages,
       temperature: settings.temperature,
-      instructions: systemMessage?.content ?? '',
+      instructions: settings.systemPrompt,
       stream: false,
       text: {
         format: {
@@ -87,17 +115,18 @@ export const generateStreamingChatCompletion = async (
   // TODO: Implement token checking and context cutoff
   // TODO: Implement rate limiting
   try {
-    // Extract system message if present
-    const systemMessage = messages.find(msg => msg.role === 'system')
-    const otherMessages = messages.filter(msg => msg.role !== 'system')
+    // Limit the number of messages to avoid exceeding token limits
+    const limitedMessages = limitMessagesContext(
+      messages,
+      MAX_MESSAGES_PER_CHAT
+    )
 
     // Create the response with streaming enabled
     const response = await openai.responses.create({
       model: settings.model,
-      input: otherMessages,
+      input: limitedMessages,
       temperature: settings.temperature,
-      // TODO: Change how we do instructions here
-      instructions: systemMessage?.content ?? '',
+      instructions: settings.systemPrompt,
       stream: true,
       text: {
         format: {

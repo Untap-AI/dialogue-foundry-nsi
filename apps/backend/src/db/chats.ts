@@ -125,3 +125,22 @@ export const deleteChat = async (chatId: string) => {
 
   return true
 }
+
+/**
+ * Get all chats for a specific company
+ * @param companyId The company ID to filter by
+ * @returns Array of chats for the company
+ */
+export const getChatsByCompanyId = async (companyId: string) => {
+  const { data: chats, error } = await supabase
+    .from('chats')
+    .select('*')
+    .eq('company_id', companyId)
+    .order('created_at', { ascending: false })
+
+  if (error) {
+    throw new Error(`Failed to get chats by company ID: ${error.message}`)
+  }
+
+  return chats || []
+}

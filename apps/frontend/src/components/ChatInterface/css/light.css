@@ -1,0 +1,75 @@
+.nlux-theme-dialogue-foundry[data-color-scheme='light'] {
+    /** Exceptions box */
+    --nlux-Exceptions--BackgroundColor: var(--df-alert-bg);
+    --nlux-Exceptions--BorderColor: var(--df-alert-border);
+    --nlux-Exceptions--TextColor: var(--df-alert-text);
+
+    /** Welcome message */
+    --nlux-WelcomeMessage-Avatar--BorderColor: var(--df-transparent);
+    --nlux-WelcomeMessage-Avatar--BackgroundColor: var(--df-transparent);
+
+    /** Divider between composer and messages */
+    --nlux-ChatRoom-Divider--Color: var(--df-text-secondary);
+
+    /** Conversation loader */
+    --nlux-ChatRoom-Loader--Color: var(--df-text-secondary);
+
+    /** Conversation content color */
+    --nlux-ChatRoom--BackgroundColor: var(--df-bg-primary);
+    --nlux-ChatRoom--BorderColor: var(--df-border-color);
+    --nlux-ChatRoom--TextColor: var(--df-text-primary);
+    --nlux-ChatRoom-Divider--Color: var(--df-border-color);
+
+    /** Participant info in chat */
+    --nlux-ChatItem-ParticipantName--Color: var(--df-text-primary);
+
+    /* Human message in chat */
+    --nlux-HumanMessage--BackgroundColor: var(--df-primary-color);
+    --nlux-HumanMessage--BorderColor: var(--df-border-color);
+    --nlux-HumanMessage--TextColor: var(--df-text-contrast);
+
+    /** AI message in chat */
+    --nlux-AiMessage--BackgroundColor: var(--df-bg-secondary);
+    --nlux-AiMessage--BorderColor: var(--df-border-color);
+    --nlux-AiMessage--TextColor: var(--df-text-primary);
+
+    /** Prompt container */
+    --nlux-composer-container--BackgroundColor: var(--df-transparent);
+    --nlux-composer-container--BorderTop: 1px solid var(--df-border-color);
+
+    /** Prompt input colors */
+    --nlux-PromptInput--BackgroundColor: var(--df-transparent);
+    --nlux-PromptInput--BorderColor: var(--df-primary-color);
+    --nlux-PromptInput--TextColor: var(--df-text-primary);
+
+    --nlux-PromptInput-Active--BackgroundColor: var(--df-transparent);
+    --nlux-PromptInput-Active--BorderColor: var(--df-transparent);
+    --nlux-PromptInput-Active--TextColor: var(--df-text-primary);
+
+    --nlux-PromptInput-Disabled--BackgroundColor: var(--df-transparent);
+    --nlux-PromptInput-Disabled--TextColor: var(--df-text-contrast);
+    --nlux-PromptInput-Disabled--BorderColor: var(--df-transparent);
+
+    --nlux-PromptInput-Placeholder--TextColor: var(--df-text-secondary);
+    --nlux-PromptInput-Focus-Outline--Color: var(--df-focus-outline);
+
+    /** Submit button colors */
+    --nlux-SubmitButton--BackgroundColor: var(--df-bg-primary);
+    --nlux-SubmitButton--BorderColor: var(--df-border-color);
+    --nlux-SubmitButton--TextColor: var(--df-secondary-color);
+
+    --nlux-SubmitButton-Active--BackgroundColor: var(--df-bg-primary);
+    --nlux-SubmitButton-Active--BorderColor: var(--df-border-color);
+    --nlux-SubmitButton-Active--TextColor: var(--df-secondary-color);
+
+    --nlux-SubmitButton-Disabled--BackgroundColor: var(--df-transparent);
+    --nlux-SubmitButton-Disabled--BorderColor: var(--df-transparent);
+    --nlux-SubmitButton-Disabled--TextColor: var(--df-disabled);
+
+    --nlux-SubmitButton-Focus-Outline--Color: var(--df-focus-outline);
+
+    /** Conversation starters */
+    --nlux-ConversationStarter--BackgroundColor: var(--nlux-AiMessage--BackgroundColor);
+    --nlux-ConversationStarter--BorderColor: var(--df-border-color);
+    --nlux-ConversationStarter--TextColor: var(--nlux-AiMessage--TextColor);
+}
