@@ -22,6 +22,7 @@ import {
   authenticateChatAccess,
   authenticateUser
 } from '../middleware/auth-middleware'
+import { getChatConfigWithFallback } from '../db/chat-configs'
 import type { CustomRequest } from '../middleware/auth-middleware'
 import type { Message, ChatSettings } from '../services/openai-service'
 
@@ -153,7 +154,8 @@ router.post(
   async (req: CustomRequest, res) => {
     try {
       const { chatId } = req.params
-      const { content, model, temperature, maxMessagesInContext } = req.body
+      const { content, model, temperature, maxMessagesInContext, domain } =
+        req.body
 
       if (!chatId) {
         return res.status(400).json({ error: 'Chat ID is required' })
@@ -173,11 +175,16 @@ router.post(
         return res.status(404).json({ error: 'Chat not found' })
       }
 
-      // Get chat settings - using request parameters or defaults
+      // Get the domain-specific configuration or fall back to default
+      const domainToUse = domain || req.get('origin') || 'default'
+      const chatConfig = await getChatConfigWithFallback(domainToUse)
+
+      // Get chat settings - using request parameters, chat config, or defaults
       const chatSettings: ChatSettings = {
         model: model || DEFAULT_SETTINGS.model,
         temperature: temperature || DEFAULT_SETTINGS.temperature,
-        systemPrompt: chat.system_prompt || undefined,
+        systemPrompt:
+          chat.system_prompt || chatConfig?.system_prompt || undefined,
         maxMessagesInContext: maxMessagesInContext
           ? parseInt(maxMessagesInContext)
           : undefined
@@ -262,6 +269,7 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     const temperature = req.body.temperature || req.query.temperature
     const maxMessagesInContext =
       req.body.maxMessagesInContext || req.query.maxMessagesInContext
+    const domain = req.body.domain || req.query.domain
 
     if (!chatId) {
       return res.status(400).json({ error: 'Chat ID is required' })
@@ -281,13 +289,18 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       return res.status(404).json({ error: 'Chat not found' })
     }
 
-    // Get chat settings - using request parameters or defaults
+    // Get the domain-specific configuration or fall back to default
+    const domainToUse = domain || req.get('origin') || 'default'
+    const chatConfig = await getChatConfigWithFallback(domainToUse)
+
+    // Get chat settings - using request parameters, chat config, or defaults
     const chatSettings: ChatSettings = {
       model: model || DEFAULT_SETTINGS.model,
       temperature: temperature
         ? parseFloat(temperature)
         : DEFAULT_SETTINGS.temperature,
-      systemPrompt: chat.system_prompt || undefined,
+      systemPrompt:
+        chat.system_prompt || chatConfig?.system_prompt || undefined,
       maxMessagesInContext: maxMessagesInContext
         ? parseInt(maxMessagesInContext as string)
         : undefined

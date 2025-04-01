@@ -9,6 +9,33 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      chat_configs: {
+        Row: {
+          created_at: string
+          domain: string
+          id: string
+          pinecone_index_name: string | null
+          system_prompt: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          domain: string
+          id?: string
+          pinecone_index_name?: string | null
+          system_prompt: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          domain?: string
+          id?: string
+          pinecone_index_name?: string | null
+          system_prompt?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       chats: {
         Row: {
           created_at: string

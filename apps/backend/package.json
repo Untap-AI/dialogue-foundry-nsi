@@ -19,7 +19,9 @@
     "supabase-start": "supabase start",
     "supabase-stop": "supabase stop",
     "supabase-status": "supabase status",
-    "new-migration": "node scripts/create-migration.js"
+    "new-migration": "node scripts/create-migration.js",
+    "chat-config": "ts-node src/scripts/chat-config-manager.ts",
+    "chat-config-cli": "ts-node src/scripts/chat-config-cli.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.1",
