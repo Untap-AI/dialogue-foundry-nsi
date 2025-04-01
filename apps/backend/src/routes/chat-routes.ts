@@ -6,7 +6,8 @@ import {
   getChatsByUserId,
   updateChat,
   deleteChat,
-  createChatAdmin
+  createChatAdmin,
+  getChatsByCompanyId
 } from '../db/chats'
 import {
   getMessagesByChatId,
@@ -107,15 +108,46 @@ router.get('/:chatId', authenticateChatAccess, async (req, res) => {
 // Create a new chat and return access token
 router.post('/', async (req, res) => {
   try {
-    const { userId, name: chatName } = req.body
+    const { userId, name: chatName, companyId } = req.body
 
     // Generate a new user ID if not provided
     const generatedUserId = userId ?? uuidv4()
 
+    // If companyId is provided, verify it exists in chat_configs
+    if (companyId) {
+      // Try to get config from cache first
+      let chatConfig = chatConfigCache.get<ChatConfigType>(companyId)
+      if (!chatConfig) {
+        // If not in cache, check the database
+        try {
+          const dbConfig = await getChatConfigWithFallback(companyId)
+          if (dbConfig) {
+            chatConfig = dbConfig
+            chatConfigCache.set(companyId, dbConfig)
+          }
+        } catch (configError) {
+          console.error(
+            `Error fetching chat config for companyId ${companyId}:`,
+            configError
+          )
+          return res.status(400).json({
+            error: `Invalid company ID. No configuration found for "${companyId}".`
+          })
+        }
+      }
+
+      if (!chatConfig) {
+        return res.status(400).json({
+          error: `Invalid company ID. No configuration found for "${companyId}".`
+        })
+      }
+    }
+
     // Create the chat using the admin function to bypass RLS
     const newChat = await createChatAdmin({
       user_id: generatedUserId,
-      name: chatName || 'New Chat'
+      name: chatName || 'New Chat',
+      company_id: companyId
     })
 
     // Cache the newly created chat
@@ -130,6 +162,24 @@ router.post('/', async (req, res) => {
     })
   } catch (error) {
     console.error('Error creating chat:', error)
+    return res.status(500).json({ error })
+  }
+})
+
+// Get all chats for a specific company
+router.get('/company/:companyId', async (req, res) => {
+  try {
+    const { companyId } = req.params
+
+    if (!companyId) {
+      return res.status(400).json({ error: 'Company ID is required' })
+    }
+
+    const chats = await getChatsByCompanyId(companyId)
+
+    return res.json({ chats })
+  } catch (error) {
+    console.error('Error getting company chats:', error)
     return res.status(500).json({ error })
   }
 })
@@ -188,14 +238,10 @@ router.post(
   async (req: CustomRequest, res) => {
     try {
       const { chatId } = req.params
-      const { content, model, temperature, companyId } = req.body
+      const { content, model, temperature } = req.body
 
       if (!chatId) {
         return res.status(400).json({ error: 'Chat ID is required' })
-      }
-
-      if (!companyId) {
-        return res.status(400).json({ error: 'Company ID is required' })
       }
 
       // Use the authenticated user's ID from the JWT token
@@ -219,6 +265,17 @@ router.post(
 
       if (!chat) {
         return res.status(404).json({ error: 'Chat not found' })
+      }
+
+      // Get the company ID from the chat
+      const companyId = chat.company_id
+
+      // If the chat doesn't have a company_id, use the default
+      if (!companyId) {
+        return res.status(400).json({
+          error:
+            'This chat is not associated with any company. Please create a new chat with a company ID.'
+        })
       }
 
       // Get the company-specific configuration or fall back to default
@@ -317,14 +374,9 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     const content = req.body.content || req.query.content
     const model = req.body.model || req.query.model
     const temperature = req.body.temperature || req.query.temperature
-    const companyId = req.body.companyId || req.query.companyId
 
     if (!chatId) {
       return res.status(400).json({ error: 'Chat ID is required' })
-    }
-
-    if (!companyId) {
-      return res.status(400).json({ error: 'Company ID is required' })
     }
 
     // Use the authenticated user's ID from the JWT token
@@ -348,6 +400,17 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
 
     if (!chat) {
       return res.status(404).json({ error: 'Chat not found' })
+    }
+
+    // Get the company ID from the chat
+    const companyId = chat.company_id
+
+    // If the chat doesn't have a company_id, return an error
+    if (!companyId) {
+      return res.status(400).json({
+        error:
+          'This chat is not associated with any company. Please create a new chat with a company ID.'
+      })
     }
 
     // Try to get config from cache first

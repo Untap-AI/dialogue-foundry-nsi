@@ -8,6 +8,7 @@ export const DEFAULT_CHAT_ID_STORAGE_KEY = 'dialogue_foundry_chat_id'
 
 export interface ChatConfig {
   apiBaseUrl: string
+  companyId: string
   tokenStorageKey?: string
   chatIdStorageKey?: string
 }
@@ -36,6 +37,7 @@ export interface MessageResponse {
 
 export class ChatApiService {
   private apiBaseUrl: string
+  private companyId: string
   private tokenStorageKey: string
   private chatIdStorageKey: string
   private storage: Storage
@@ -43,6 +45,7 @@ export class ChatApiService {
 
   constructor(config: ChatConfig) {
     this.apiBaseUrl = config.apiBaseUrl
+    this.companyId = config.companyId
     this.tokenStorageKey = config.tokenStorageKey || DEFAULT_TOKEN_STORAGE_KEY
     this.chatIdStorageKey =
       config.chatIdStorageKey || DEFAULT_CHAT_ID_STORAGE_KEY
@@ -79,11 +82,7 @@ export class ChatApiService {
    * - If not found, creates a new chat
    * - Returns the chat data and conversation history
    */
-  async initializeChat({
-    systemPrompt
-  }: {
-    systemPrompt: string
-  }): Promise<ChatInit> {
+  async initializeChat(): Promise<ChatInit> {
     const storedToken = this.storage.getItem(this.tokenStorageKey)
     const storedChatId = this.storage.getItem(this.chatIdStorageKey)
 
@@ -105,18 +104,18 @@ export class ChatApiService {
     }
 
     // Create a new chat
-    return this.createNewChat(systemPrompt)
+    return this.createNewChat()
   }
 
   /**
    * Create a new chat session
    */
-  async createNewChat(systemPrompt: string): Promise<ChatInit> {
+  async createNewChat(): Promise<ChatInit> {
     try {
       const response = await this.api.post('/chats', {
         // TODO: Make this dynamic
         name: 'New Conversation',
-        systemPrompt
+        companyId: this.companyId
       })
 
       // Store token and chat ID
@@ -136,11 +135,11 @@ export class ChatApiService {
   /**
    * Clear the current chat session and create a new one
    */
-  async startNewChat(systemPrompt: string): Promise<ChatInit> {
+  async startNewChat(): Promise<ChatInit> {
     this.storage.removeItem(this.tokenStorageKey)
     this.storage.removeItem(this.chatIdStorageKey)
 
-    return this.createNewChat(systemPrompt)
+    return this.createNewChat()
   }
 
   /**

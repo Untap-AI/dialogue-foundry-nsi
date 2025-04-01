@@ -40,7 +40,7 @@
     /** Prompt input colors */
     --nlux-PromptInput--BackgroundColor: var(--df-transparent);
     --nlux-PromptInput--BorderColor: var(--df-primary-color);
-    --nlux-PromptInput--TextColor: var(--df-text-secondary);
+    --nlux-PromptInput--TextColor: var(--df-text-primary);
 
     --nlux-PromptInput-Active--BackgroundColor: var(--df-transparent);
     --nlux-PromptInput-Active--BorderColor: var(--df-transparent);

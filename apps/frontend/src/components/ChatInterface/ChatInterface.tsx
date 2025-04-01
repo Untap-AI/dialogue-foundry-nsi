@@ -18,7 +18,7 @@ export const ChatInterface = ({
   className
 }: ChatInterfaceProps) => {
   // Get config from context
-  const { conversationStarters, chatConfig, theme, personaOptions, systemPrompt } =
+  const { conversationStarters, chatConfig, theme, personaOptions } =
     useConfig()
 
   const [chatId, setChatId] = useState<string | undefined>(undefined)
@@ -52,9 +52,7 @@ export const ChatInterface = ({
     const setupChat = async () => {
       try {
         // Initialize service
-        const chatInit = await new ChatApiService(chatConfig).initializeChat(
-          { systemPrompt }
-        )
+        const chatInit = await new ChatApiService(chatConfig).initializeChat()
         setChatId(chatInit.chatId)
         setMessages(chatInit.messages)
 
@@ -76,8 +74,6 @@ export const ChatInterface = ({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [onChatInitialized])
-
-  console.log('messages', messages)
 
   // TODO: ConversationStarter UI
   // TODO: Loading State

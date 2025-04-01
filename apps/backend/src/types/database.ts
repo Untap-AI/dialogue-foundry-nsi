@@ -35,6 +35,7 @@ export type Database = {
       }
       chats: {
         Row: {
+          company_id: string | null
           created_at: string
           id: string
           name: string
@@ -42,6 +43,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          company_id?: string | null
           created_at?: string
           id?: string
           name: string
@@ -49,13 +51,22 @@ export type Database = {
           user_id: string
         }
         Update: {
+          company_id?: string | null
           created_at?: string
           id?: string
           name?: string
           updated_at?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "chats_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "chat_configs"
+            referencedColumns: ["company_id"]
+          },
+        ]
       }
       messages: {
         Row: {
