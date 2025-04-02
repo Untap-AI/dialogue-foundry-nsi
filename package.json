@@ -4,6 +4,7 @@
   "scripts": {
     "build": "turbo build",
     "dev": "turbo dev",
+    "start": "turbo start",
     "dev:backend": "turbo dev --filter=@dialogue-foundry/backend",
     "dev:playground": "turbo dev --filter=@dialogue-foundry/playground",
     "lint": "turbo lint",

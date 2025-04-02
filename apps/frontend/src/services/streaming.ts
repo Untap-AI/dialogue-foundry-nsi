@@ -64,6 +64,7 @@ export class ChatStreamingService {
         }
       )
 
+      // TODO: Better error messages
       if (!response.ok) {
         onError(new Error(`HTTP error! Status: ${response.status}`))
         return
