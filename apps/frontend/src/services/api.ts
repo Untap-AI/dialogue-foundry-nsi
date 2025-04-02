@@ -103,6 +103,8 @@ export class ChatApiService {
       }
     }
 
+    console.log('Creating new chat')
+
     // Create a new chat
     return this.createNewChat()
   }

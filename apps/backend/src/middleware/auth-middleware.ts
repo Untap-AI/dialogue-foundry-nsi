@@ -1,4 +1,8 @@
-import { extractTokenFromHeader, verifyToken } from '../lib/jwt-utils'
+import {
+  extractTokenFromHeader,
+  verifyToken,
+  verifyAdminToken
+} from '../lib/jwt-utils'
 import type * as express from 'express'
 
 // Create a custom interface extending Express Request
@@ -6,6 +10,7 @@ export interface CustomRequest extends express.Request {
   user?: {
     userId: string
     chatId?: string
+    isAdmin?: boolean
   }
 }
 
@@ -96,5 +101,65 @@ export const authenticateUser = (
   } catch (error) {
     console.error('Auth middleware error:', error)
     return res.status(500).json({ error: 'Authentication failed' })
+  }
+}
+
+/**
+ * Middleware for routes that require admin privileges
+ * This is used for system configuration and management routes
+ * Admin tokens are created separately from regular chat access tokens
+ */
+export const authenticateAdmin = (
+  req: CustomRequest,
+  res: express.Response,
+  next: express.NextFunction
+) => {
+  try {
+    // Get the authorization header
+    const authHeader = req.headers.authorization
+
+    // Try the password-based authentication first
+    const adminPassword = process.env.ADMIN_PASSWORD
+    if (adminPassword && req.headers['x-admin-key'] === adminPassword) {
+      // Add admin info to request
+      Object.assign(req, {
+        user: {
+          userId: 'admin-user',
+          isAdmin: true
+        }
+      })
+      return next()
+    }
+
+    // If password auth fails, try JWT token auth
+    const token = extractTokenFromHeader(authHeader)
+    if (!token) {
+      return res.status(401).json({
+        error:
+          'Admin authentication required. Provide a valid Bearer token or admin key.'
+      })
+    }
+
+    // Verify admin token
+    const payload = verifyAdminToken(token)
+    if (!payload) {
+      return res.status(403).json({
+        error:
+          'Admin privileges required. Regular user tokens are not accepted for this operation.'
+      })
+    }
+
+    // Add admin info to request for future middleware/handlers
+    Object.assign(req, {
+      user: {
+        userId: payload.userId,
+        isAdmin: true
+      }
+    })
+
+    return next()
+  } catch (error) {
+    console.error('Admin auth middleware error:', error)
+    return res.status(500).json({ error: 'Admin authentication failed' })
   }
 }

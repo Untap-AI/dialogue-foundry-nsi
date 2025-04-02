@@ -21,9 +21,11 @@
     "supabase-status": "supabase status",
     "new-migration": "node scripts/create-migration.js",
     "chat-config": "ts-node src/scripts/chat-config-manager.ts",
-    "chat-config-cli": "ts-node src/scripts/chat-config-cli.ts"
+    "chat-config-cli": "ts-node src/scripts/chat-config-cli.ts",
+    "admin:token": "ts-node src/scripts/generate-admin-token.ts"
   },
   "dependencies": {
+    "@pinecone-database/pinecone": "^5.1.1",
     "@supabase/supabase-js": "^2.49.1",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
