@@ -9,7 +9,7 @@
     "start": "vite",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "preview": "vite preview",
-    "clean": "rm -rf dist",
+    "clean": "rm -rf dist && rm -rf node_modules",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

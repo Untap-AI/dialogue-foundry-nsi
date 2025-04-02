@@ -8,7 +8,7 @@
     "start": "pnpm db-migrate && pnpm db-types && pnpm supabase-start && ts-node src/index.ts",
     "dev": "ts-node-dev --project tsconfig.json -r dotenv/config src/index.ts",
     "lint": "eslint src --ext .ts",
-    "clean": "rm -rf dist",
+    "clean": "rm -rf dist && rm -rf node_modules",
     "restart": "supabase stop && pnpm run chat",
     "update": "git pull origin main && pnpm run db-migrate && pnpm run db-types",
     "db-reset": "supabase db reset && pnpm run db-types",
