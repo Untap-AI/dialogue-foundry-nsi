@@ -479,7 +479,10 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     let contextFromDocs = ''
     if (chatConfig?.pinecone_index_name) {
       try {
-        const documents = await retrieveDocuments(companyId, content)
+        const documents = await retrieveDocuments(
+          chatConfig.pinecone_index_name,
+          content
+        )
         if (documents && documents.length > 0) {
           contextFromDocs = formatDocumentsAsContext(documents)
         }

@@ -1,6 +1,5 @@
 import { Pinecone } from '@pinecone-database/pinecone'
 import dotenv from 'dotenv'
-import { getChatConfigByCompanyId } from '../db/chat-configs'
 import { cacheService } from './cache-service'
 
 dotenv.config()
@@ -26,37 +25,17 @@ const pinecone = new Pinecone({
  * @returns Array of retrieved documents with similarity scores
  */
 export const retrieveDocuments = async (
-  companyId: string,
+  indexName: string,
   query: string,
   topK: number = 5,
   filter?: Record<string, unknown>
 ) => {
   try {
-    // Try to get chat config from cache first
-    let chatConfig = cacheService.getChatConfig(companyId)
-
-    // If not in cache, fetch from database
-    if (!chatConfig) {
-      const dbConfig = await getChatConfigByCompanyId(companyId)
-
-      // If found, store in cache
-      if (dbConfig) {
-        cacheService.setChatConfig(companyId, dbConfig)
-        chatConfig = dbConfig
-      }
-    }
-
-    if (!chatConfig || !chatConfig.pinecone_index_name) {
-      console.warn(`No Pinecone index configured for company ID: ${companyId}`)
-      return []
-    }
-
-    const indexName = chatConfig.pinecone_index_name
-
     // Get the index from centralized cache or initialize it
     let index = cacheService.getPineconeIndex(indexName)
     if (!index) {
-      index = pinecone.index(indexName)
+      // TODO: Remove this once we have a namespace for each company
+      index = pinecone.index(indexName).namespace('default')
       cacheService.setPineconeIndex(indexName, index)
     }
 
@@ -69,13 +48,15 @@ export const retrieveDocuments = async (
         filter
         // TODO: Add reranking
       },
-      fields: ['text']
+      fields: ['chunk_text']
     })
 
     // Extract and format the results
     const documents = queryResponse.result.hits
       .map(hit =>
-        'text' in hit.fields ? hit.fields['text']?.toString() : undefined
+        'chunk_text' in hit.fields
+          ? hit.fields['chunk_text']?.toString()
+          : undefined
       )
       .filter(text => text !== undefined) as string[]
 
