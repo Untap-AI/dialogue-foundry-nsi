@@ -13,7 +13,7 @@
       "cache": false,
       "persistent": true
     },
-    "dev:playground": {
+    "dev:frontend": {
       "cache": false,
       "persistent": true
     },

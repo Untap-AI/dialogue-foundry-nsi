@@ -8,6 +8,9 @@ dotenv.config()
 const supabaseUrl = process.env.SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
+console.log('supabaseUrl', supabaseUrl)
+console.log('supabaseServiceKey', supabaseServiceKey)
+
 // Create a Supabase client with the service role key to bypass RLS for admin operations
 const serviceSupabase =
   supabaseUrl && supabaseServiceKey
@@ -28,6 +31,8 @@ export const getChatConfigByCompanyId = async (companyId: string) => {
   // Use serviceSupabase to bypass RLS if available, otherwise fall back to regular client
   const client = serviceSupabase || supabase
 
+  console.log('Getting chat config for company ID:', companyId)
+
   const { data: chatConfig, error } = await client
     .from('chat_configs')
     .select('*')
@@ -35,6 +40,7 @@ export const getChatConfigByCompanyId = async (companyId: string) => {
     .maybeSingle()
 
   if (error) {
+    console.error('Error getting chat config:', error)
     throw new Error(`Failed to get chat config: ${error.message}`)
   }
 
