@@ -2,6 +2,9 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import chatRoutes from './routes/chat-routes'
+import chatConfigRoutes from './routes/chat-config-routes'
+import cacheRoutes from './routes/cache-routes'
+import adminRoutes from './routes/admin-routes'
 
 // Load environment variables
 dotenv.config()
@@ -42,6 +45,9 @@ app.get('/health', (_, res) => {
 
 // API routes
 app.use('/api/chats', chatRoutes)
+app.use('/api/chat-configs', chatConfigRoutes)
+app.use('/api/cache', cacheRoutes)
+app.use('/api/admin', adminRoutes)
 
 // Error handling middleware
 app.use((err: Error, _: express.Request, res: express.Response) => {

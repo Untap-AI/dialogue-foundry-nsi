@@ -72,6 +72,7 @@ npm start
 - REST API for chat interactions
 - Persistent chat and message storage with Supabase
 - Integration with OpenAI for AI responses
+- Document retrieval with Pinecone vector database
 - User identification to maintain chat history between sessions
 - CORS protection for security
 - JWT-based authentication for secure chat access
@@ -81,6 +82,7 @@ npm start
 - Node.js (v14+)
 - Supabase account (for database)
 - OpenAI API key
+- Pinecone API key (for document retrieval)
 
 ## API Endpoints
 
@@ -126,6 +128,36 @@ function ChatComponent() {
   );
 }
 ```
+
+## Pinecone Vector Database Integration
+
+The application integrates with Pinecone for document retrieval during chat interactions:
+
+1. Each company in the system can have its own Pinecone index configured
+2. When a user sends a message, the system queries the Pinecone index for relevant documents
+3. Retrieved documents are added as context for the LLM, improving responses with domain-specific knowledge
+
+### Configuration
+
+To use the Pinecone integration:
+
+1. Add your Pinecone API key to your environment variables:
+   ```
+   PINECONE_API_KEY=your-pinecone-api-key
+   ```
+
+2. Configure a Pinecone index for each company in the `chat_configs` table:
+   ```sql
+   UPDATE chat_configs SET pinecone_index_name = 'your-index-name' WHERE company_id = 'your-company-id';
+   ```
+
+3. Ensure documents in your Pinecone index include a 'text' field containing the document content
+
+### Document Structure
+
+Documents in Pinecone should include the following metadata:
+- `text`: The document content (required)
+- Additional metadata fields can be used for filtering (optional)
 
 ## License
 

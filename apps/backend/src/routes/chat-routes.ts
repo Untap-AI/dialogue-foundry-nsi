@@ -1,6 +1,5 @@
 import express from 'express'
 import { v4 as uuidv4 } from 'uuid'
-import NodeCache from 'node-cache'
 import {
   getChatById,
   getChatsByUserId,
@@ -25,21 +24,15 @@ import {
   authenticateUser
 } from '../middleware/auth-middleware'
 import { getChatConfigWithFallback } from '../db/chat-configs'
+import {
+  retrieveDocuments,
+  formatDocumentsAsContext
+} from '../services/pinecone-service'
+import { cacheService } from '../services/cache-service'
 import type { CustomRequest } from '../middleware/auth-middleware'
 import type { Message, ChatSettings } from '../services/openai-service'
-import type { Database } from '../types/database'
 
 const router = express.Router()
-
-// Define types for cache items
-type ChatType = Database['public']['Tables']['chats']['Row']
-type ChatConfigType = Database['public']['Tables']['chat_configs']['Row']
-
-// In-memory cache for frequently accessed data with TTL
-// chatConfigCache: stores company-specific chat configurations (TTL: 5 minutes)
-// chatCache: stores chat objects (TTL: 1 minute)
-const chatConfigCache = new NodeCache({ stdTTL: 300, checkperiod: 60 }) // 5 minutes
-const chatCache = new NodeCache({ stdTTL: 60, checkperiod: 30 }) // 1 minute
 
 // Get all chats for a user (requires user authentication)
 router.get(
@@ -80,16 +73,13 @@ router.get('/:chatId', authenticateChatAccess, async (req, res) => {
     }
 
     // Check cache first
-    const cachedChat = chatCache.get<ChatType>(chatId)
-    let chat: ChatType | null
-
-    if (cachedChat) {
-      chat = cachedChat
-    } else {
-      chat = await getChatById(chatId)
-      if (chat) {
+    let chat = cacheService.getChat(chatId)
+    if (!chat) {
+      const dbChat = await getChatById(chatId)
+      if (dbChat) {
         // Cache the chat for future requests
-        chatCache.set(chatId, chat)
+        cacheService.setChat(chatId, dbChat)
+        chat = dbChat
       }
     }
 
@@ -116,14 +106,14 @@ router.post('/', async (req, res) => {
     // If companyId is provided, verify it exists in chat_configs
     if (companyId) {
       // Try to get config from cache first
-      let chatConfig = chatConfigCache.get<ChatConfigType>(companyId)
+      let chatConfig = cacheService.getChatConfig(companyId)
       if (!chatConfig) {
         // If not in cache, check the database
         try {
           const dbConfig = await getChatConfigWithFallback(companyId)
           if (dbConfig) {
             chatConfig = dbConfig
-            chatConfigCache.set(companyId, dbConfig)
+            cacheService.setChatConfig(companyId, dbConfig)
           }
         } catch (configError) {
           console.error(
@@ -151,7 +141,7 @@ router.post('/', async (req, res) => {
     })
 
     // Cache the newly created chat
-    chatCache.set(newChat.id, newChat)
+    cacheService.setChat(newChat.id, newChat)
 
     // Generate access token for this chat
     const token = generateChatAccessToken(newChat.id, generatedUserId)
@@ -202,7 +192,7 @@ router.put('/:chatId', authenticateChatAccess, async (req, res) => {
 
     // Update the cache with the new data
     if (updatedChat) {
-      chatCache.set(chatId, updatedChat)
+      cacheService.setChat(chatId, updatedChat)
     }
 
     return res.json(updatedChat)
@@ -223,7 +213,7 @@ router.delete('/:chatId', authenticateChatAccess, async (req, res) => {
     await deleteChat(chatId)
 
     // Remove from cache
-    chatCache.del(chatId)
+    cacheService.deleteChat(chatId)
 
     return res.json({ success: true })
   } catch (error) {
@@ -254,12 +244,12 @@ router.post(
       }
 
       // Check cache first before database query
-      let chat = chatCache.get<ChatType>(chatId)
+      let chat = cacheService.getChat(chatId)
       if (!chat) {
         const dbChat = await getChatById(chatId)
         if (dbChat) {
           chat = dbChat
-          chatCache.set(chatId, dbChat)
+          cacheService.setChat(chatId, dbChat)
         }
       }
 
@@ -280,12 +270,12 @@ router.post(
 
       // Get the company-specific configuration or fall back to default
       // Try to get config from cache first
-      let chatConfig = chatConfigCache.get<ChatConfigType>(companyId)
+      let chatConfig = cacheService.getChatConfig(companyId)
       if (!chatConfig) {
         const dbConfig = await getChatConfigWithFallback(companyId)
         if (dbConfig) {
           chatConfig = dbConfig
-          chatConfigCache.set(companyId, dbConfig)
+          cacheService.setChatConfig(companyId, dbConfig)
         }
       }
 
@@ -324,6 +314,28 @@ router.post(
         role: 'user',
         content
       })
+
+      // Retrieve relevant documents from Pinecone if an index is configured
+      let contextFromDocs = ''
+      if (chatConfig?.pinecone_index_name) {
+        try {
+          const documents = await retrieveDocuments(companyId, content)
+          if (documents && documents.length > 0) {
+            contextFromDocs = formatDocumentsAsContext(documents)
+          }
+        } catch (retrievalError) {
+          console.error('Error during document retrieval:', retrievalError)
+          // Continue without document retrieval if it fails
+        }
+      }
+
+      // If we retrieved context, add it as a system message
+      if (contextFromDocs) {
+        openaiMessages.push({
+          role: 'system',
+          content: contextFromDocs
+        })
+      }
 
       // Generate response from OpenAI
       const aiResponseContent = await generateChatCompletion(
@@ -389,12 +401,12 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     }
 
     // Check cache first before database query
-    let chat = chatCache.get<ChatType>(chatId)
+    let chat = cacheService.getChat(chatId)
     if (!chat) {
       const dbChat = await getChatById(chatId)
       if (dbChat) {
         chat = dbChat
-        chatCache.set(chatId, dbChat)
+        cacheService.setChat(chatId, dbChat)
       }
     }
 
@@ -414,12 +426,12 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     }
 
     // Try to get config from cache first
-    let chatConfig = chatConfigCache.get<ChatConfigType>(companyId)
+    let chatConfig = cacheService.getChatConfig(companyId)
     if (!chatConfig) {
       const dbConfig = await getChatConfigWithFallback(companyId)
       if (dbConfig) {
         chatConfig = dbConfig
-        chatConfigCache.set(companyId, dbConfig)
+        cacheService.setChatConfig(companyId, dbConfig)
       }
     }
 
@@ -462,6 +474,28 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
         content
       }
     ]
+
+    // Retrieve relevant documents from Pinecone if an index is configured
+    let contextFromDocs = ''
+    if (chatConfig?.pinecone_index_name) {
+      try {
+        const documents = await retrieveDocuments(companyId, content)
+        if (documents && documents.length > 0) {
+          contextFromDocs = formatDocumentsAsContext(documents)
+        }
+      } catch (retrievalError) {
+        console.error('Error during document retrieval:', retrievalError)
+        // Continue without document retrieval if it fails
+      }
+    }
+
+    // If we retrieved context, add it as a system message
+    if (contextFromDocs) {
+      openaiMessages.push({
+        role: 'system',
+        content: contextFromDocs
+      })
+    }
 
     const onChunk = (chunk: string) => {
       res.write(chunk)
