@@ -1,19 +1,18 @@
 {
   "name": "@dialogue-foundry/frontend",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.1.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "build:lib": "tsc -b && BUILD_MODE=library vite build",
-    "build:html": "tsc -b && vite build",
+    "build:watch": "vite build --watch",
     "start": "vite",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "preview": "vite preview",
     "clean": "rm -rf dist && rm -rf node_modules",
     "typecheck": "tsc --noEmit",
-    "publish-packages": "ts-node ../../packages/deploy-s3/scripts/version-based-deploy.ts --package ./package.json --source ./dist --bucket dialogue-foundry-frontend"
+    "publish-package": "ts-node ../../packages/deploy-s3/scripts/version-based-deploy.ts --package ./package.json --source ./dist --bucket dialogue-foundry-frontend"
   },
   "dependencies": {
     "@dialogue-foundry/tailwind-config": "workspace:*",
