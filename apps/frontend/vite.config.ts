@@ -11,18 +11,25 @@ export default defineConfig(({ command }) => {
     plugins: [
       react(),
       tailwindcss(),
-      cssInjectedByJsPlugin(),
+      // CSS injected by JS plugin is only needed for library mode
+      // For HTML output, we can use regular CSS loading
+      process.env.BUILD_MODE === 'library' ? cssInjectedByJsPlugin() : null,
       {
         name: 'css-handler',
         enforce: 'post',
         transformIndexHtml(html) {
-          if (!isProd) {
-            // In development, add a link to the index.css file
-            return html.replace(
-              /<\/title>/,
-              `</title>\n    <link rel="stylesheet" href="./index.css">`
-            );
+          // For both development and production, ensure the CSS file is referenced
+          if (process.env.BUILD_MODE !== 'library') {
+            // Check if CSS link already exists
+            if (!html.includes('<link rel="stylesheet" href="./index.css">') && 
+                !html.includes('<link rel="stylesheet" href="/index.css">')) {
+              return html.replace(
+                /<\/title>/,
+                `</title>\n    <link rel="stylesheet" href="./index.css">`
+              );
+            }
           }
+          return html;
         }
       }
     ],
@@ -38,27 +45,68 @@ export default defineConfig(({ command }) => {
     },
     // Add build configuration
     build: {
-      // Disable generating HTML files
-      manifest: true,
-      rollupOptions: {
-        input: {
-          main: resolve(__dirname, 'src/main.tsx') // Adjust this path to your entry point
+      // Configure output based on build mode
+      ...(process.env.BUILD_MODE === 'library' ? {
+        // Library mode - generate JS only, no HTML
+        manifest: true,
+        rollupOptions: {
+          input: {
+            index: resolve(__dirname, 'src/index.tsx')
+          },
+          output: {
+            entryFileNames: '[name].js',
+            chunkFileNames: '[name].js',
+            assetFileNames: '[name].[ext]',
+            manualChunks: undefined
+          }
         },
-        output: {
-          // Don't generate HTML
-          entryFileNames: '[name].js',
-          chunkFileNames: '[name].js',
-          assetFileNames: '[name].[ext]',
-          // Skip HTML file generation
-          manualChunks: undefined
-        }
-      },
-      // Ensure CSS is inlined into JS
-      cssCodeSplit: false,
-      // Don't generate source maps in production
-      sourcemap: !isProd,
-      // Don't copy public directory assets
-      copyPublicDir: false
+        // Ensure CSS is inlined into JS for library mode
+        cssCodeSplit: false,
+        // Don't generate source maps in production
+        sourcemap: !isProd,
+        // Don't copy public directory assets in library mode
+        copyPublicDir: false
+      } : {
+        // Default mode - generate HTML and normal assets
+        outDir: 'dist',
+        emptyOutDir: true,
+        // Keep CSS code split but put it at root level with JS
+        cssCodeSplit: true,
+        // Don't add hash to main CSS file for easier referencing
+        cssMinify: isProd,
+        rollupOptions: {
+          input: {
+            index: resolve(__dirname, 'index.html')
+          },
+          output: {
+            // Place JS files at the root level next to index.html
+            entryFileNames: 'index.js',
+            chunkFileNames: 'chunks/[name].[hash].js', // Only put chunks in a subfolder
+            assetFileNames: (assetInfo) => {
+              // Make sure to handle undefined name
+              if (!assetInfo.name) return 'assets/[name].[hash].[ext]';
+              
+              const info = assetInfo.name.split('.');
+              const ext = info[info.length - 1];
+              
+              // Keep CSS at root level, place other assets in assets folder
+              if (ext === 'css') {
+                // Main CSS file doesn't need a hash for easier referencing
+                if (assetInfo.name.includes('index') || assetInfo.name.includes('main')) {
+                  return 'index.css';
+                }
+                return '[name].[ext]';
+              }
+              
+              return 'assets/[name].[hash].[ext]';
+            }
+          }
+        },
+        // Generate source maps in development
+        sourcemap: !isProd,
+        // Copy public directory assets in HTML mode
+        copyPublicDir: true
+      })
     }
   }
 }) 

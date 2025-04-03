@@ -1,0 +1,171 @@
+name: Deploy Packages to S3
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - '.github/workflows/deploy-to-s3.yml'
+  # Enable manual triggering
+  workflow_dispatch:
+    inputs:
+      filter:
+        description: 'Optional filter to deploy specific package(s)'
+        required: false
+        default: ''
+      force:
+        description: 'Force deployment even if version exists'
+        required: false
+        default: 'false'
+        type: boolean
+      build_mode:
+        description: 'Build mode (empty for default, html, or lib)'
+        required: false
+        default: ''
+        type: string
+
+jobs:
+  build_and_deploy:
+    name: Build and Deploy
+    # Only run when PR is merged to main, not on every PR close
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Needed for Turborepo to detect changes
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false
+      
+      - name: Get pnpm store directory
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+      
+      - name: Setup pnpm cache
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+      
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Build all packages
+        run: |
+          # Default build for most packages
+          if [[ -z "${{ github.event.inputs.build_mode }}" || "${{ github.event.inputs.filter }}" != *"frontend"* ]]; then
+            pnpm build
+          else
+            # Special handling for frontend with build mode
+            if [[ "${{ github.event.inputs.filter }}" == *"frontend"* ]]; then
+              if [[ "${{ github.event.inputs.build_mode }}" == "lib" ]]; then
+                echo "Building frontend in library mode"
+                cd apps/frontend && pnpm build:lib
+              elif [[ "${{ github.event.inputs.build_mode }}" == "html" ]]; then
+                echo "Building frontend in HTML mode"
+                cd apps/frontend && pnpm build:html
+              else
+                echo "Building frontend in default mode"
+                cd apps/frontend && pnpm build
+              fi
+            fi
+          fi
+      
+      - name: Deploy packages
+        id: deploy
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
+          DEPLOY_BUCKET: ${{ secrets.DEPLOY_BUCKET }}
+        run: |
+          # Set force flag if needed
+          FORCE_FLAG=""
+          if [[ "${{ github.event.inputs.force }}" == "true" ]]; then
+            FORCE_FLAG="--force"
+          fi
+          
+          # Use filter if provided
+          FILTER_FLAG=""
+          if [[ -n "${{ github.event.inputs.filter }}" ]]; then
+            FILTER_FLAG="--filter=${{ github.event.inputs.filter }}"
+          fi
+          
+          # Choose deploy script based on build mode for frontend
+          if [[ "${{ github.event.inputs.filter }}" == *"frontend"* && -n "${{ github.event.inputs.build_mode }}" ]]; then
+            if [[ "${{ github.event.inputs.build_mode }}" == "lib" ]]; then
+              cd apps/frontend && pnpm publish-packages:lib $FORCE_FLAG
+            elif [[ "${{ github.event.inputs.build_mode }}" == "html" ]]; then
+              cd apps/frontend && pnpm publish-packages:html $FORCE_FLAG
+            else
+              # Run deploy command with Turborepo for default mode
+              pnpm turbo run publish-packages $FILTER_FLAG -- $FORCE_FLAG
+            fi
+          else
+            # Run deploy command with Turborepo for all other packages
+            pnpm turbo run publish-packages $FILTER_FLAG -- $FORCE_FLAG
+          fi
+          
+          # Extract deployed packages info for notification
+          DEPLOYED_PACKAGES=""
+          for pkg in $(find apps packages -name "package.json" -not -path "*/node_modules/*" -not -path "*/dist/*" | sort); do
+            if grep -q '"publish-packages":' "$pkg"; then
+              dir=$(dirname "$pkg")
+              name=$(node -p "require('./$pkg').name")
+              version=$(node -p "require('./$pkg').version")
+              DEPLOYED_PACKAGES="$DEPLOYED_PACKAGES$name@$version, "
+            fi
+          done
+          
+          # Remove trailing comma and space
+          DEPLOYED_PACKAGES=${DEPLOYED_PACKAGES%, }
+          echo "DEPLOY_SUCCESS=true" >> $GITHUB_OUTPUT
+          echo "PACKAGES_DEPLOYED=$DEPLOYED_PACKAGES" >> $GITHUB_OUTPUT
+      
+      - name: Create deployment summary
+        run: |
+          echo "## 📦 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Package | Version | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "| ------- | ------- | ------ |" >> $GITHUB_STEP_SUMMARY
+          
+          # We'll list the packages that have the publish-packages script
+          for pkg in $(find apps packages -name "package.json" -not -path "*/node_modules/*" -not -path "*/dist/*" | sort); do
+            if grep -q '"publish-packages":' "$pkg"; then
+              dir=$(dirname "$pkg")
+              name=$(node -p "require('./$pkg').name")
+              version=$(node -p "require('./$pkg').version")
+              buildMode="${{ github.event.inputs.build_mode }}"
+              status="✅"
+              
+              # Add build mode info for frontend
+              if [[ "$name" == *"frontend"* && -n "$buildMode" ]]; then
+                echo "| $name | $version | $status ($buildMode mode) |" >> $GITHUB_STEP_SUMMARY
+              else
+                echo "| $name | $version | $status |" >> $GITHUB_STEP_SUMMARY
+              fi
+            fi
+          done
+          
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Deployed to: s3://${{ secrets.DEPLOY_BUCKET }}" >> $GITHUB_STEP_SUMMARY
+
+      # Add notification step (for Slack, MS Teams, etc.)

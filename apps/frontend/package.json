@@ -6,11 +6,14 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:lib": "tsc -b && BUILD_MODE=library vite build",
+    "build:html": "tsc -b && vite build",
     "start": "vite",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "preview": "vite preview",
     "clean": "rm -rf dist && rm -rf node_modules",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "publish-packages": "ts-node ../../packages/deploy-s3/scripts/version-based-deploy.ts --package ./package.json --source ./dist --bucket dialogue-foundry-frontend"
   },
   "dependencies": {
     "@dialogue-foundry/tailwind-config": "workspace:*",
@@ -27,6 +30,7 @@
   },
   "devDependencies": {
     "@babel/plugin-syntax-jsx": "^7.23.3",
+    "@dialogue-foundry/deploy-s3": "workspace:*",
     "@dialogue-foundry/eslint-config": "workspace:*",
     "@dialogue-foundry/tsconfig": "workspace:*",
     "@types/node": "^20.17.24",
