@@ -49,7 +49,7 @@ This repository uses [Changesets](https://github.com/changesets/changesets) for 
 5. **Build and Publish** the updated packages:
 
    ```bash
-   pnpm publish-packages
+   pnpm publish-package
    ```
 
 ## Deployment to AWS S3

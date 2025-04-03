@@ -18,7 +18,7 @@ import * as path from 'path';
 import { S3 } from 'aws-sdk';
 import * as semver from 'semver';
 import { Command } from 'commander';
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 import { glob } from 'glob';
 
 // Define the command line interface
@@ -82,7 +82,7 @@ async function main() {
     const minor = semver.minor(currentVersion);
     const patch = semver.patch(currentVersion);
 
-    if(!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY || !process.env.AWS_SESSION_TOKEN) {
+    if(!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
       console.error(chalk.red('Error: AWS credentials not found in environment variables'));
       process.exit(1);
     }
@@ -91,7 +91,6 @@ async function main() {
     const awsConfig: S3.ClientConfiguration = {  
       accessKeyId: process.env.AWS_ACCESS_KEY_ID,
       secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
-      sessionToken: process.env.AWS_SESSION_TOKEN
     };
     
     // Initialize S3 client with configured credentials

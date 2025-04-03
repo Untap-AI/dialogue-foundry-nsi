@@ -24,7 +24,7 @@
     "clean": {
       "cache": false
     },
-    "publish-packages": {
+    "publish-package": {
       "dependsOn": ["build"],
       "cache": false
     }

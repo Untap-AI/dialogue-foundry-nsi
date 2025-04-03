@@ -93,7 +93,7 @@ jobs:
 ```json
 {
   "scripts": {
-    "publish-packages": "ts-node ../../packages/deploy-s3/scripts/version-based-deploy.ts --package ./package.json --source ./dist --bucket my-deployment-bucket"
+    "publish-package": "ts-node ../../packages/deploy-s3/scripts/version-based-deploy.ts --package ./package.json --source ./dist --bucket my-deployment-bucket"
   }
 }
 ```
@@ -105,7 +105,7 @@ For web assets that need cross-origin access (like HTML/JS/CSS files):
 ```json
 {
   "scripts": {
-    "publish-packages:web": "ts-node ../../packages/deploy-s3/scripts/version-based-deploy.ts --package ./package.json --source ./dist --bucket my-deployment-bucket --extra-headers '{\"Cache-Control\":\"public, max-age=31536000\", \"Access-Control-Allow-Origin\":\"*\", \"Access-Control-Allow-Methods\":\"GET, OPTIONS\", \"Access-Control-Allow-Headers\":\"Content-Type\"}'"
+    "publish-package:web": "ts-node ../../packages/deploy-s3/scripts/version-based-deploy.ts --package ./package.json --source ./dist --bucket my-deployment-bucket --extra-headers '{\"Cache-Control\":\"public, max-age=31536000\", \"Access-Control-Allow-Origin\":\"*\", \"Access-Control-Allow-Methods\":\"GET, OPTIONS\", \"Access-Control-Allow-Headers\":\"Content-Type\"}'"
   }
 }
 ```

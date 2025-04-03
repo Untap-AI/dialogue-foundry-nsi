@@ -25,7 +25,7 @@ This workflow builds and deploys packages to AWS S3 with intelligent version-bas
 2. **Setup Node.js and pnpm**: Configures the JavaScript environment
 3. **Install dependencies**: Installs project dependencies using pnpm
 4. **Build packages**: Builds all packages or only the filtered ones
-5. **Deploy packages**: Runs the `publish-packages` script for all packages that define it
+5. **Deploy packages**: Runs the `publish-package` script for all packages that define it
 6. **Create deployment summary**: Generates a summary report of deployed packages
 7. **Send notifications**: Sends a Slack notification with deployment results
 
@@ -44,7 +44,7 @@ This workflow requires the following GitHub secrets:
 The workflow uses Turborepo to:
 - Detect which packages need to be built/deployed
 - Build packages in the correct dependency order
-- Only deploy packages that define a `publish-packages` script
+- Only deploy packages that define a `publish-package` script
 
 #### Example: Manually Deploying a Specific Package
 

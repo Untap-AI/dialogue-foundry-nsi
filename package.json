@@ -12,9 +12,9 @@
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
     "update-eslint": "turbo run lint --filter=@dialogue-foundry/eslint-config",
     "changeset": "changeset",
-    "version": "changeset version",
-    "publish-packages": "turbo run publish-packages",
-    "deploy-to-s3:frontend": "turbo run publish-packages --filter=@dialogue-foundry/frontend",
+    "changeset:version": "changeset version",
+    "publish-package": "turbo run publish-package",
+    "deploy-to-s3:frontend": "turbo run publish-package --filter=@dialogue-foundry/frontend",
     "deploy-to-s3": "turbo run build && node ./scripts/deploy-to-s3.js"
   },
   "devDependencies": {
