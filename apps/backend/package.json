@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "start": "ts-node --project tsconfig.json -r dotenv/config src/index.ts",
+    "start:prod": "rm -rf dist &&node dist/index.js",
     "start:local": "pnpm supabase-start && pnpm db-migrate && ts-node src/index.ts",
     "dev": "ts-node-dev --project tsconfig.json -r dotenv/config src/index.ts",
     "lint": "eslint src --ext .ts",
@@ -26,7 +26,9 @@
     "new-migration": "node scripts/create-migration.js",
     "chat-config": "ts-node src/scripts/chat-config-manager.ts",
     "chat-config-cli": "ts-node src/scripts/chat-config-cli.ts",
-    "admin:token": "ts-node src/scripts/generate-admin-token.ts"
+    "admin:token": "ts-node src/scripts/generate-admin-token.ts",
+    "install:prod": "pnpm install --production",
+    "package": "pnpm build:prod && cp package.json dist/ && cd dist && pnpm install --production --prefer-offline"
   },
   "dependencies": {
     "@pinecone-database/pinecone": "^5.1.1",
@@ -52,6 +54,7 @@
     "globals": "^16.0.0",
     "supabase": "^2.20.5",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "ts-node": "^10.9.2"
   }
 }
