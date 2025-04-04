@@ -13,6 +13,10 @@
  *   ts-node version-based-deploy.ts --package <packageJsonPath> --source <sourcePath> --bucket <bucketName> [options]
  */
 
+// Load environment variables from .env file
+import * as dotenv from 'dotenv';
+dotenv.config();
+
 import * as fs from 'fs';
 import * as path from 'path';
 import { S3 } from 'aws-sdk';
@@ -87,6 +91,25 @@ async function main() {
     const accessKeyId = options.accessKeyId || process.env.AWS_ACCESS_KEY_ID;
     const secretAccessKey = options.secretAccessKey || process.env.AWS_SECRET_ACCESS_KEY;
 
+    // Debug AWS credentials
+    console.log(chalk.blue('Checking AWS credentials...'));
+    
+    if (!accessKeyId) {
+      console.log(chalk.yellow('AWS_ACCESS_KEY_ID is not set'));
+    } else {
+      console.log(chalk.green('AWS_ACCESS_KEY_ID is set'));
+    }
+    
+    if (!secretAccessKey) {
+      console.log(chalk.yellow('AWS_SECRET_ACCESS_KEY is not set'));
+    } else {
+      console.log(chalk.green('AWS_SECRET_ACCESS_KEY is set'));
+    }
+
+    // List all AWS environment variables (keys only, not values)
+    const awsEnvVars = Object.keys(process.env).filter(key => key.startsWith('AWS_'));
+    console.log(chalk.blue(`AWS environment variables found: ${awsEnvVars.join(', ') || 'none'}`));
+
     if(!accessKeyId || !secretAccessKey) {
       console.error(chalk.red('Error: AWS credentials not found in command-line options or environment variables'));
       process.exit(1);
@@ -94,9 +117,12 @@ async function main() {
     
     // AWS credentials configuration
     const awsConfig: S3.ClientConfiguration = {  
-      accessKeyId,
-      secretAccessKey,
+      region: options.region || process.env.AWS_REGION || 'us-east-1'
     };
+    
+    // Only set credentials if provided - allows AWS SDK to use default credential provider chain
+    if (accessKeyId) awsConfig.accessKeyId = accessKeyId;
+    if (secretAccessKey) awsConfig.secretAccessKey = secretAccessKey;
     
     // Initialize S3 client with configured credentials
     const s3 = new S3(awsConfig);
