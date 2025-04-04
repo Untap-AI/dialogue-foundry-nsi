@@ -26,7 +26,7 @@ export interface DialogueFoundryConfig {
 // Default configuration
 export const defaultConfig: DialogueFoundryConfig = {
   chatConfig: {
-    apiBaseUrl: 'http://localhost:3000/api',
+    apiBaseUrl: process.env.REACT_APP_API_BASE_URL || 'http://localhost:3000/api',
     companyId: 'west-hills-vineyards'
   },
   theme: 'light',
