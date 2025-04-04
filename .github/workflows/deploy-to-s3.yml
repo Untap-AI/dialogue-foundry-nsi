@@ -1,0 +1,67 @@
+name: Deploy Packages to S3
+
+on:
+  pull_request:
+    types: [closed]
+    branches:
+      - main
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - '.github/workflows/deploy-to-s3.yml'
+
+jobs:
+  build_and_deploy:
+    name: Build and Deploy
+    # Only run when PR is merged to main, not on every PR close
+    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main')
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Needed for Turborepo to detect changes
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false
+      
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Build all packages
+        run: |
+         pnpm build
+      
+      - name: Deploy packages
+        id: deploy
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        run: |
+          pnpm publish-package
+      
+      - name: Create deployment summary
+        run: |
+          echo "## 📦 Deployment Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Package | Version | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "| ------- | ------- | ------ |" >> $GITHUB_STEP_SUMMARY
+          
+          # We'll list the packages that have the publish-package script
+          for pkg in $(find apps packages -name "package.json" -not -path "*/node_modules/*" -not -path "*/dist/*" | sort); do
+            if grep -q '"publish-package":' "$pkg"; then
+              dir=$(dirname "$pkg")
+              name=$(node -p "require('./$pkg').name")
+              version=$(node -p "require('./$pkg').version")
+              status="✅"
+            fi
+          done
