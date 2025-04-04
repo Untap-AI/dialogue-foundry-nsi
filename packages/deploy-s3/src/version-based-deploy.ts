@@ -45,10 +45,11 @@ program
   .requiredOption('--source <path>', 'Path to the directory containing files to deploy')
   .requiredOption('--bucket <n>', 'AWS S3 bucket name')
   .option('--folder <n>', 'Specific folder name to deploy to (defaults to package name)')
-  .option('--region <region>', 'AWS region (default: us-east-1 or AWS_REGION env variable)')
   .option('--base-path <path>', 'Base path in the S3 bucket')
   .option('--force', 'Force deployment even if the version already exists')
   .option('--dry-run', 'Dry run (do not actually deploy)')
+  .option('--access-key-id <id>', 'AWS access key ID (falls back to AWS_ACCESS_KEY_ID env variable)')
+  .option('--secret-access-key <key>', 'AWS secret access key (falls back to AWS_SECRET_ACCESS_KEY env variable)')
   .parse(process.argv);
 
 const options = program.opts<DeployOptions>();
@@ -82,15 +83,19 @@ async function main() {
     const minor = semver.minor(currentVersion);
     const patch = semver.patch(currentVersion);
 
-    if(!process.env.AWS_ACCESS_KEY_ID || !process.env.AWS_SECRET_ACCESS_KEY) {
-      console.error(chalk.red('Error: AWS credentials not found in environment variables'));
+    // Get AWS credentials from options or environment variables
+    const accessKeyId = options.accessKeyId || process.env.AWS_ACCESS_KEY_ID;
+    const secretAccessKey = options.secretAccessKey || process.env.AWS_SECRET_ACCESS_KEY;
+
+    if(!accessKeyId || !secretAccessKey) {
+      console.error(chalk.red('Error: AWS credentials not found in command-line options or environment variables'));
       process.exit(1);
     }
     
     // AWS credentials configuration
     const awsConfig: S3.ClientConfiguration = {  
-      accessKeyId: process.env.AWS_ACCESS_KEY_ID,
-      secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY,
+      accessKeyId,
+      secretAccessKey,
     };
     
     // Initialize S3 client with configured credentials
