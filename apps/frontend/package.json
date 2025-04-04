@@ -18,13 +18,9 @@
     "@dialogue-foundry/tailwind-config": "workspace:*",
     "@nlux/react": "^2",
     "@nlux/themes": "^2",
-    "@tailwindcss/postcss": "^4.0.15",
-    "@tailwindcss/vite": "^4.0.16",
-    "autoprefixer": "^10.4.21",
     "axios": "^1.8.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "tailwindcss": "^4.0.15",
     "vite-plugin-css-injected-by-js": "^3.5.2"
   },
   "devDependencies": {

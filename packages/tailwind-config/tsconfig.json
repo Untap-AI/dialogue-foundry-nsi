@@ -1,5 +1,0 @@
-{
-  "extends": "@dialogue-foundry/tsconfig/base.json",
-  "include": ["."],
-  "exclude": ["node_modules"]
-} 
