@@ -41,12 +41,19 @@ jobs:
         run: |
          pnpm build
       
+      - name: Debug environment variables
+        run: |
+          echo "Checking environment variables (redacted values for security)"
+          if [ -n "$AWS_ACCESS_KEY_ID" ]; then echo "AWS_ACCESS_KEY_ID is set"; else echo "AWS_ACCESS_KEY_ID is NOT set"; fi
+          if [ -n "$AWS_SECRET_ACCESS_KEY" ]; then echo "AWS_SECRET_ACCESS_KEY is set"; else echo "AWS_SECRET_ACCESS_KEY is NOT set"; fi
+      
       - name: Deploy packages
         id: deploy
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
+          # Run the publish package script
           pnpm publish-package
       
       - name: Create deployment summary
