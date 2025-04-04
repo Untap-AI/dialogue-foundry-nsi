@@ -6,12 +6,13 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "build:watch": "vite build --watch",
+    "build:all": "tsc -b && BUILD_MODE=full vite build",
     "start": "vite",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf dist && rm -rf node_modules",
     "typecheck": "tsc --noEmit",
-    "publish-package": "node ../../packages/deploy-s3/dist/version-based-deploy.js --package ./package.json --source ./dist --bucket dialogue-foundry-frontend"
+    "publish-package": "npm run build && node ../../packages/deploy-s3/dist/version-based-deploy.js --package ./package.json --source ./dist --bucket dialogue-foundry-frontend",
+    "publish-package:all": "npm run build:all && node ../../packages/deploy-s3/dist/version-based-deploy.js --package ./package.json --source ./dist --bucket dialogue-foundry-frontend"
   },
   "dependencies": {
     "@dialogue-foundry/tailwind-config": "workspace:*",
