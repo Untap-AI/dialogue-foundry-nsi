@@ -24,6 +24,7 @@ dist-ssr
 *.sln
 *.sw?
 
+
 # Environment files with sensitive data
 .env
 .env.local
@@ -32,4 +33,7 @@ dist-ssr
 
 # Keep examples
 !.env.*.example
+
+# Build files
+*.tsbuildinfo
 
