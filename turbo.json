@@ -23,6 +23,10 @@
     },
     "clean": {
       "cache": false
+    },
+    "publish-package": {
+      "dependsOn": ["build"],
+      "cache": false
     }
   }
 } 

@@ -1,0 +1,52 @@
+name: Deploy to S3
+
+on:
+  push:
+    branches:
+      - main
+  # Enable manual triggering
+  workflow_dispatch:
+
+jobs:
+  build_and_deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'pnpm'
+      
+      - name: Install dependencies
+        run: pnpm install
+      
+      - name: Build project
+        run: pnpm run build
+      
+      - name: Deploy to S3
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: ${{ secrets.AWS_REGION || 'us-east-1' }}
+          DEPLOY_BUCKET: ${{ secrets.DEPLOY_BUCKET }}
+        run: |
+          pnpm exec ts-node packages/deploy-s3/scripts/version-based-deploy.ts \
+            --package ./package.json \
+            --source ./dist \
+            --bucket $DEPLOY_BUCKET
+      
+      # Alternative approach with explicit credentials as parameters
+      # - name: Deploy to S3 (Alternative)
+      #   run: |
+      #     pnpm exec ts-node packages/deploy-s3/scripts/version-based-deploy.ts \
+      #       --package ./package.json \
+      #       --source ./dist \
+      #       --bucket ${{ secrets.DEPLOY_BUCKET }} \
+      #       --access-key-id ${{ secrets.AWS_ACCESS_KEY_ID }} \
+      #       --secret-access-key ${{ secrets.AWS_SECRET_ACCESS_KEY }} \
+      #       --region ${{ secrets.AWS_REGION || 'us-east-1' }} 

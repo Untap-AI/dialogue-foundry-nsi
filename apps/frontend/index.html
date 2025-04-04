@@ -3,11 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cross-Origin-Opener-Policy" content="same-origin" />
+    <meta http-equiv="Cross-Origin-Embedder-Policy" content="require-corp" />
+    <meta http-equiv="Cross-Origin-Resource-Policy" content="cross-origin" />
     <title>Dialogue Foundry Chat Playground</title>
-    <!-- CSS will be added dynamically by Vite plugin depending on environment -->
+    <!-- CSS will be automatically added by the Vite plugin -->
   </head>
   <body>
     <div id="root" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0;"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <script type="module" src="./src/index.tsx"></script>
   </body>
 </html> 
