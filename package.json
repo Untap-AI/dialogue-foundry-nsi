@@ -10,10 +10,16 @@
     "lint": "turbo lint",
     "clean": "turbo clean",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "update-eslint": "turbo run lint --filter=@dialogue-foundry/eslint-config"
+    "update-eslint": "turbo run lint --filter=@dialogue-foundry/eslint-config",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "publish-package": "turbo run publish-package",
+    "deploy-to-s3:frontend": "turbo run publish-package --filter=@dialogue-foundry/frontend",
+    "deploy-to-s3": "turbo run build && node ./scripts/deploy-to-s3.js"
   },
   "devDependencies": {
     "@babel/plugin-syntax-jsx": "^7.25.9",
+    "@changesets/cli": "^2.28.1",
     "eslint": "^8.57.1",
     "turbo": "^2.4.4",
     "typescript": "~5.3.3"

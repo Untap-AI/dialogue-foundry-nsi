@@ -11,20 +11,8 @@ export default defineConfig(({ command }) => {
     plugins: [
       react(),
       tailwindcss(),
+      // Always use CSS injected by JS plugin for JS-only output
       cssInjectedByJsPlugin(),
-      {
-        name: 'css-handler',
-        enforce: 'post',
-        transformIndexHtml(html) {
-          if (!isProd) {
-            // In development, add a link to the index.css file
-            return html.replace(
-              /<\/title>/,
-              `</title>\n    <link rel="stylesheet" href="./index.css">`
-            );
-          }
-        }
-      }
     ],
     server: {
       port: 3001
@@ -36,21 +24,36 @@ export default defineConfig(({ command }) => {
         localsConvention: 'camelCase',
       }
     },
-    // Add build configuration
+    // Build configuration for JS-only output
     build: {
-      // Disable generating HTML files
-      manifest: true,
+      // Library mode configuration - JS output with no HTML
+      lib: {
+        entry: resolve(__dirname, 'src/index.tsx'),
+        name: 'DialogueFoundry',
+        fileName: 'index'
+      },
       rollupOptions: {
-        input: {
-          main: resolve(__dirname, 'src/main.tsx') // Adjust this path to your entry point
-        },
+        // Make React external so it's not included in the bundle
+        external: ['react', 'react-dom'],
         output: {
-          // Don't generate HTML
-          entryFileNames: '[name].js',
-          chunkFileNames: '[name].js',
-          assetFileNames: '[name].[ext]',
-          // Skip HTML file generation
-          manualChunks: undefined
+          // Global variables to use in UMD build for externalized deps
+          globals: {
+            react: 'React',
+            'react-dom': 'ReactDOM'
+          },
+          // Output configuration
+          entryFileNames: 'index.js',
+          chunkFileNames: 'chunks/[name].js',
+          assetFileNames: (assetInfo) => {
+            // Make sure to handle undefined name
+            if (!assetInfo.name) return 'assets/[name].[ext]';
+            
+            const info = assetInfo.name.split('.');
+            const ext = info[info.length - 1];
+            
+            // Place all assets in assets folder
+            return 'assets/[name].[ext]';
+          }
         }
       },
       // Ensure CSS is inlined into JS
