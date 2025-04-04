@@ -13,12 +13,11 @@
     "update-eslint": "turbo run lint --filter=@dialogue-foundry/eslint-config",
     "changeset": "changeset",
     "changeset:version": "changeset version",
-    "publish-package": "cross-env TURBO_FORCE=true turbo run publish-package --no-cache --pass-through=AWS_ACCESS_KEY_ID,AWS_SECRET_ACCESS_KEY"
+    "publish-package": "turbo run publish-package"
   },
   "devDependencies": {
     "@babel/plugin-syntax-jsx": "^7.25.9",
     "@changesets/cli": "^2.28.1",
-    "cross-env": "^7.0.3",
     "eslint": "^8.57.1",
     "turbo": "^2.4.4",
     "typescript": "~5.3.3"
