@@ -182,9 +182,6 @@ importers:
         specifier: ^7.5.4
         version: 7.7.1
     devDependencies:
-      '@types/aws-sdk':
-        specifier: ^2.7.4
-        version: 2.7.4
       '@types/glob':
         specifier: ^8.1.0
         version: 8.1.0
@@ -1033,10 +1030,6 @@ packages:
 
   '@tybys/wasm-util@0.9.0':
     resolution: {integrity: sha512-6+7nlbMVX/PVDCwaIQ8nTOPveOcFLSt8GcXdx8hD0bt39uWxYT88uXzqTd4fTvqta7oeUJqudepapKNt2DYJFw==}
-
-  '@types/aws-sdk@2.7.4':
-    resolution: {integrity: sha512-BdGaQDSow2hYmHbn7RV/Lg9rvh/JBD6gFRKAeCh3eqjc2eAjaz5m+cjuX1lpaWOisMeb0ep8sZBhtOLHHZ8qAA==}
-    deprecated: This is a stub types definition. aws-sdk provides its own type definitions, so you do not need this installed.
 
   '@types/babel__core@7.20.5':
     resolution: {integrity: sha512-qoQprZvz5wQFJwMDqeseRXWv3rqMvhgpbXFfVyWhbx9X47POIA6i/+dXefEmZKoAgOaTdaIgNSMqMIU61yRyzA==}
@@ -4292,10 +4285,6 @@ snapshots:
     dependencies:
       tslib: 2.8.1
     optional: true
-
-  '@types/aws-sdk@2.7.4':
-    dependencies:
-      aws-sdk: 2.1692.0
 
   '@types/babel__core@7.20.5':
     dependencies:
