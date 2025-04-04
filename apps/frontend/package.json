@@ -9,7 +9,6 @@
     "build:watch": "vite build --watch",
     "start": "vite",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
-    "preview": "vite preview",
     "clean": "rm -rf dist && rm -rf node_modules",
     "typecheck": "tsc --noEmit",
     "publish-package": "node ../../packages/deploy-s3/dist/version-based-deploy.js --package ./package.json --source ./dist --bucket dialogue-foundry-frontend"
