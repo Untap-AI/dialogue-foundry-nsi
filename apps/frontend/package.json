@@ -12,7 +12,7 @@
     "preview": "vite preview",
     "clean": "rm -rf dist && rm -rf node_modules",
     "typecheck": "tsc --noEmit",
-    "publish-package": "node ../../packages/deploy-s3/dist/version-based-deploy.js --package ./package.json --source ./dist --bucket dialogue-foundry-frontend --access-key-id $AWS_ACCESS_KEY_ID --secret-access-key $AWS_SECRET_ACCESS_KEY"
+    "publish-package": "node ../../packages/deploy-s3/dist/version-based-deploy.js --package ./package.json --source ./dist --bucket dialogue-foundry-frontend --access-key-id \"$AWS_ACCESS_KEY_ID\" --secret-access-key \"$AWS_SECRET_ACCESS_KEY\""
   },
   "dependencies": {
     "@dialogue-foundry/tailwind-config": "workspace:*",

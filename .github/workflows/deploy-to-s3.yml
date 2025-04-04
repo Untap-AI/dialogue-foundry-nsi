@@ -43,21 +43,21 @@ jobs:
       - name: Build all packages
         run: |
          pnpm build
-      
-      - name: Debug environment variables
-        run: |
-          echo "Checking GitHub secrets and environment variables"
-          if [ -n "$AWS_ACCESS_KEY_ID" ]; then echo "Secret AWS_ACCESS_KEY_ID is configured"; else echo "Secret AWS_ACCESS_KEY_ID is NOT configured"; fi
-          if [ -n "$AWS_SECRET_ACCESS_KEY" ]; then echo "Secret AWS_SECRET_ACCESS_KEY is configured"; else echo "Secret AWS_SECRET_ACCESS_KEY is NOT configured"; fi
-          
+    
       
       - name: Deploy packages
         id: deploy
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          echo "Running publish-package script"
+          echo "Running publish-package script with AWS credentials"
+          echo "Checking AWS environment variables presence"
+          if [ -n "${{ secrets.AWS_ACCESS_KEY_ID }}" ]; then echo "AWS_ACCESS_KEY_ID is available"; else echo "AWS_ACCESS_KEY_ID is missing"; fi
+          if [ -n "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ]; then echo "AWS_SECRET_ACCESS_KEY is available"; else echo "AWS_SECRET_ACCESS_KEY is missing"; fi
+          
+          # Manually export the environment variables
+          export AWS_ACCESS_KEY_ID="${{ secrets.AWS_ACCESS_KEY_ID }}"
+          export AWS_SECRET_ACCESS_KEY="${{ secrets.AWS_SECRET_ACCESS_KEY }}"
+          
+          # Run the publish-package script
           pnpm publish-package
       
       - name: Create deployment summary
