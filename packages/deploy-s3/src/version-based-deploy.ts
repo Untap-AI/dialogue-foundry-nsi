@@ -124,7 +124,7 @@ async function main() {
     if (accessKeyId) awsConfig.accessKeyId = accessKeyId;
     if (secretAccessKey) awsConfig.secretAccessKey = secretAccessKey;
     
-    // Initialize S3 client with configured credentials
+    // Initialize S3 client with configured credentials 
     const s3 = new S3(awsConfig);
 
     console.log(chalk.blue(`\n🚀 Preparing to deploy ${packageName} v${currentVersion} to S3 bucket ${options.bucket}`));
