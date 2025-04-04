@@ -133,10 +133,10 @@ async function main() {
     const basePath = options.basePath || '';
     const majorMinorPath = `${major}.${minor}`;
     
-    // Key paths in S3
-    const versionPath = path.join(basePath, packageName, majorMinorPath).replace(/\\/g, '/');
+    // Key paths in S3 - removed packageName from paths
+    const versionPath = path.join(basePath, majorMinorPath).replace(/\\/g, '/');
     const versionTxtKey = path.join(versionPath, 'version.txt').replace(/\\/g, '/');
-    const latestPath = path.join(basePath, packageName, 'latest').replace(/\\/g, '/');
+    const latestPath = path.join(basePath, 'latest').replace(/\\/g, '/');
     const latestVersionTxtKey = path.join(latestPath, 'version.txt').replace(/\\/g, '/');
 
     // Check if version file exists (to determine if this exact version was already deployed)
