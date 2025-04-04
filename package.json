@@ -13,7 +13,7 @@
     "update-eslint": "turbo run lint --filter=@dialogue-foundry/eslint-config",
     "changeset": "changeset",
     "changeset:version": "changeset version",
-    "publish-package": "turbo run publish-package",
+    "publish-package": "turbo run publish-package"
   },
   "devDependencies": {
     "@babel/plugin-syntax-jsx": "^7.25.9",
