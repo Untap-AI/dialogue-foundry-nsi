@@ -13,7 +13,7 @@
     "update-eslint": "turbo run lint --filter=@dialogue-foundry/eslint-config",
     "changeset": "changeset",
     "changeset:version": "changeset version",
-    "publish-package": "cross-env AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY turbo run publish-package",
+    "publish-package": "turbo run publish-package",
     "deploy-to-s3:frontend": "turbo run publish-package --filter=@dialogue-foundry/frontend",
     "deploy-to-s3": "turbo run build && node ./scripts/deploy-to-s3.js"
   },
