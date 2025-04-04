@@ -16,6 +16,9 @@ jobs:
     # Only run when PR is merged to main, not on every PR close
     if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main')
     runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     
     steps:
       - name: Checkout code
@@ -50,29 +53,9 @@ jobs:
       
       - name: Deploy packages
         id: deploy
-        env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
-          # More verbose debugging for credentials
-          echo "AWS credential availability checks:"
-          if [ -n "$AWS_ACCESS_KEY_ID" ]; then
-            echo "✅ AWS_ACCESS_KEY_ID is available (value hidden for security)"
-          else
-            echo "❌ AWS_ACCESS_KEY_ID is NOT available - check your GitHub repository secrets"
-            exit 1
-          fi
-          
-          if [ -n "$AWS_SECRET_ACCESS_KEY" ]; then
-            echo "✅ AWS_SECRET_ACCESS_KEY is available (value hidden for security)"
-          else
-            echo "❌ AWS_SECRET_ACCESS_KEY is NOT available - check your GitHub repository secrets"
-            exit 1
-          fi
-          
-          # Run the publish package script with explicitly passed environment variables
-          echo "Running publish-package script with credentials"
-          AWS_ACCESS_KEY_ID="$AWS_ACCESS_KEY_ID" AWS_SECRET_ACCESS_KEY="$AWS_SECRET_ACCESS_KEY" pnpm publish-package
+          echo "Running publish-package script"
+          pnpm publish-package
       
       - name: Create deployment summary
         run: |

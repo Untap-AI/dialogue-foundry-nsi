@@ -14,8 +14,6 @@
     "changeset": "changeset",
     "changeset:version": "changeset version",
     "publish-package": "turbo run publish-package",
-    "deploy-to-s3:frontend": "turbo run publish-package --filter=@dialogue-foundry/frontend",
-    "deploy-to-s3": "turbo run build && node ./scripts/deploy-to-s3.js"
   },
   "devDependencies": {
     "@babel/plugin-syntax-jsx": "^7.25.9",
