@@ -11,6 +11,7 @@
   position: relative;
   background-color: var(--df-primary-color);
   transition: all 200ms;
+  cursor: pointer;
 }
 
 .chat-icon-button:hover {
