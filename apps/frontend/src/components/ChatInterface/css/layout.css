@@ -56,7 +56,6 @@
     --nlux-ChatItem-Message-BubbleLayout--BorderRadius: calc(var(--df-border-radius) - 4px);
     --nlux-ChatItem-Message-BubbleLayout--PaddingTopBottom: 10px;
     --nlux-ChatItem-Message-BubbleLayout--PaddingLeftRight: 15px;
-    --nlux-ChatItem-Message-Received--PaddingRight: 15px;
 
     /** Chat item message in list display layout */
     --nlux-ChatItem-Message-ListLayout--BorderWidth: 0px;
@@ -93,6 +92,14 @@
     --nlux-ConversationStarter--Gap: var(--df-flex-gap);
     --nlux-ConversationStarter--Width: 160px;
     --nlux-ConversationStarter--Height: 101px;
+}
+
+/* Mobile specific styles */
+@media (max-width: 768px) {
+    .nlux-AiChat-root.nlux-theme-dialogue-foundry {
+        /* Set chat room border radius to 0 on mobile */
+        --nlux-ChatRoom--BorderRadius: 0;
+    }
 }
 
 .nlux-conversationStarters-container {

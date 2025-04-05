@@ -45,9 +45,7 @@ export const ChatInterface = ({
     streamingService.streamMessage(
       userMessage,
       // On each chunk update
-      chunk =>  {
-        observer.next(chunk)
-      },
+      chunk => observer.next(chunk),
       // On complete
       () => observer.complete(),
       // On error
@@ -100,7 +98,7 @@ export const ChatInterface = ({
           conversationOptions={{
             showWelcomeMessage: true,
             conversationStarters,
-            autoScroll: isMobile ? false : true
+            autoScroll: !isMobile
           }}
           personaOptions={{
             assistant: personaOptions?.assistant

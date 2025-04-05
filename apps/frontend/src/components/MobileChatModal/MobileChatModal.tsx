@@ -20,6 +20,28 @@ export const MobileChatModal = ({ isOpen, onClose }: MobileChatModalProps) => {
     }
   }, [])
 
+  // Prevent touchmove events on body when modal is open (for Safari)
+  const preventTouchMove = useCallback((e: TouchEvent) => {
+    // Check if we're inside the modal content
+    const modalContent = document.querySelector('.mobile-chat-content')
+    let target = e.target as Node | null
+    
+    // Only allow touchmove inside scrollable containers
+    while (target) {
+      if (target instanceof HTMLElement && 
+          (target.classList.contains('nlux-conversation-container') || 
+           target.classList.contains('nlux-chatSegments-container'))) {
+        // Allow scrolling in the chat container
+        return
+      }
+      if (target === modalContent) break
+      target = target.parentNode
+    }
+    
+    // Otherwise prevent the event
+    e.preventDefault()
+  }, [])
+
   // Set up a ResizeObserver to detect changes in the conversation container
   useEffect(() => {
     const setupResizeObserver = () => {
@@ -175,7 +197,7 @@ export const MobileChatModal = ({ isOpen, onClose }: MobileChatModalProps) => {
     if (isOpen) {
       // Show the dialog as a modal
       dialog.showModal()
-      // Prevent body scrolling
+
       document.body.style.overflow = 'hidden'
       
       // Initial scroll to bottom after modal opens
@@ -185,11 +207,11 @@ export const MobileChatModal = ({ isOpen, onClose }: MobileChatModalProps) => {
       }, 300)
     } else {
       // Close the dialog
-      dialog.close()
-      // Restore body scrolling
+
       document.body.style.overflow = ''
+      dialog.close()
     }
-  }, [isOpen, scrollToBottom])
+  }, [isOpen, scrollToBottom, preventTouchMove])
 
   return (
     <dialog

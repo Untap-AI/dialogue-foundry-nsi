@@ -1,15 +1,18 @@
 .mobile-chat-modal {
   width: 100%;
-  height: 100vh;
+  min-height: 100dvh; /* Use vh instead of dvh for better compatibility */
   max-width: 100%;
-  max-height: 100%;
   margin: 0;
   padding: 0;
   border: none;
-  background-color: var(--df-bg-primary);
-  color: var(--df-text-primary);
+  /* TODO: Use react portals */
   z-index: 10000;
   overflow: hidden; /* Prevent scrolling of the dialog itself */
+  position: fixed; /* Fix position to prevent Safari scroll issues */
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
 }
 
 /* Remove the default dialog backdrop */
@@ -20,133 +23,9 @@
 /* The content container */
 .mobile-chat-content {
   width: 100%;
-  height: 100vh;
+  height: 100%;
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  position: relative; /* Add relative positioning for Safari */
 }
-
-/* Ensure the nlux-conversation-container works well in the modal */
-.mobile-chat-modal .nlux-conversation-container {
-  height: auto !important;
-  max-height: none !important;
-  flex: 1 1 auto !important;
-  padding: 0 10px !important; /* Add horizontal padding */
-  box-sizing: border-box !important;
-  width: 100% !important;
-  overflow-y: auto !important; /* Ensure scrolling is enabled */
-  -webkit-overflow-scrolling: touch !important; /* Smooth scrolling on iOS */
-  position: relative !important; /* Needed for proper scroll calculations */
-}
-
-/* Add padding at the bottom for better scroll experience */
-.mobile-chat-modal .nlux-conversation-container::after {
-  content: '';
-  display: block;
-  height: 20px; /* Padding at the bottom */
-}
-
-/* Message bubbles fixes for mobile */
-.mobile-chat-modal .nlux-message-bubble {
-  max-width: 85% !important; /* Prevent message bubbles from spilling */
-  word-wrap: break-word !important;
-  overflow-wrap: break-word !important;
-}
-
-/* Specifically target user message bubbles */
-.mobile-chat-modal .nlux-user-message .nlux-message-bubble {
-  margin-left: auto !important;
-  margin-right: 0 !important;
-  max-width: 80% !important; /* Slightly narrower for user messages */
-}
-
-/* Fix container widths to prevent overflow */
-.mobile-chat-modal .nlux-conversation-messages {
-  width: 100% !important;
-  max-width: 100% !important;
-  box-sizing: border-box !important;
-}
-
-/* Fix message content width */
-.mobile-chat-modal .nlux-message-content {
-  max-width: 100% !important; 
-  word-break: break-word !important;
-}
-
-/* Message list container */
-.mobile-chat-modal .nlux-messages-list {
-  padding: 0 !important;
-  width: 100% !important;
-}
-
-/* Style for the composer container (parent wrapper) */
-.mobile-chat-modal .nlux-composer-container {
-  position: relative !important;
-  z-index: 10 !important;
-  padding: 0 !important;
-  background-color: var(--df-bg-primary) !important;
-  -webkit-tap-highlight-color: transparent !important; /* Remove tap highlight on iOS */
-  touch-action: manipulation !important; /* Optimize for touch */
-}
-
-/* Style for the composer area to ensure it's always visible */
-.mobile-chat-modal .nlux-composer {
-  position: relative !important;
-  z-index: 5 !important;
-  margin-top: auto !important;
-  padding: 8px 10px !important;
-  background-color: var(--df-bg-primary) !important;
-  border-top: 1px solid rgba(0, 0, 0, 0.1) !important;
-  -webkit-tap-highlight-color: transparent !important; /* Remove tap highlight on iOS */
-  touch-action: manipulation !important; /* Optimize for touch */
-}
-
-/* Input area styling */
-.mobile-chat-modal .nlux-composer-input {
-  padding: 10px 12px !important;
-  font-size: 16px !important; /* Prevent zoom on iOS */
-  border-radius: 18px !important;
-  touch-action: manipulation !important; /* Optimize for touch */
-  -webkit-touch-callout: none !important; /* Disable callout to match native feel */
-  user-select: text !important; /* Allow text selection in the input */
-}
-
-/* Ensure the composer is visible when virtual keyboard appears */
-.mobile-chat-modal .nlux-composer:focus-within {
-  position: sticky !important;
-  bottom: 0 !important;
-  padding-bottom: env(safe-area-inset-bottom, 8px) !important; /* iOS safe area */
-  background-color: var(--df-bg-primary) !important;
-}
-
-/* Send button styling for better touch targets */
-.mobile-chat-modal .nlux-composer-send-button {
-  min-width: 36px !important; 
-  min-height: 36px !important;
-  margin-left: 8px !important;
-  border-radius: 50% !important;
-  -webkit-tap-highlight-color: transparent !important;
-  touch-action: manipulation !important;
-}
-
-/* Fix for iOS Safari's 100vh issue */
-@supports (-webkit-touch-callout: none) {
-  .mobile-chat-modal {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: -webkit-fill-available; /* Use fill-available for iOS */
-  }
-  
-  .mobile-chat-content {
-    height: -webkit-fill-available;
-  }
-}
-
-/* Ensure the interface has proper height within the modal */
-.mobile-chat-content .chat-interface-wrapper {
-  flex: 1;
-  overflow: hidden;
-} 

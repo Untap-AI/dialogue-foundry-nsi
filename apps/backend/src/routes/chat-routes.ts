@@ -475,8 +475,6 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       }
     ]
 
-    console.log('content', content)
-
     // Retrieve relevant documents from Pinecone if an index is configured
     let contextFromDocs = ''
     if (chatConfig?.pinecone_index_name) {
@@ -505,8 +503,6 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     const onChunk = (chunk: string) => {
       res.write(chunk)
     }
-
-
 
     // Generate streaming response from OpenAI
     const aiResponseContent = await generateStreamingChatCompletion(
