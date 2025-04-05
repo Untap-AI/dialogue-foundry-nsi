@@ -27,7 +27,12 @@
     "publish-package": {
       "dependsOn": ["build"],
       "cache": false,
-      "passThroughEnv": ["AWS_ACCESS_KEY_ID", "AWS_SECRET_ACCESS_KEY"]
+      "passThroughEnv": [
+        "AWS_ACCESS_KEY_ID", 
+        "AWS_SECRET_ACCESS_KEY", 
+        "GITHUB_TOKEN", 
+        "NODE_AUTH_TOKEN"
+      ]
     }
   }
 } 

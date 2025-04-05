@@ -1,0 +1,27 @@
+{
+  "name": "@dialogue-foundry/backend-smokebox",
+  "version": "1.0.0",
+  "description": "Test environment deployment for backend service",
+  "private": true,
+  "scripts": {
+    "build": "rm -rf dist && mkdir -p dist && cp -r ../dist/* dist/ && cp package.json dist/",
+    "deploy": "pnpm build && pnpm publish-to-github",
+    "publish-to-github": "node ../scripts/deploy-to-github-registry.js",
+    "start": "node dist/index.js",
+    "clean": "rm -rf dist && rm -rf node_modules",
+    "publish-package": "pnpm build && pnpm publish-to-github"
+  },
+  "dependencies": {
+    "@dialogue-foundry/backend": "workspace:*"
+  },
+  "devDependencies": {
+    "aws-sdk": "^2.1567.0"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com/"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/your-org/dialogue-foundry.git"
+  }
+} 
