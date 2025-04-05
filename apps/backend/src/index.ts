@@ -59,9 +59,9 @@ app.use((err: Error, _: express.Request, res: express.Response, __: express.Next
 })
 
 // Start the server
-app.listen(port, '10.0.0.192', () => {
+app.listen(port, () => {
   console.info(`Server is running on port ${port}`)
-  console.info(`Health check: http://0.0.0.0:${port}/health`)
+  console.info(`Health check: http://localhost:${port}/health`)
 })
 
 export default app
