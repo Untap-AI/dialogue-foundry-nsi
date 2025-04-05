@@ -8,7 +8,10 @@ on:
     paths:
       - 'apps/**'
       - 'packages/**'
-      - '.github/workflows/deploy-to-s3.yml'
+      - '.github/workflows/publish-packages.yml'
+  
+  # Allow manual triggering
+  workflow_dispatch:
 
 jobs:
   build_and_deploy:
@@ -16,9 +19,15 @@ jobs:
     # Only run when PR is merged to main, not on every PR close
     if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main')
     runs-on: ubuntu-latest
+    
+    permissions:
+      packages: write
+      contents: read
+    
     env:
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     
     steps:
       - name: Checkout code
@@ -30,6 +39,8 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
+          registry-url: 'https://npm.pkg.github.com'
+          scope: '@dialogue-foundry'
       
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
@@ -42,20 +53,15 @@ jobs:
       
       - name: Build all packages
         run: |
-         pnpm build
-      
-      - name: Debug environment variables
-        run: |
-          echo "Checking GitHub secrets and environment variables"
-          if [ -n "${{ secrets.AWS_ACCESS_KEY_ID }}" ]; then echo "Secret AWS_ACCESS_KEY_ID is configured"; else echo "Secret AWS_ACCESS_KEY_ID is NOT configured"; fi
-          if [ -n "${{ secrets.AWS_SECRET_ACCESS_KEY }}" ]; then echo "Secret AWS_SECRET_ACCESS_KEY is configured"; else echo "Secret AWS_SECRET_ACCESS_KEY is NOT configured"; fi
-          
+         pnpm build  
       
       - name: Deploy packages
         id: deploy
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Running publish-package script"
           pnpm publish-package
@@ -73,6 +79,6 @@ jobs:
               dir=$(dirname "$pkg")
               name=$(node -p "require('./$pkg').name")
               version=$(node -p "require('./$pkg').version")
-              status="✅"
+              echo "| $name | $version | ✅ |" >> $GITHUB_STEP_SUMMARY
             fi
           done
