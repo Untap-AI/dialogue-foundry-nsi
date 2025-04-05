@@ -94,6 +94,14 @@
     --nlux-ConversationStarter--Height: 101px;
 }
 
+/* Mobile specific styles */
+@media (max-width: 768px) {
+    .nlux-AiChat-root.nlux-theme-dialogue-foundry {
+        /* Set chat room border radius to 0 on mobile */
+        --nlux-ChatRoom--BorderRadius: 0;
+    }
+}
+
 .nlux-conversationStarters-container {
     overflow-y: auto;
 }

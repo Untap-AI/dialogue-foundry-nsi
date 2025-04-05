@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef, useCallback } from 'react'
 import { AiChat, useAsStreamAdapter } from '@nlux/react'
 import { useConfig } from '../../contexts/ConfigContext'
+import { useResizeObserver } from '../../hooks/useResizeObserver'
 import '@nlux/themes/unstyled.css'
 import './ChatInterface.css'
 
@@ -20,6 +21,11 @@ export const ChatInterface = ({
   // Get config from context
   const { conversationStarters, chatConfig, theme, personaOptions } =
     useConfig()
+ 
+  // Use the resize observer hook with a 150ms debounce delay for consistent behavior with ChatWidget
+  const { width } = useResizeObserver()
+  // Determine if mobile based on current width
+  const isMobile = width < 768
 
   const [chatId, setChatId] = useState<string | undefined>(undefined)
   const [messages, setMessages] = useState<ChatItem[] | undefined>(undefined)
@@ -91,10 +97,14 @@ export const ChatInterface = ({
           initialConversation={messages?.length ? messages : undefined}
           conversationOptions={{
             showWelcomeMessage: true,
-            conversationStarters
+            conversationStarters,
+            autoScroll: !isMobile
           }}
           personaOptions={{
             assistant: personaOptions?.assistant
+          }}
+          composerOptions={{
+            placeholder: 'Ask me anything...',
           }}
         />
       </div>

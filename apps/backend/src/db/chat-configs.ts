@@ -8,9 +8,6 @@ dotenv.config()
 const supabaseUrl = process.env.SUPABASE_URL
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-console.log('supabaseUrl', supabaseUrl)
-console.log('supabaseServiceKey', supabaseServiceKey)
-
 // Create a Supabase client with the service role key to bypass RLS for admin operations
 const serviceSupabase =
   supabaseUrl && supabaseServiceKey
