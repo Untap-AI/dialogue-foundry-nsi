@@ -96,6 +96,9 @@ export const ChatInterface = ({
           personaOptions={{
             assistant: personaOptions?.assistant
           }}
+          composerOptions={{
+            placeholder: 'Ask me anything...',
+          }}
         />
       </div>
     </div>

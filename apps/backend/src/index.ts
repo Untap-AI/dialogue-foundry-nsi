@@ -11,7 +11,7 @@ dotenv.config()
 
 // Create Express application
 const app = express()
-const port = process.env.PORT || 3000
+const port = parseInt(process.env.PORT || '3000', 10)
 
 // Parse JSON bodies
 app.use(express.json())
@@ -59,9 +59,9 @@ app.use((err: Error, _: express.Request, res: express.Response, __: express.Next
 })
 
 // Start the server
-app.listen(port, () => {
+app.listen(port, '10.0.0.192', () => {
   console.info(`Server is running on port ${port}`)
-  console.info(`Health check: http://localhost:${port}/health`)
+  console.info(`Health check: http://0.0.0.0:${port}/health`)
 })
 
 export default app

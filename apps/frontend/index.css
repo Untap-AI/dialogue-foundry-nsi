@@ -3,7 +3,7 @@
 :root {
   /* Core colors that can be customized by customers */
   --df-primary-color: rgb(50, 79, 68);
-  --df-secondary-color: #F1CFBF;
+  --df-secondary-color: rgb(242, 207, 191);
   
   /* Background colors */
   --df-bg-primary: rgb(255, 244, 231);
@@ -48,3 +48,13 @@
   --df-text-secondary: #71717a;
   --df-text-contrast: #ffffff;
 } 
+
+.nlux-comp-composer>button:disabled>.nlux-comp-sendIcon>.nlux-comp-sendIcon-container {
+  border: 1px solid var(--df-secondary-color);
+  border-radius: 50%;
+}
+
+.nlux-comp-composer>button>.nlux-comp-sendIcon>.nlux-comp-sendIcon-container {
+  border: 1px solid var(--df-border-color);
+  border-radius: 50%;
+}
