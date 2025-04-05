@@ -4,3 +4,45 @@
 @import './css/layout.css';
 @import './css/icons.css';
 @import './css/components.css';
+
+.chat-interface-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+}
+
+.chat-interface-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* Mobile specific styles */
+@media (max-width: 768px) {
+  .nlux-conversation-container {
+    flex: 1 1 auto !important;
+    max-height: none !important;
+  }
+  
+  /* Fix for iOS Safari viewport height issues */
+  .mobile-chat-content .chat-interface-wrapper {
+    height: calc(100vh - 60px); /* Account for header height */
+  }
+  
+  /* Ensure message text doesn't overflow */
+  .nlux-message-bubble {
+    word-break: break-word !important;
+    overflow-wrap: break-word !important;
+    max-width: 90% !important;
+  }
+  
+  /* Style for user messages specifically */
+  .nlux-user-message .nlux-message-bubble {
+    margin-left: auto !important;
+    margin-right: 0 !important;
+    max-width: 85% !important;
+  }
+}

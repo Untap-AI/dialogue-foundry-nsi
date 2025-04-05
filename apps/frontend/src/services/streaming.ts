@@ -95,6 +95,8 @@ export class ChatStreamingService {
         }
       }
 
+      console.log('fullText', fullText)
+
       onComplete(fullText)
     } catch (error) {
       // Ignore aborted request errors
