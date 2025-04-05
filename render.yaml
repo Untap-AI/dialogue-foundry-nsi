@@ -5,8 +5,8 @@ services:
     env: node
     buildCommand: ./render-scripts/setup-smokebox.sh
     startCommand: node server.js
-    region: ohio # Choose your preferred region
-    plan: starter # Choose your preferred plan
+    region: oregon # Choose your preferred region
+    plan: free # Choose your preferred plan
     branch: main # Automatically deploys from main branch
     healthCheckPath: /health
     envVars:
@@ -27,8 +27,8 @@ services:
     env: node
     buildCommand: ./render-scripts/setup-prod.sh
     startCommand: node server.js
-    region: ohio # Choose your preferred region
-    plan: starter # Choose your preferred plan
+    region: oregon # Choose your preferred region
+    plan: free # Choose your preferred plan
     branch: main # Still from main branch, but manual deployment
     healthCheckPath: /health
     envVars:
