@@ -19,16 +19,3 @@
   flex-direction: column;
   overflow: hidden;
 }
-
-/* Mobile specific styles */
-@media (max-width: 768px) {
-  .nlux-conversation-container {
-    flex: 1 1 auto !important;
-    max-height: none !important;
-  }
-  
-  /* Fix for iOS Safari viewport height issues */
-  .mobile-chat-content .chat-interface-wrapper {
-    height: calc(100vh - 60px); /* Account for header height with vh */
-  }
-}
