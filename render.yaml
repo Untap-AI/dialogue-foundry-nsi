@@ -9,7 +9,7 @@ services:
     plan: starter # Choose your preferred plan
     branch: main # Automatically deploys from main branch
     healthCheckPath: /health
-    nodeVersion: 18.x
+    runtime: "node:18.x"
     envVars:
       - key: NODE_ENV
         value: production
@@ -32,7 +32,7 @@ services:
     plan: starter # Choose your preferred plan
     branch: main # Still from main branch, but manual deployment
     healthCheckPath: /health
-    nodeVersion: 18.x
+    runtime: "node:18.x"
     envVars:
       - key: NODE_ENV
         value: production
