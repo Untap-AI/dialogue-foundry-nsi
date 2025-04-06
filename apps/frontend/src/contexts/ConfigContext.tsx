@@ -83,7 +83,7 @@ export function ConfigProvider({
         
         if (configScript && configScript.textContent) {
           try {
-            // Extract the actual JSON content, ignoring any comments
+            // Extract the actual JSON content, ignoring any comments.
             const textContent = configScript.textContent.trim();
             let jsonContent = textContent;
             
