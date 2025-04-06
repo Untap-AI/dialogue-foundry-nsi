@@ -1,18 +1,14 @@
 .mobile-chat-modal {
-  width: 100%;
-  min-height: 100dvh; /* Use vh instead of dvh for better compatibility */
-  max-width: 100%;
+  width: 100dvw;
+  max-width: 100dvw;
+  height: 100dvh;
+  max-height: 100dvh;
   margin: 0;
   padding: 0;
   border: none;
   /* TODO: Use react portals */
   z-index: 10000;
   overflow: hidden; /* Prevent scrolling of the dialog itself */
-  position: fixed; /* Fix position to prevent Safari scroll issues */
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
 }
 
 /* Remove the default dialog backdrop */
@@ -23,7 +19,7 @@
 /* The content container */
 .mobile-chat-content {
   width: 100%;
-  height: 100%;
+  height: 100dvh;
   display: flex;
   flex-direction: column;
   overflow: hidden;
