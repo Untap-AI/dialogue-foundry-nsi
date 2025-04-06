@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "description": "tsconfig file",
   "main": "base.json",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/peytonhobson/dialogue-foundry.git"
+  },
   "files": [
     "base.json",
     "react.json"

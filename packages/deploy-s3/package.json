@@ -7,12 +7,17 @@
   "bin": {
     "deploy-s3": "./dist/version-based-deploy.js"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/peytonhobson/dialogue-foundry.git"
+  },
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",
     "dev": "tsc --watch",
     "lint": "eslint src/**/*.ts",
-    "test": "jest"
+    "test": "jest",
+    "publish-package": "pnpm install && pnpm build"
   },
   "keywords": [
     "aws",
