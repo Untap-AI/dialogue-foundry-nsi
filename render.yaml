@@ -4,7 +4,7 @@ services:
     name: dialogue-foundry-backend-smokebox
     env: node
     rootDir: apps/backend
-    buildCommand: pnpm install --no-frozen-lockfile --production; pnpm build
+    buildCommand: pnpm install --no-frozen-lockfile; pnpm build
     startCommand: pnpm start
     region: oregon
     plan: free
@@ -34,7 +34,7 @@ services:
     name: dialogue-foundry-backend-prod
     env: node
     rootDir: apps/backend
-    buildCommand: pnpm install --no-frozen-lockfile --production; pnpm build
+    buildCommand: pnpm install --no-frozen-lockfile; pnpm build
     startCommand: pnpm start
     region: oregon
     plan: free
@@ -58,6 +58,5 @@ services:
       - key: SUPABASE_SERVICE_ROLE_KEY
         sync: false
         
-    
     # Disable auto-deploy for production
     autoDeploy: false 
