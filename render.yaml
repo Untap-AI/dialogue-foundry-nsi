@@ -3,9 +3,9 @@ services:
   - type: web
     name: dialogue-foundry-backend-smokebox
     env: node
-    rootDir: apps/backend-deploy
-    buildCommand: node scripts/build.js smokebox && pnpm install --production
-    startCommand: node dist/index.js
+    rootDir: apps/backend
+    buildCommand: pnpm install --no-frozen-lockfile --production; pnpm build
+    startCommand: pnpm start
     region: oregon # Choose your preferred region
     plan: free # Choose your preferred plan
     branch: main # Automatically deploys from main branch
@@ -17,22 +17,27 @@ services:
         value: smokebox
       - key: PORT
         value: 8080
-      - key: NPM_TOKEN
-        sync: false # This will be set manually in Render dashboard
-      # Define other environment variables as needed from .env
-      
-    # Auto-deploy on changes to main branch is disabled in favor of our GitHub Action
-    autoDeploy: false
+      - key: PINECONE_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+    autoDeploy: true
   
   # Production Environment
   - type: web
     name: dialogue-foundry-backend-prod
     env: node
-    rootDir: apps/backend-deploy
-    buildCommand: node scripts/build.js production && pnpm install --production
-    startCommand: node dist/index.js
+    rootDir: apps/backend
+    buildCommand: pnpm install --no-frozen-lockfile --production; pnpm build
+    startCommand: pnpm start
     region: oregon # Choose your preferred region
-    plan: free # Choose your preferred plan
+    plan: s # Choose your preferred plan
     branch: main # Still from main branch, but manual deployment
     healthCheckPath: /health
     envVars:
@@ -42,11 +47,17 @@ services:
         value: production
       - key: PORT
         value: 8080
-      - key: NPM_TOKEN
-        sync: false # This will be set manually in Render dashboard
-      - key: BACKEND_VERSION
-        value: "1.0.0" # This will be updated when deploying new versions
-      # Define other environment variables as needed from .env
+      - key: PINECONE_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false
+        
     
     # Disable auto-deploy for production
     autoDeploy: false 

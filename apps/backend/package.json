@@ -34,10 +34,7 @@
     "chat-config": "ts-node src/scripts/chat-config-manager.ts",
     "chat-config-cli": "ts-node src/scripts/chat-config-cli.ts",
     "admin:token": "ts-node src/scripts/generate-admin-token.ts",
-    "install:prod": "pnpm install --production",
-    "package": "pnpm build && cp package.json dist/ && cd dist && pnpm install --production --prefer-offline",
-    "publish-to-github": "node scripts/deploy-to-github-registry.js",
-    "publish-package": "pnpm package && NODE_ENV=production pnpm publish-to-github"
+    "install:prod": "pnpm install --production"
   },
   "dependencies": {
     "@pinecone-database/pinecone": "^5.1.1",
