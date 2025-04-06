@@ -48,18 +48,30 @@ export default defineConfig(({ command, mode }) => {
           const srcConfigJson = path.resolve(__dirname, 'default-config.json');
           const destDir = path.resolve(__dirname, 'dist');
           const destConfigJson = path.resolve(destDir, 'default-config.json');
+          const htmlFile = path.resolve(destDir, 'index.html');
 
-          if (fs.existsSync(srcConfigJson)) {
-            // Ensure the dist directory exists
-            if (!fs.existsSync(destDir)) {
-              fs.mkdirSync(destDir, { recursive: true });
+          if (fs.existsSync(srcConfigJson) && fs.existsSync(htmlFile)) {
+            try {
+              // Read the config file
+              const configContent = fs.readFileSync(srcConfigJson, 'utf8');
+              
+              // Read the HTML file
+              let htmlContent = fs.readFileSync(htmlFile, 'utf8');
+              
+              // Replace the placeholder in the script tag with actual JSON content
+              htmlContent = htmlContent.replace(
+                /<script id="dialogue-foundry-config" type="application\/json">[\s\S]*?<\/script>/,
+                `<script id="dialogue-foundry-config" type="application/json">${configContent}</script>`
+              );
+              
+              // Write updated HTML back
+              fs.writeFileSync(htmlFile, htmlContent);
+              console.log('✅ Injected config JSON into index.html');
+            } catch (error) {
+              console.error('❌ Error processing config file:', error);
             }
-            
-            // Copy default-config.json to dist/default-config.json
-            fs.copyFileSync(srcConfigJson, destConfigJson);
-            console.log('✅ Copied default-config.json to dist/default-config.json');
           } else {
-            console.warn('⚠️ default-config.json not found in the root directory');
+            console.warn('⚠️ default-config.json or index.html not found');
           }
         }
       },

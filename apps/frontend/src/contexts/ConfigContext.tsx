@@ -81,20 +81,22 @@ export function ConfigProvider({
         // Try to load from a script tag with id="dialogue-foundry-config"
         const configScript = document.getElementById('dialogue-foundry-config')
         
-        // First, check if the script has a src attribute
-        const src = configScript?.getAttribute('src')
-        if (src) {
+        if (configScript && configScript.textContent) {
           try {
-            // Ensure the URL is resolved correctly even if it's relative
-            // This converts relative URLs to absolute URLs based on the current page
-            const resolvedUrl = new URL(src, window.location.href).href;
+            // Extract the actual JSON content, ignoring any comments
+            const textContent = configScript.textContent.trim();
+            let jsonContent = textContent;
             
-            // Fetch and parse the JSON file
-            const response = await fetch(resolvedUrl)
-            if (!response.ok) {
-              throw new Error(`Failed to load config: ${response.status}`)
+            // If there are comments in the text content, try to extract just the JSON
+            if (textContent.includes('/*') || textContent.includes('//')) {
+              // Simple regex to extract JSON - this assumes the JSON is a complete object
+              const jsonMatch = textContent.match(/(\{[\s\S]*\})/);
+              if (jsonMatch) {
+                jsonContent = jsonMatch[1];
+              }
             }
-            const parsedConfig = await response.json()
+            
+            const parsedConfig = JSON.parse(jsonContent);
             
             // If API URL is a placeholder, replace it with the actual URL
             if (parsedConfig.chatConfig?.apiBaseUrl === 'RUNTIME_PLACEHOLDER') {
@@ -103,21 +105,8 @@ export function ConfigProvider({
                 : `${window.location.origin}/api`
             }
             
-            console.log('Loaded config from JSON file:', parsedConfig)
-            setConfigState({ ...defaultConfig, ...parsedConfig })
-            setConfigLoaded(true)
-            return
-          } catch (error) {
-            console.error('Error loading config from src:', error)
-          }
-        }
-        
-        // Fallback to using inline content
-        if (configScript && configScript.textContent) {
-          try {
-            const parsedConfig = JSON.parse(configScript.textContent)
             console.log('Found config in script tag', parsedConfig)
-            setConfigState(parsedConfig)
+            setConfigState({ ...defaultConfig, ...parsedConfig })
             setConfigLoaded(true)
             return
           } catch (parseError) {
