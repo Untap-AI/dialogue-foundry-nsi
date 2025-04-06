@@ -12,12 +12,13 @@
     "url": "git+https://github.com/peytonhobson/dialogue-foundry.git"
   },
   "scripts": {
+    "prepare": "pnpm install",
     "build": "tsc",
     "clean": "rm -rf dist",
     "dev": "tsc --watch",
     "lint": "eslint src/**/*.ts",
     "test": "jest",
-    "publish-package": "pnpm install && pnpm build"
+    "publish-package": "pnpm prepare && pnpm build"
   },
   "keywords": [
     "aws",

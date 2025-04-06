@@ -3,6 +3,10 @@
   "private": true,
   "version": "0.1.1",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/peytonhobson/dialogue-foundry.git"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
@@ -11,8 +15,8 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf dist && rm -rf node_modules",
     "typecheck": "tsc --noEmit",
-    "publish-package": "pnpm run build && npx ts-node ../../packages/deploy-s3/src/version-based-deploy.ts --package ./package.json --source ./dist --bucket dialogue-foundry-frontend",
-    "publish-package:all": "pnpm run build:all && npx ts-node ../../packages/deploy-s3/src/version-based-deploy.ts --package ./package.json --source ./dist --bucket dialogue-foundry-frontend"
+    "publish-package": "pnpm run build && pnpm install @types/semver && npx ts-node ../../packages/deploy-s3/dist/version-based-deploy.js --package ./package.json --source ./dist --bucket dialogue-foundry-frontend",
+    "publish-package:all": "pnpm run build:all && pnpm install @types/semver && npx ts-node ../../packages/deploy-s3/dist/version-based-deploy.js --package ./package.json --source ./dist --bucket dialogue-foundry-frontend"
   },
   "dependencies": {
     "@nlux/react": "^2",
@@ -32,6 +36,7 @@
     "@types/node": "^20.17.24",
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
+    "@types/semver": "^7.5.4",
     "@vitejs/plugin-react": "^4.3.4",
     "aws-sdk": "^2.1527.0",
     "chalk": "^4.1.2",
