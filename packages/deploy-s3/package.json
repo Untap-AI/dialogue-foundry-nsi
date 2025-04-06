@@ -2,11 +2,8 @@
   "name": "@dialogue-foundry/deploy-s3",
   "version": "0.2.1",
   "description": "Deploy packages to AWS S3 with versioned folders",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
-  "bin": {
-    "df-deploy-s3": "./dist/cli.js"
-  },
+  "main": "dist/version-based-deploy.js",
+  "types": "dist/version-based-deploy.d.ts",
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",
