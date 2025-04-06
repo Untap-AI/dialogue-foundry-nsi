@@ -12,8 +12,7 @@
     "clean": "rm -rf dist",
     "dev": "tsc --watch",
     "lint": "eslint src/**/*.ts",
-    "test": "jest",
-    "postinstall": "pnpm run build"
+    "test": "jest"
   },
   "keywords": [
     "aws",
