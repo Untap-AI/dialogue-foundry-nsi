@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.1.2
+
+### Patch Changes
+
+- c38f289: Deployment fixes
+
 ## 0.1.1
 
 ### Patch Changes
