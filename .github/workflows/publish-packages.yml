@@ -71,10 +71,7 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          echo "Installing additional type dependencies..."
-          pnpm add -D @types/semver semver
-          echo "Running publish-package script"
+        run:
           pnpm publish-package
       
       - name: Create deployment summary
