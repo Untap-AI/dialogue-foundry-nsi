@@ -11,8 +11,8 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf dist && rm -rf node_modules",
     "typecheck": "tsc --noEmit",
-    "publish-package": "pnpm run build && npx @dialogue-foundry/deploy-s3 --package ./package.json --source ./dist --bucket dialogue-foundry-frontend",
-    "publish-package:all": "pnpm run build:all && npx @dialogue-foundry/deploy-s3 --package ./package.json --source ./dist --bucket dialogue-foundry-frontend"
+    "publish-package": "pnpm run build && ts-node ../../packages/deploy-s3/src/version-based-deploy.ts --package ./package.json --source ./dist --bucket dialogue-foundry-frontend",
+    "publish-package:all": "pnpm run build:all && ts-node ../../packages/deploy-s3/src/version-based-deploy.ts --package ./package.json --source ./dist --bucket dialogue-foundry-frontend"
   },
   "dependencies": {
     "@nlux/react": "^2",
@@ -34,6 +34,7 @@
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
     "eslint": "^8.57.1",
+    "ts-node": "^10.9.2",
     "typescript": "~5.3.3",
     "vite": "^6.2.0"
   }
