@@ -20,6 +20,9 @@ const { execSync } = require('child_process')
 const distDir = path.resolve(process.cwd(), 'dist')
 const packageJsonPath = path.join(distDir, 'package.json')
 
+console.log(`Current working directory: ${process.cwd()}`)
+console.log(`Looking for dist at: ${distDir}`)
+
 // Ensure we're running from a directory with a dist folder
 if (!fs.existsSync(distDir)) {
   console.error(
@@ -59,6 +62,11 @@ const npmrcPath = path.join(distDir, '.npmrc')
 const githubRegistry = 'https://npm.pkg.github.com'
 const orgName = name.split('/')[0].replace('@', '')
 
+console.log(`Package name: ${name}`)
+console.log(`Organization extracted: ${orgName}`)
+console.log(`Using GitHub Registry: ${githubRegistry}`)
+console.log(`Token: ${token}`)
+
 fs.writeFileSync(
   npmrcPath,
   `${orgName}:registry=${githubRegistry}/\n` +
@@ -73,10 +81,30 @@ console.log(
 try {
   // Navigate to the dist directory
   process.chdir(distDir)
+  console.log(`Changed directory to: ${process.cwd()}`)
+
+  // Show .npmrc file content for debugging (without showing the token)
+  console.log('Created .npmrc file with content:')
+  const npmrcContent = fs.readFileSync(npmrcPath, 'utf8')
+  console.log(npmrcContent.replace(/(_authToken=)[^\\n]+/, '$1[REDACTED]'))
 
   // Publish the package
   console.log('Publishing package...')
-  execSync('npm publish', { stdio: 'inherit' })
+  try {
+    execSync('npm publish', { stdio: 'inherit' })
+  } catch (publishError) {
+    console.error(
+      'npm publish command failed with error:',
+      publishError.message
+    )
+    console.error('This might be due to:')
+    console.error('1. Authentication issues with GitHub')
+    console.error('2. Package already exists with same version')
+    console.error('3. Package name conflicts')
+    console.error('4. Network issues')
+    console.error('Try running with npm publish --verbose for more details')
+    throw publishError
+  }
 
   console.log(
     `Successfully published ${name}@${version} to GitHub Package Registry!`
@@ -88,5 +116,6 @@ try {
   // Clean up the .npmrc file
   if (fs.existsSync(npmrcPath)) {
     fs.unlinkSync(npmrcPath)
+    console.log('Cleaned up .npmrc file')
   }
 }
