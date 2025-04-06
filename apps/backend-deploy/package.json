@@ -1,0 +1,19 @@
+{
+  "name": "@dialogue-foundry/backend-deploy",
+  "version": "1.0.0",
+  "description": "Unified deployment package for backend service",
+  "private": true,
+  "scripts": {
+    "build": "rm -rf dist && mkdir -p dist && cp -r ../backend/dist/* dist/ && cp package.json dist/",
+    "deploy:smokebox": "node scripts/deploy-direct.js smokebox",
+    "deploy:production": "node scripts/deploy-direct.js production",
+    "start": "node dist/index.js",
+    "clean": "rm -rf dist && rm -rf node_modules"
+  },
+  "dependencies": {
+    "@peytonhobson/backend": "workspace:*"
+  },
+  "devDependencies": {
+    "dotenv": "^16.0.3"
+  }
+} 

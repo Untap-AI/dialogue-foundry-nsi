@@ -1,0 +1,123 @@
+name: Backend Deployment
+
+on:
+  # Allow direct deployment to be triggered manually
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'smokebox'
+        type: choice
+        options:
+          - smokebox
+          - production
+      version:
+        description: 'Backend package version to deploy (for production)'
+        required: false
+        type: string
+  
+  # Automatically deploy to smokebox when relevant code changes
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/backend-deploy/**'  # When our deployment code changes
+  
+  # Also trigger when a new backend package is published
+  workflow_run:
+    workflows: ["Publish Packages"]  # The workflow that publishes packages
+    types:
+      - completed
+    branches:
+      - main
+
+jobs:
+  # Job for automated smokebox deployments after code changes
+  auto_deploy_smokebox:
+    name: Auto Deploy to Smokebox
+    runs-on: ubuntu-latest
+    # Only run on push events or when package publishing completes
+    if: github.event_name == 'push' || (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success')
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false
+      
+      - name: Install Dependencies
+        run: |
+          cd apps/backend-deploy
+          pnpm install
+      
+      - name: Deploy to Smokebox
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SMOKEBOX_ID: ${{ secrets.RENDER_SMOKEBOX_ID }}
+          RENDER_PROD_ID: ${{ secrets.RENDER_PROD_ID }}
+        run: |
+          echo "Automatically deploying latest code to smokebox environment..."
+          cd apps/backend-deploy
+          pnpm run deploy:smokebox
+  
+  # Job for manual deployments to either environment
+  manual_deploy:
+    name: Manual Deployment
+    runs-on: ubuntu-latest
+    # Only run on manual triggers
+    if: github.event_name == 'workflow_dispatch'
+    
+    # For production deployments, require manual approval
+    environment:
+      ${{ github.event.inputs.environment == 'production' && 'production' || '' }}
+    
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+      
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+          run_install: false
+      
+      - name: Install Dependencies
+        run: |
+          cd apps/backend-deploy
+          pnpm install
+      
+      - name: Deploy to Render
+        env:
+          RENDER_API_KEY: ${{ secrets.RENDER_API_KEY }}
+          RENDER_SMOKEBOX_ID: ${{ secrets.RENDER_SMOKEBOX_ID }}
+          RENDER_PROD_ID: ${{ secrets.RENDER_PROD_ID }}
+        run: |
+          cd apps/backend-deploy
+          
+          if [[ "${{ github.event.inputs.environment }}" == "production" ]]; then
+            if [[ -n "${{ github.event.inputs.version }}" ]]; then
+              echo "Manually deploying version ${{ github.event.inputs.version }} to production environment..."
+              pnpm run deploy:production ${{ github.event.inputs.version }}
+            else
+              echo "Manually deploying latest version to production environment..."
+              pnpm run deploy:production
+            fi
+          else
+            echo "Manually deploying to smokebox environment..."
+            pnpm run deploy:smokebox
+          fi 

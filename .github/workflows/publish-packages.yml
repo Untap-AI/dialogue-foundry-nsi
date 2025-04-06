@@ -1,4 +1,4 @@
-name: Deploy Packages to S3
+name: Publish Packages
 
 on:
   push:
@@ -16,9 +16,6 @@ on:
       - 'apps/**'
       - 'packages/**'
       - '.github/workflows/publish-packages.yml'
-  
-  # Allow manual triggering
-  workflow_dispatch:
 
 jobs:
   build_and_deploy:
@@ -58,9 +55,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       
-      - name: Install ts-node globally
-        run: pnpm install -g ts-node typescript
-      
       - name: Build all packages
         run: |
           echo "Building all packages..."
@@ -75,37 +69,7 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           echo "Running publish-package scripts..."
-          
-          # Create an array to track failures
-          declare -a failed_packages
-          
-          # Find all packages with publish-package script
-          for pkg in $(find apps packages -name "package.json" -not -path "*/node_modules/*" -not -path "*/dist/*" | sort); do
-            if grep -q '"publish-package":' "$pkg"; then
-              dir=$(dirname "$pkg")
-              name=$(node -p "require('./$pkg').name")
-              echo "Publishing $name from $dir..."
-              
-              # Run the publish-package script and capture exit code
-              cd $dir
-              pnpm run publish-package
-              exit_code=$?
-              cd - > /dev/null
-              
-              if [ $exit_code -ne 0 ]; then
-                failed_packages+=("$name")
-                echo "::warning::Failed to publish $name"
-              else
-                echo "Successfully published $name"
-              fi
-            fi
-          done
-          
-          # Report failures but don't fail the workflow
-          if [ ${#failed_packages[@]} -ne 0 ]; then
-            echo "::warning::The following packages failed to publish: ${failed_packages[*]}"
-            echo "Continuing with deployment summary..."
-          fi
+          pnpm publish-package
       
       - name: Create deployment summary
         run: |

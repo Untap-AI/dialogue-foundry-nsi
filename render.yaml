@@ -3,8 +3,9 @@ services:
   - type: web
     name: dialogue-foundry-backend-smokebox
     env: node
-    buildCommand: ./render-scripts/setup-smokebox.sh
-    startCommand: node server.js
+    rootDir: apps/backend-deploy
+    buildCommand: node scripts/build.js smokebox && pnpm install --production
+    startCommand: node dist/index.js
     region: oregon # Choose your preferred region
     plan: free # Choose your preferred plan
     branch: main # Automatically deploys from main branch
@@ -12,27 +13,32 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: DEPLOYMENT_ENV
+        value: smokebox
       - key: PORT
         value: 8080
       - key: NPM_TOKEN
         sync: false # This will be set manually in Render dashboard
       # Define other environment variables as needed from .env
       
-    # Auto-deploy on changes to main branch
-    autoDeploy: true
+    # Auto-deploy on changes to main branch is disabled in favor of our GitHub Action
+    autoDeploy: false
   
   # Production Environment
   - type: web
     name: dialogue-foundry-backend-prod
     env: node
-    buildCommand: ./render-scripts/setup-prod.sh
-    startCommand: node server.js
+    rootDir: apps/backend-deploy
+    buildCommand: node scripts/build.js production && pnpm install --production
+    startCommand: node dist/index.js
     region: oregon # Choose your preferred region
     plan: free # Choose your preferred plan
     branch: main # Still from main branch, but manual deployment
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
+        value: production
+      - key: DEPLOYMENT_ENV
         value: production
       - key: PORT
         value: 8080
