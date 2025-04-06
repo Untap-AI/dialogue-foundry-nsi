@@ -23,6 +23,8 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+**/backend-prod
+**/backend-smokebox
 
 
 # Environment files with sensitive data

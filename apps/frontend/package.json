@@ -11,8 +11,8 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf dist && rm -rf node_modules",
     "typecheck": "tsc --noEmit",
-    "publish-package": "pnpm run build && ts-node ../../packages/deploy-s3/src/version-based-deploy.ts --package ./package.json --source ./dist --bucket dialogue-foundry-frontend",
-    "publish-package:all": "pnpm run build:all && ts-node ../../packages/deploy-s3/src/version-based-deploy.ts --package ./package.json --source ./dist --bucket dialogue-foundry-frontend"
+    "publish-package": "pnpm run build && npx ts-node ../../packages/deploy-s3/src/version-based-deploy.ts --package ./package.json --source ./dist --bucket dialogue-foundry-frontend",
+    "publish-package:all": "pnpm run build:all && npx ts-node ../../packages/deploy-s3/src/version-based-deploy.ts --package ./package.json --source ./dist --bucket dialogue-foundry-frontend"
   },
   "dependencies": {
     "@nlux/react": "^2",
@@ -33,7 +33,13 @@
     "@types/react": "^19.0.10",
     "@types/react-dom": "^19.0.4",
     "@vitejs/plugin-react": "^4.3.4",
+    "aws-sdk": "^2.1527.0",
+    "chalk": "^4.1.2",
+    "commander": "^11.1.0",
+    "dotenv": "^16.4.7",
     "eslint": "^8.57.1",
+    "glob": "^10.3.10",
+    "semver": "^7.5.4",
     "ts-node": "^10.9.2",
     "typescript": "~5.3.3",
     "vite": "^6.2.0"
