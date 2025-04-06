@@ -14,13 +14,13 @@
  */
 
 // Load environment variables from .env file
-import * as dotenv from 'dotenv';
-dotenv.config();
+import { config } from 'dotenv';
+config();
 
-import * as fs from 'fs';
-import * as path from 'path';
+import fs from 'fs';
+import path from 'path';
 import { S3 } from 'aws-sdk';
-import * as semver from 'semver';
+import semver from 'semver';
 import { Command } from 'commander';
 import chalk from 'chalk';
 import { glob } from 'glob';
