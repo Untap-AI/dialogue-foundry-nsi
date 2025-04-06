@@ -3,6 +3,10 @@
   "version": "0.0.0",
   "description": "eslint config file",
   "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/peytonhobson/dialogue-foundry.git"
+  },
   "files": [
     "react.js",
     "CHANGELOG.md"
