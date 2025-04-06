@@ -26,12 +26,30 @@ importers:
 
   apps/backend:
     dependencies:
+      '@dialogue-foundry/tsconfig':
+        specifier: workspace:*
+        version: link:../../packages/tsconfig
       '@pinecone-database/pinecone':
         specifier: ^5.1.1
         version: 5.1.1
       '@supabase/supabase-js':
         specifier: ^2.49.1
         version: 2.49.4
+      '@types/cors':
+        specifier: ^2.8.17
+        version: 2.8.17
+      '@types/express':
+        specifier: ^4.17.21
+        version: 4.17.21
+      '@types/jsonwebtoken':
+        specifier: ^9.0.9
+        version: 9.0.9
+      '@types/node':
+        specifier: ^20.17.24
+        version: 20.17.30
+      '@types/uuid':
+        specifier: ^9.0.8
+        version: 9.0.8
       cors:
         specifier: ^2.8.5
         version: 2.8.5
@@ -50,6 +68,12 @@ importers:
       openai:
         specifier: ^4.87.4
         version: 4.91.1(ws@8.18.1)(zod@3.24.2)
+      tsc:
+        specifier: ^2.0.4
+        version: 2.0.4
+      typescript:
+        specifier: ^5.3.3
+        version: 5.8.3
       uuid:
         specifier: ^9.0.1
         version: 9.0.1
@@ -60,24 +84,6 @@ importers:
       '@dialogue-foundry/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
-      '@dialogue-foundry/tsconfig':
-        specifier: workspace:*
-        version: link:../../packages/tsconfig
-      '@types/cors':
-        specifier: ^2.8.17
-        version: 2.8.17
-      '@types/express':
-        specifier: ^4.17.21
-        version: 4.17.21
-      '@types/jsonwebtoken':
-        specifier: ^9.0.9
-        version: 9.0.9
-      '@types/node':
-        specifier: ^20.17.24
-        version: 20.17.30
-      '@types/uuid':
-        specifier: ^9.0.8
-        version: 9.0.8
       eslint:
         specifier: ^8.57.1
         version: 8.57.1
@@ -93,22 +99,6 @@ importers:
       ts-node-dev:
         specifier: ^2.0.0
         version: 2.0.0(@types/node@20.17.30)(typescript@5.8.3)
-      tsc:
-        specifier: ^2.0.4
-        version: 2.0.4
-      typescript:
-        specifier: ^5.3.3
-        version: 5.8.3
-
-  apps/backend-deploy:
-    dependencies:
-      '@dialogue-foundry/backend':
-        specifier: workspace:*
-        version: link:../backend
-    devDependencies:
-      dotenv:
-        specifier: ^16.0.3
-        version: 16.4.7
 
   apps/frontend:
     dependencies:

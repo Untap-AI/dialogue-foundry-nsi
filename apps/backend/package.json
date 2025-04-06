@@ -37,6 +37,8 @@
     "install:prod": "pnpm install --production"
   },
   "dependencies": {
+    "tsc": "^2.0.4",
+    "@dialogue-foundry/tsconfig": "workspace:*",
     "@pinecone-database/pinecone": "^5.1.1",
     "@supabase/supabase-js": "^2.49.1",
     "@types/cors": "^2.8.17",
@@ -56,13 +58,11 @@
   },
   "devDependencies": {
     "@dialogue-foundry/eslint-config": "workspace:*",
-    "@dialogue-foundry/tsconfig": "workspace:*",
     "eslint": "^8.57.1",
     "globals": "^16.0.0",
     "supabase": "^2.20.5",
     "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
-    "tsc": "^2.0.4"
+    "ts-node-dev": "^2.0.0"
   },
   "files": [
     "dist/**/*"
