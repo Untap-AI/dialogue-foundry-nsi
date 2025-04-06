@@ -4,21 +4,16 @@
   "description": "Deploy packages to AWS S3 with versioned folders",
   "main": "dist/version-based-deploy.js",
   "types": "dist/version-based-deploy.d.ts",
-  "bin": {
-    "deploy-s3": "./dist/version-based-deploy.js"
-  },
   "repository": {
     "type": "git",
     "url": "git+https://github.com/peytonhobson/dialogue-foundry.git"
   },
   "scripts": {
-    "prepare": "pnpm install",
     "build": "tsc",
     "clean": "rm -rf dist",
     "dev": "tsc --watch",
     "lint": "eslint src/**/*.ts",
-    "test": "jest",
-    "publish-package": "pnpm prepare && pnpm build"
+    "test": "jest"
   },
   "keywords": [
     "aws",
