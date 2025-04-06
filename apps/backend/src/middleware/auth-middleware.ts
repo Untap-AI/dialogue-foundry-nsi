@@ -15,7 +15,20 @@ export interface CustomRequest extends express.Request {
 }
 
 /**
+ * Helper function to extract token from query parameter
+ * This is mainly used for EventSource connections where setting custom headers isn't possible
+ */
+const extractTokenFromQuery = (req: express.Request): string | undefined => {
+  if (req.query && typeof req.query.token === 'string') {
+    // Don't log the token for security reasons
+    return req.query.token;
+  }
+  return undefined;
+}
+
+/**
  * Middleware to authenticate chat access using JWT token
+ * Supports both Authorization header and token query parameter
  */
 export const authenticateChatAccess = (
   req: CustomRequest,
@@ -23,29 +36,49 @@ export const authenticateChatAccess = (
   next: express.NextFunction
 ) => {
   try {
-    // Get the authorization header
-    const authHeader = req.headers.authorization
-
-    // Extract token from header
-    const token = extractTokenFromHeader(authHeader)
+    let token: string | undefined;
+    let tokenSource = 'none';
+    
+    // First try to get token from header
+    const authHeader = req.headers.authorization;
+    token = extractTokenFromHeader(authHeader);
+    if (token) tokenSource = 'header';
+    
+    // If no token in header, try query parameter
     if (!token) {
+      token = extractTokenFromQuery(req);
+      if (token) tokenSource = 'query';
+    }
+    
+    // If still no token, return authentication error
+    if (!token) {
+      console.warn(`Authentication failed: No token provided in request to ${req.originalUrl}`);
       return res.status(401).json({
-        error: 'Authentication required. Provide a valid Bearer token.'
-      })
+        error: 'Authentication required. Provide a valid Bearer token or token parameter.',
+        code: 'TOKEN_MISSING'
+      });
     }
 
     // Verify token
     const payload = verifyToken(token)
     if (!payload) {
-      return res.status(401).json({ error: 'Invalid or expired token' })
+      console.warn(`Authentication failed: Invalid/expired token provided via ${tokenSource} to ${req.originalUrl}`);
+      return res.status(401).json({ 
+        error: 'Invalid or expired token. Please reinitialize your chat session.',
+        code: 'TOKEN_INVALID'
+      })
     }
 
     // Check if the requested chat ID matches the token's chat ID
     const { chatId } = req.params
     if (chatId && chatId !== payload.chatId) {
+      console.warn(`Chat access denied: Token for chat ${payload.chatId} attempted to access chat ${chatId}`);
       return res
         .status(403)
-        .json({ error: 'You do not have access to this chat' })
+        .json({ 
+          error: 'You do not have access to this chat', 
+          code: 'CHAT_ACCESS_DENIED'
+        })
     }
 
     // Add user info to request for future middleware/handlers using Object.assign
@@ -59,7 +92,10 @@ export const authenticateChatAccess = (
     return next()
   } catch (error) {
     console.error('Auth middleware error:', error)
-    return res.status(500).json({ error: 'Authentication failed' })
+    return res.status(500).json({ 
+      error: 'Authentication failed', 
+      code: 'AUTH_FAILED'
+    })
   }
 }
 

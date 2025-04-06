@@ -12,12 +12,10 @@ import type { ChatItem } from '@nlux/react'
 type ChatStatus = 'loading' | 'initialized' | 'error'
 
 export interface ChatInterfaceProps {
-  onChatInitialized?: (chatId: string) => void
   className?: string
 }
 
 export const ChatInterface = ({
-  onChatInitialized,
   className
 }: ChatInterfaceProps) => {
   // Get config from context
@@ -63,10 +61,6 @@ export const ChatInterface = ({
         const chatInit = await new ChatApiService(chatConfig).initializeChat()
         setChatId(chatInit.chatId)
         setMessages(chatInit.messages)
-
-        if (onChatInitialized) {
-          onChatInitialized(chatInit.chatId)
-        }
         setChatStatus('initialized')
       } catch (error) {
         setChatStatus('error')
@@ -83,7 +77,7 @@ export const ChatInterface = ({
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [onChatInitialized])
+  }, [])
 
   // TODO: ConversationStarter UI
   // TODO: Loading State

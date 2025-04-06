@@ -5,6 +5,7 @@ import {
   validateOpenAIResponseChunk
 } from '../util/openai-chunk-validators'
 import { MAX_MESSAGES_PER_CHAT } from '../db/messages'
+import { text } from 'express'
 
 dotenv.config()
 
@@ -135,27 +136,38 @@ export const generateStreamingChatCompletion = async (
       }
     })
 
-    let fullText = ''
-
-    for await (const rawChunk of response) {
-      // Use our validator instead of type casting
-      const chunk = validateOpenAIResponseChunk(rawChunk)
-
-      let text = ''
-
-      // Use our type guard function instead of checking the type directly
-      if (isOpenAIResponseDeltaChunk(chunk)) {
-        text = chunk.delta
+    let fullText = '';
+    
+    try {
+      for await (const rawChunk of response) {
+        // Use our validator instead of type casting
+        const chunk = validateOpenAIResponseChunk(rawChunk)
+  
+        let text = ''
+  
+        // Use our type guard function instead of checking the type directly
+        if (isOpenAIResponseDeltaChunk(chunk)) {
+          text = chunk.delta
+        }
+  
+        if (text) {
+          // Add to full text and send immediately
+          fullText += text;
+          onChunk(text);
+        }
       }
-
-      if (text) {
-        onChunk(text)
-      }
-
-      fullText += text
+      
+      // Add a small delay to ensure all content is properly processed by the client
+      await new Promise(resolve => setTimeout(resolve, 50));
+      
+      // Send a final empty chunk to ensure proper completion
+      onChunk('');
+  
+      return fullText;
+    } catch (streamError) {
+      console.error('Error during stream processing:', streamError);
+      throw streamError;
     }
-
-    return fullText
   } catch (error) {
     console.error('Error generating streaming chat completion:', error)
     throw new Error(`Failed to generate streaming response: ${error}`)

@@ -371,16 +371,14 @@ router.get('/:chatId/stream', authenticateChatAccess, handleStreamRequest)
 
 // Shared handler function for stream requests
 async function handleStreamRequest(req: CustomRequest, res: express.Response) {
+  // Set the proper headers for Server-Sent Events (SSE)
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache');
+  res.setHeader('Connection', 'keep-alive');
+  res.setHeader('X-Accel-Buffering', 'no'); // Disable buffering for Nginx
+  
   try {
     const { chatId } = req.params
-
-    // Check if token is provided in query parameters (for EventSource)
-    const tokenFromQuery = req.query.token as string
-
-    if (tokenFromQuery && !req.headers.authorization) {
-      // Use Object.assign to modify headers without directly reassigning properties
-      Object.assign(req.headers, { authorization: `Bearer ${tokenFromQuery}` })
-    }
 
     // Get content from body (POST) or query params (GET)
     const content = req.body.content || req.query.content
@@ -392,6 +390,7 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     }
 
     // Use the authenticated user's ID from the JWT token
+    // This is set by the authenticateChatAccess middleware
     const userId = req.user?.userId
 
     if (!userId || !content) {
@@ -500,8 +499,23 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       })
     }
 
+    // Send initial SSE message to confirm connection
+    res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
+    res.flushHeaders();
+
+    // Define SSE-formatted chunk sender
     const onChunk = (chunk: string) => {
-      res.write(chunk)
+      // Ensure the response is still writable
+      if (!res.writableEnded) {
+        // Format the chunk as a Server-Sent Event
+        res.write(`data: ${JSON.stringify({ 
+          type: 'chunk', 
+          content: chunk 
+        })}\n\n`);
+        
+        // Force immediate sending of the chunk
+        res.flushHeaders();
+      }
     }
 
     // Generate streaming response from OpenAI
@@ -511,6 +525,7 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       onChunk
     )
 
+    // Store the complete AI response in the database
     await createMessageAdmin({
       chat_id: chatId,
       user_id: userId,
@@ -520,21 +535,68 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       sequence_number: nextSequenceNumber + 1
     })
 
-    res.end()
+    // Send a completion message
+    if (!res.writableEnded) {
+      res.write(`data: ${JSON.stringify({ 
+        type: 'done', 
+        fullContent: aiResponseContent 
+      })}\n\n`);
+      
+      // Force flush to ensure all content is sent
+      res.flushHeaders();
+      
+      // Small delay to ensure client receives all data
+      await new Promise(resolve => setTimeout(resolve, 100));
+    }
+
+    // End the response properly
+    if (!res.writableEnded) {
+      res.end();
+    }
 
     // Handle client disconnect
     return req.on('close', () => {
       console.info('Client disconnected')
-      res.end()
+      if (!res.writableEnded) {
+        res.end()
+      }
     })
   } catch (error) {
     console.error('Error in streaming chat message endpoint:', error)
     // Only send error response if headers haven't been sent yet
     if (!res.headersSent) {
-      return res.status(500).json({ error })
+      // Check if this is an authentication error
+      if (error instanceof Error && error.message && 
+          (error.message.includes('token') || error.message.includes('authenticate'))) {
+        return res.status(401).json({ 
+          error: 'Invalid or expired token. Please reinitialize your chat session.',
+          code: 'TOKEN_INVALID'
+        });
+      }
+      return res.status(500).json({ 
+        error: 'An error occurred processing your request',
+        code: 'STREAMING_ERROR'
+      });
     }
 
-    return res.status(500).json({ error })
+    // Send an error event if headers have been sent
+    if (!res.writableEnded) {
+      // Determine error code based on the error message
+      let errorCode = 'STREAMING_ERROR';
+      if (error instanceof Error) {
+        if (error.message.includes('token') || error.message.includes('authenticate')) {
+          errorCode = 'TOKEN_INVALID';
+        }
+      }
+      
+      res.write(`data: ${JSON.stringify({ 
+        type: 'error', 
+        error: error instanceof Error ? error.message : 'Unknown error',
+        code: errorCode
+      })}\n\n`);
+      return res.end();
+    }
+    return
   }
 }
 
