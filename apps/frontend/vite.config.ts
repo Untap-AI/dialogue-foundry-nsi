@@ -127,6 +127,18 @@ export default defineConfig(({ command, mode }) => {
               fs.writeFileSync(htmlFile, htmlContent);
               console.log('✅ Changed index.js path to relative in index.html');
             }
+            
+            // Also fix src/index.tsx references
+            if (htmlContent.includes('src="./src/index.tsx"')) {
+              htmlContent = htmlContent.replace(
+                'src="./src/index.tsx"',
+                'src="./index.js"'
+              );
+              
+              // Write the updated HTML back
+              fs.writeFileSync(htmlFile, htmlContent);
+              console.log('✅ Changed src/index.tsx path to ./index.js in index.html');
+            }
           }
         }
       }
@@ -163,12 +175,7 @@ export default defineConfig(({ command, mode }) => {
             }
             return 'index-asset.[ext]';
           },
-          globals: {
-            react: 'React',
-            'react-dom': 'ReactDOM'
-          }
         },
-        external: ['react', 'react-dom'],
       },
       cssCodeSplit: false,
       copyPublicDir: true,
@@ -184,12 +191,7 @@ export default defineConfig(({ command, mode }) => {
       rollupOptions: {
         output: {
           entryFileNames: 'index.js',
-          globals: {
-            react: 'React',
-            'react-dom': 'ReactDOM'
-          }
         },
-        external: ['react', 'react-dom'],
       },
       cssCodeSplit: false,
       copyPublicDir: false,

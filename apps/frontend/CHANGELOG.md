@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.1.5
+
+### Patch Changes
+
+- Internal react scripts
+
 ## 0.1.4
 
 ### Patch Changes
