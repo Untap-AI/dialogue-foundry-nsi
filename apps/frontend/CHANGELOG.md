@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.1.4
+
+### Patch Changes
+
+- cdb84b6: Inline config
+
 ## 0.1.3
 
 ### Patch Changes
