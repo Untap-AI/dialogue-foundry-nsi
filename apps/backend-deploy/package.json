@@ -11,7 +11,7 @@
     "clean": "rm -rf dist && rm -rf node_modules"
   },
   "dependencies": {
-    "@peytonhobson/backend": "workspace:*"
+    "@dialogue-foundry/backend": "workspace:*"
   },
   "devDependencies": {
     "dotenv": "^16.0.3"

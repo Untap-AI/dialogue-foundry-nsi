@@ -21,6 +21,8 @@ The deployment process:
 
 This approach keeps the deployed codebase small (staying within free/starter plan limits) while still providing full deployment functionality.
 
+> **Important Note:** While the package is referenced as `@dialogue-foundry/backend` in the local workspace, it's published to GitHub Package Registry as `@peytonhobson/backend`. The build script handles this difference by configuring the correct package name for deployment.
+
 ## Usage
 
 ### Deploying to Environments
@@ -77,13 +79,15 @@ Additionally, Render requires:
 NPM_TOKEN=your_github_package_registry_token
 ```
 
+The NPM_TOKEN needs permissions to read packages from the GitHub Package Registry under the `@peytonhobson` organization.
+
 ## Render Configuration
 
 The Render service is configured to:
 
 1. Use the `apps/backend-deploy` directory as the root directory
 2. Run the build script to create a minimal server 
-3. Install the backend package from GitHub Packages
+3. Install the backend package from GitHub Packages using the name `@peytonhobson/backend`
 4. Start the server
 
 This approach ensures a small, efficient deployment that stays within the free/starter plan limits. 
