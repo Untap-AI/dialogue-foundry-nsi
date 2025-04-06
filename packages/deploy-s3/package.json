@@ -4,6 +4,9 @@
   "description": "Deploy packages to AWS S3 with versioned folders",
   "main": "dist/version-based-deploy.js",
   "types": "dist/version-based-deploy.d.ts",
+  "bin": {
+    "deploy-s3": "./dist/version-based-deploy.js"
+  },
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",
