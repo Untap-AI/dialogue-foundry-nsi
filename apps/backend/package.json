@@ -3,6 +3,13 @@
   "version": "1.0.0",
   "description": "Simple chatbot backend for a small company website",
   "main": "dist/index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/peytonhobson/dialogue-foundry.git"
+  },
+  "publishConfig": {
+    "registry": "https://npm.pkg.github.com"
+  },
   "scripts": {
     "build": "tsc",
     "start": "node dist/index.js",

@@ -57,25 +57,49 @@ if (!token) {
   process.exit(1)
 }
 
+// Log that we found a token (without showing it)
+console.log(`Found authentication token: ${token ? '✓' : '✗'}`)
+
 // Create .npmrc file in the dist directory for GitHub authentication
 const npmrcPath = path.join(distDir, '.npmrc')
 const githubRegistry = 'https://npm.pkg.github.com'
-const orgName = name.split('/')[0].replace('@', '')
+// Use the actual GitHub username for publishing instead of package organization
+const githubUsername = 'peytonhobson'
 
 console.log(`Package name: ${name}`)
-console.log(`Organization extracted: ${orgName}`)
+console.log(`Original package org: ${name.split('/')[0].replace('@', '')}`)
+console.log(`Using GitHub username: ${githubUsername}`)
 console.log(`Using GitHub Registry: ${githubRegistry}`)
-console.log(`Token: ${token}`)
+
+// Get the package name without the scope
+const packageNameWithoutScope = name.split('/')[1]
+
+// Create a temporary modified package.json for publishing
+const tempPackageJson = { ...packageJson }
+tempPackageJson.name = `@${githubUsername}/${packageNameWithoutScope}`
+tempPackageJson.repository = {
+  type: 'git',
+  url: `git+https://github.com/${githubUsername}/dialogue-foundry.git`
+}
+tempPackageJson.publishConfig = {
+  registry: githubRegistry
+}
+
+// Write the modified package.json
+fs.writeFileSync(packageJsonPath, JSON.stringify(tempPackageJson, undefined, 2))
+console.log(`Modified package.json for GitHub Packages compatibility`)
+console.log(`New package name: ${tempPackageJson.name}`)
 
 fs.writeFileSync(
   npmrcPath,
-  `${orgName}:registry=${githubRegistry}/\n` +
+  `registry=${githubRegistry}\n` +
+    `@${githubUsername}:registry=${githubRegistry}\n` +
     `//npm.pkg.github.com/:_authToken=${token}\n` +
     `always-auth=true\n`
 )
 
 console.log(
-  `Preparing to publish ${name}@${version} to GitHub Package Registry...`
+  `Preparing to publish ${tempPackageJson.name}@${version} to GitHub Package Registry...`
 )
 
 try {
@@ -91,7 +115,9 @@ try {
   // Publish the package
   console.log('Publishing package...')
   try {
-    execSync('npm publish', { stdio: 'inherit' })
+    execSync('npm publish --registry=https://npm.pkg.github.com', {
+      stdio: 'inherit'
+    })
   } catch (publishError) {
     console.error(
       'npm publish command failed with error:',
@@ -107,7 +133,7 @@ try {
   }
 
   console.log(
-    `Successfully published ${name}@${version} to GitHub Package Registry!`
+    `Successfully published ${tempPackageJson.name}@${version} to GitHub Package Registry!`
   )
 } catch (error) {
   console.error('Failed to publish package:', error.message)
