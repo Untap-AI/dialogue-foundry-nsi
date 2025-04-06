@@ -1,5 +1,12 @@
 # @dialogue-foundry/backend
 
+## 1.0.3
+
+### Patch Changes
+
+- 19bd464: Default model to mini
+- b3fc49e: Streaming improvement
+
 ## 1.0.2
 
 ### Patch Changes

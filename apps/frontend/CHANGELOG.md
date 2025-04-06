@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.1.7
+
+### Patch Changes
+
+- b3fc49e: Streaming improvement
+
 ## 0.1.6
 
 ### Patch Changes
