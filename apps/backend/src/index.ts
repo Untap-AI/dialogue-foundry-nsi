@@ -50,7 +50,7 @@ app.use('/api/cache', cacheRoutes)
 app.use('/api/admin', adminRoutes)
 
 // Error handling middleware
-app.use((err: Error, _: express.Request, res: express.Response, __: express.NextFunction) => {
+app.use((err: Error, _: express.Request, res: express.Response) => {
   console.error(err.stack)
   res.status(500).json({
     error: 'An unexpected error occurred',

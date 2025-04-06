@@ -12,9 +12,8 @@ interface MobileChatModalProps {
 export const MobileChatModal = ({ isOpen, onClose }: MobileChatModalProps) => {
   const dialogRef = useRef<HTMLDialogElement>(null)
 
-  const {scrollToBottom} = useChatScroll({isOpen})
+  const { scrollToBottom } = useChatScroll({ isOpen })
 
-  
   useEffect(() => {
     const dialog = dialogRef.current
     if (!dialog) return
@@ -24,7 +23,7 @@ export const MobileChatModal = ({ isOpen, onClose }: MobileChatModalProps) => {
       dialog.showModal()
 
       document.body.style.overflow = 'hidden'
-      
+
       // Initial scroll to bottom after modal opens
       // Use a longer timeout to ensure all content is rendered
       setTimeout(() => {
@@ -42,10 +41,10 @@ export const MobileChatModal = ({ isOpen, onClose }: MobileChatModalProps) => {
     <dialog
       ref={dialogRef}
       className="mobile-chat-modal"
-      onCancel={(e) => {
+      onCancel={e => {
         e.preventDefault() // Prevent default close on ESC key
       }}
-      onClick={(e) => {
+      onClick={e => {
         // Close if clicking on the backdrop (the dialog element itself)
         if (e.target === dialogRef.current) {
           onClose()
@@ -54,9 +53,7 @@ export const MobileChatModal = ({ isOpen, onClose }: MobileChatModalProps) => {
     >
       <div className="mobile-chat-content">
         <ChatHeader onClose={onClose} />
-        <ChatInterface 
-          className="mobile-chat-interface mobile-chat-bubbles"
-        />
+        <ChatInterface className="mobile-chat-interface mobile-chat-bubbles" />
       </div>
     </dialog>
   )

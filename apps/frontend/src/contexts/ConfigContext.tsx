@@ -26,7 +26,8 @@ export interface DialogueFoundryConfig {
 // Default configuration
 export const defaultConfig: DialogueFoundryConfig = {
   chatConfig: {
-    apiBaseUrl: (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:3000/api',
+    apiBaseUrl:
+      (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:3000/api',
     companyId: 'west-hills-vineyards'
   },
   theme: 'light',
@@ -80,31 +81,32 @@ export function ConfigProvider({
       try {
         // Try to load from a script tag with id="dialogue-foundry-config"
         const configScript = document.getElementById('dialogue-foundry-config')
-        
+
         if (configScript && configScript.textContent) {
           try {
             // Extract the actual JSON content, ignoring any comments.
-            const textContent = configScript.textContent.trim();
-            let jsonContent = textContent;
-            
+            const textContent = configScript.textContent.trim()
+            let jsonContent = textContent
+
             // If there are comments in the text content, try to extract just the JSON
             if (textContent.includes('/*') || textContent.includes('//')) {
               // Simple regex to extract JSON - this assumes the JSON is a complete object
-              const jsonMatch = textContent.match(/(\{[\s\S]*\})/);
+              const jsonMatch = textContent.match(/(\{[\s\S]*\})/)
               if (jsonMatch) {
-                jsonContent = jsonMatch[1];
+                jsonContent = jsonMatch[1]
               }
             }
-            
-            const parsedConfig = JSON.parse(jsonContent);
-            
+
+            const parsedConfig = JSON.parse(jsonContent)
+
             // If API URL is a placeholder, replace it with the actual URL
             if (parsedConfig.chatConfig?.apiBaseUrl === 'RUNTIME_PLACEHOLDER') {
-              parsedConfig.chatConfig.apiBaseUrl = window.location.hostname === 'localhost'
-                ? 'http://localhost:3000/api'
-                : `${window.location.origin}/api`
+              parsedConfig.chatConfig.apiBaseUrl =
+                window.location.hostname === 'localhost'
+                  ? 'http://localhost:3000/api'
+                  : `${window.location.origin}/api`
             }
-            
+
             console.log('Found config in script tag', parsedConfig)
             setConfigState({ ...defaultConfig, ...parsedConfig })
             setConfigLoaded(true)
@@ -113,7 +115,7 @@ export function ConfigProvider({
             console.error('Error parsing config from script tag:', parseError)
           }
         }
-        
+
         // If no config was found, just use defaults
         console.log('No external config found, using defaults')
         setConfigLoaded(true)

@@ -28,12 +28,12 @@ export const useResizeObserver = (delay = 10) => {
   useEffect(() => {
     // Add event listener for window resize
     window.addEventListener('resize', debouncedUpdateDimensions)
-    
+
     // Cleanup event listener on unmount
     return () => {
       // Remove the event listener
       window.removeEventListener('resize', debouncedUpdateDimensions)
-      
+
       // Cancel any pending debounced calls
       debouncedUpdateDimensions.cancel()
     }

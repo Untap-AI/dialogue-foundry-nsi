@@ -15,7 +15,9 @@ export const useChatScroll = ({ isOpen }: UseChatScrollOptions) => {
 
   // Function to scroll to the bottom of the conversation
   const scrollToBottom = useCallback(() => {
-    const conversationContainer = document.querySelector('.nlux-conversation-container')
+    const conversationContainer = document.querySelector(
+      '.nlux-conversation-container'
+    )
     if (conversationContainer && conversationContainer instanceof HTMLElement) {
       conversationContainer.scrollTop = conversationContainer.scrollHeight
     }
@@ -24,28 +26,30 @@ export const useChatScroll = ({ isOpen }: UseChatScrollOptions) => {
   // Set up a ResizeObserver to detect changes in the conversation container
   useEffect(() => {
     const setupResizeObserver = () => {
-      const segmentsContainer = document.querySelector('.nlux-chatSegments-container')
+      const segmentsContainer = document.querySelector(
+        '.nlux-chatSegments-container'
+      )
       if (segmentsContainer && !resizeObserverRef.current) {
         // Create a new ResizeObserver
         const resizeObserver = new ResizeObserver(() => {
           // When container resizes, scroll to bottom
           scrollToBottom()
         })
-        
+
         // Start observing the container
         resizeObserver.observe(segmentsContainer)
         resizeObserverRef.current = resizeObserver
       }
     }
-    
+
     if (isOpen) {
       // Try to set up the observer immediately
       setupResizeObserver()
-      
+
       // Also try again after a delay to ensure the element is in the DOM
       setTimeout(setupResizeObserver, 500)
     }
-    
+
     return () => {
       // Clean up the ResizeObserver when component unmounts or modal closes
       if (resizeObserverRef.current) {
@@ -65,32 +69,40 @@ export const useChatScroll = ({ isOpen }: UseChatScrollOptions) => {
     // Set up event listeners for the input area
     const setupTouchListeners = () => {
       // Composer container - the parent container that wraps the entire input area
-      const composerContainer = document.querySelector('.nlux-composer-container')
+      const composerContainer = document.querySelector(
+        '.nlux-composer-container'
+      )
       if (composerContainer) {
-        composerContainer.addEventListener('touchstart', handleTouch, { passive: true })
+        composerContainer.addEventListener('touchstart', handleTouch, {
+          passive: true
+        })
       }
     }
 
     if (isOpen) {
       // Add a delay to ensure the elements are in the DOM
       setTimeout(setupTouchListeners, 500)
-      
+
       // Re-check for elements periodically in case they load later
       const checkInterval = setInterval(() => {
-        const composerExists = document.querySelector('.nlux-composer-container, .nlux-composer-input')
+        const composerExists = document.querySelector(
+          '.nlux-composer-container, .nlux-composer-input'
+        )
         if (composerExists) {
           setupTouchListeners()
           clearInterval(checkInterval)
         }
       }, 500)
-      
+
       // Clear interval after 5 seconds to avoid infinite checking
       setTimeout(() => clearInterval(checkInterval), 5000)
     }
 
     return () => {
       // Composer container
-      const composerContainer = document.querySelector('.nlux-composer-container')
+      const composerContainer = document.querySelector(
+        '.nlux-composer-container'
+      )
       if (composerContainer) {
         composerContainer.removeEventListener('touchstart', handleTouch)
       }
@@ -103,4 +115,4 @@ export const useChatScroll = ({ isOpen }: UseChatScrollOptions) => {
   }
 }
 
-export default useChatScroll 
+export default useChatScroll

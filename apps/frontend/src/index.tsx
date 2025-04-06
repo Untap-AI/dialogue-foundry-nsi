@@ -11,7 +11,7 @@ import { ConfigProvider } from './contexts/ConfigContext'
 // Define interface for configuration options
 interface DialogueFoundryOptions {
   // Add any configuration options here
-  theme?: 'light' | 'dark';
+  theme?: 'light' | 'dark'
   // Add more options as needed
 }
 
@@ -20,15 +20,18 @@ interface DialogueFoundryOptions {
  * @param rootElement - The DOM element to mount the app to
  * @param options - Configuration options for the app
  */
-function init(rootElement: HTMLElement | null, options: DialogueFoundryOptions = {}) {
+function init(
+  rootElement: HTMLElement | null,
+  options: DialogueFoundryOptions = {}
+) {
   if (!rootElement) {
-    console.error('DialogueFoundry: Root element not found');
-    return;
+    console.error('DialogueFoundry: Root element not found')
+    return
   }
 
   // Create React root
-  const root = ReactDOM.createRoot(rootElement);
-  
+  const root = ReactDOM.createRoot(rootElement)
+
   // Render app with config context
   root.render(
     <React.StrictMode>
@@ -36,34 +39,34 @@ function init(rootElement: HTMLElement | null, options: DialogueFoundryOptions =
         <App />
       </ConfigProvider>
     </React.StrictMode>
-  );
-  
-  return root;
+  )
+
+  return root
 }
 
 // Auto-initialize if in standard mode (not being used as a library)
 if (typeof window !== 'undefined' && !window.DialogueFoundry) {
-  const rootElement = document.getElementById('root');
+  const rootElement = document.getElementById('root')
   if (rootElement) {
-    init(rootElement);
+    init(rootElement)
   }
 }
 
 // Export public API
-export { init };
+export { init }
 
 // Expose the API to window for non-module usage
 if (typeof window !== 'undefined') {
   window.DialogueFoundry = {
-    init,
-  };
+    init
+  }
 }
 
 // Add DialogueFoundry to window type
 declare global {
   interface Window {
     DialogueFoundry?: {
-      init: typeof init;
-    };
+      init: typeof init
+    }
   }
 }
