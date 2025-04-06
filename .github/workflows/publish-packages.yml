@@ -51,6 +51,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       
+      - name: Install ts-node globally
+        run: pnpm install -g ts-node typescript
+      
       - name: Build all packages
         run: |
          pnpm build  
