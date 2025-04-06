@@ -1,6 +1,13 @@
 name: Deploy Packages to S3
 
 on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'apps/**'
+      - 'packages/**'
+      - '.github/workflows/publish-packages.yml'
   pull_request:
     types: [closed]
     branches:
@@ -16,8 +23,8 @@ on:
 jobs:
   build_and_deploy:
     name: Build and Deploy
-    # Only run when PR is merged to main, not on every PR close
-    if: github.event_name == 'workflow_dispatch' || (github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main')
+    # Run on: manual trigger, PR merge to main, or direct push to main
+    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event.pull_request.merged == true && github.event.pull_request.base.ref == 'main')
     runs-on: ubuntu-latest
     
     permissions:
