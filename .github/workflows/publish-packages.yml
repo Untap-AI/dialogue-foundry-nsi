@@ -8,15 +8,7 @@ on:
       - 'apps/**'
       - 'packages/**'
       - '.github/workflows/publish-packages.yml'
-  pull_request:
-    types: [closed]
-    branches:
-      - main
-    paths:
-      - 'apps/**'
-      - 'packages/**'
-      - '.github/workflows/publish-packages.yml'
-
+      
 jobs:
   build_and_deploy:
     name: Build and Deploy

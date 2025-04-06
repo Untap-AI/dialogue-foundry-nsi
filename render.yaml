@@ -6,9 +6,9 @@ services:
     rootDir: apps/backend
     buildCommand: pnpm install --no-frozen-lockfile --production; pnpm build
     startCommand: pnpm start
-    region: oregon # Choose your preferred region
-    plan: free # Choose your preferred plan
-    branch: main # Automatically deploys from main branch
+    region: oregon
+    plan: free
+    branch: main
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
@@ -36,9 +36,9 @@ services:
     rootDir: apps/backend
     buildCommand: pnpm install --no-frozen-lockfile --production; pnpm build
     startCommand: pnpm start
-    region: oregon # Choose your preferred region
-    plan: s # Choose your preferred plan
-    branch: main # Still from main branch, but manual deployment
+    region: oregon
+    plan: free
+    branch: main
     healthCheckPath: /health
     envVars:
       - key: NODE_ENV
