@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.1.6
+
+### Patch Changes
+
+- Change default config API
+
 ## 0.1.5
 
 ### Patch Changes
