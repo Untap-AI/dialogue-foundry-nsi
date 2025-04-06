@@ -10,6 +10,9 @@ export default defineConfig(({ command, mode }) => {
   const isFullBuild = process.env.BUILD_MODE === 'full'
   
   return {
+    // Use relative paths for all assets
+    base: './',
+    
     plugins: [
       react(),
       // Inject CSS into JS for library mode
@@ -34,6 +37,29 @@ export default defineConfig(({ command, mode }) => {
             console.log('✅ Copied index.css to dist/index.css');
           } else {
             console.warn('⚠️ index.css not found in the root directory - no index.css will be generated');
+          }
+        }
+      },
+      // Custom plugin to copy default-config.json to output
+      isFullBuild && {
+        name: 'copy-default-config-json',
+        closeBundle: () => {
+          // Check if default-config.json exists in the root directory
+          const srcConfigJson = path.resolve(__dirname, 'default-config.json');
+          const destDir = path.resolve(__dirname, 'dist');
+          const destConfigJson = path.resolve(destDir, 'default-config.json');
+
+          if (fs.existsSync(srcConfigJson)) {
+            // Ensure the dist directory exists
+            if (!fs.existsSync(destDir)) {
+              fs.mkdirSync(destDir, { recursive: true });
+            }
+            
+            // Copy default-config.json to dist/default-config.json
+            fs.copyFileSync(srcConfigJson, destConfigJson);
+            console.log('✅ Copied default-config.json to dist/default-config.json');
+          } else {
+            console.warn('⚠️ default-config.json not found in the root directory');
           }
         }
       },
@@ -64,6 +90,31 @@ export default defineConfig(({ command, mode }) => {
             }
           } else {
             console.warn('⚠️ index.html not found in dist directory');
+          }
+        }
+      },
+      // Plugin to make sure the index.js reference is relative
+      isFullBuild && {
+        name: 'ensure-relative-paths',
+        closeBundle: () => {
+          // Path to the output HTML file
+          const htmlFile = path.resolve(__dirname, 'dist', 'index.html');
+          
+          if (fs.existsSync(htmlFile)) {
+            // Read the HTML file
+            let htmlContent = fs.readFileSync(htmlFile, 'utf8');
+            
+            // Change any absolute JS script paths to relative ones
+            if (htmlContent.includes('src="/index.js"')) {
+              htmlContent = htmlContent.replace(
+                'src="/index.js"',
+                'src="./index.js"'
+              );
+              
+              // Write the updated HTML back
+              fs.writeFileSync(htmlFile, htmlContent);
+              console.log('✅ Changed index.js path to relative in index.html');
+            }
           }
         }
       }

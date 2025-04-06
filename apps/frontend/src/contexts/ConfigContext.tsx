@@ -80,6 +80,39 @@ export function ConfigProvider({
       try {
         // Try to load from a script tag with id="dialogue-foundry-config"
         const configScript = document.getElementById('dialogue-foundry-config')
+        
+        // First, check if the script has a src attribute
+        const src = configScript?.getAttribute('src')
+        if (src) {
+          try {
+            // Ensure the URL is resolved correctly even if it's relative
+            // This converts relative URLs to absolute URLs based on the current page
+            const resolvedUrl = new URL(src, window.location.href).href;
+            
+            // Fetch and parse the JSON file
+            const response = await fetch(resolvedUrl)
+            if (!response.ok) {
+              throw new Error(`Failed to load config: ${response.status}`)
+            }
+            const parsedConfig = await response.json()
+            
+            // If API URL is a placeholder, replace it with the actual URL
+            if (parsedConfig.chatConfig?.apiBaseUrl === 'RUNTIME_PLACEHOLDER') {
+              parsedConfig.chatConfig.apiBaseUrl = window.location.hostname === 'localhost'
+                ? 'http://localhost:3000/api'
+                : `${window.location.origin}/api`
+            }
+            
+            console.log('Loaded config from JSON file:', parsedConfig)
+            setConfigState({ ...defaultConfig, ...parsedConfig })
+            setConfigLoaded(true)
+            return
+          } catch (error) {
+            console.error('Error loading config from src:', error)
+          }
+        }
+        
+        // Fallback to using inline content
         if (configScript && configScript.textContent) {
           try {
             const parsedConfig = JSON.parse(configScript.textContent)
@@ -91,8 +124,13 @@ export function ConfigProvider({
             console.error('Error parsing config from script tag:', parseError)
           }
         }
+        
+        // If no config was found, just use defaults
+        console.log('No external config found, using defaults')
+        setConfigLoaded(true)
       } catch (error) {
         console.error('Error loading dialogue foundry configuration:', error)
+        setConfigLoaded(true)
       }
     }
 

@@ -5,7 +5,8 @@
  * 
  * Features:
  * - Creates new major.minor folders when major or minor version changes
- * - Only updates the latest folder for patch version changes
+ * - Updates the major.minor folder when patch version changes
+ * - Updates the latest folder for all version changes
  * - Creates version.txt in each folder to track full version
  * - Skips deployment if the version hasn't changed
  * 
@@ -162,19 +163,27 @@ async function main() {
 
     // Check if we need to create a new major.minor directory
     let shouldCreateNewMajorMinor = false;
+    // Check if we need to update an existing major.minor directory
+    let shouldUpdateMajorMinor = false;
     
     if (!currentS3Version) {
       // No version exists yet, so create the major.minor directory
       shouldCreateNewMajorMinor = true;
     } else if (options.force) {
       // Force flag is specified, go ahead and update
-      shouldCreateNewMajorMinor = true;
+      shouldUpdateMajorMinor = true;
     } else {
       // Check if the current version in S3 has a different major.minor
       const existingMajor = semver.major(currentS3Version);
       const existingMinor = semver.minor(currentS3Version);
       
-      shouldCreateNewMajorMinor = existingMajor !== major || existingMinor !== minor;
+      if (existingMajor !== major || existingMinor !== minor) {
+        // Major or minor version changed, create a new folder
+        shouldCreateNewMajorMinor = true;
+      } else if (semver.patch(currentS3Version) !== patch) {
+        // Only patch version changed, update the existing major.minor folder
+        shouldUpdateMajorMinor = true;
+      }
     }
 
     // Check if we need to update the "latest" folder
@@ -208,7 +217,10 @@ async function main() {
       console.log(chalk.cyan('\n🔍 DRY RUN - No changes will be made'));
       console.log(chalk.cyan(`Would deploy ${packageName} v${currentVersion} to:`));
       if (shouldCreateNewMajorMinor) {
-        console.log(chalk.cyan(`- s3://${options.bucket}/${versionPath}/`));
+        console.log(chalk.cyan(`- s3://${options.bucket}/${versionPath}/ (new folder)`));
+      }
+      if (shouldUpdateMajorMinor) {
+        console.log(chalk.cyan(`- s3://${options.bucket}/${versionPath}/ (update existing folder)`));
       }
       if (shouldUpdateLatest) {
         console.log(chalk.cyan(`- s3://${options.bucket}/${latestPath}/`));
@@ -227,7 +239,7 @@ async function main() {
 
     // Deploy files
     if (shouldCreateNewMajorMinor) {
-      console.log(chalk.blue(`\n📤 Deploying to major.minor folder: s3://${options.bucket}/${versionPath}/`));
+      console.log(chalk.blue(`\n📤 Creating new major.minor folder: s3://${options.bucket}/${versionPath}/`));
       await deployToS3(s3, options.bucket, options.source, versionPath);
       
       // Upload version.txt to the major.minor directory
@@ -238,7 +250,20 @@ async function main() {
         ContentType: 'text/plain'
       }).promise();
       
-      console.log(chalk.green(`✅ Deployed to ${versionPath}`));
+      console.log(chalk.green(`✅ Created new folder at ${versionPath}`));
+    } else if (shouldUpdateMajorMinor) {
+      console.log(chalk.blue(`\n📤 Updating existing major.minor folder: s3://${options.bucket}/${versionPath}/`));
+      await deployToS3(s3, options.bucket, options.source, versionPath);
+      
+      // Upload version.txt to the major.minor directory
+      await s3.putObject({
+        Bucket: options.bucket,
+        Key: versionTxtKey,
+        Body: currentVersion,
+        ContentType: 'text/plain'
+      }).promise();
+      
+      console.log(chalk.green(`✅ Updated existing folder at ${versionPath} to patch version ${patch}`));
     }
 
     if (shouldUpdateLatest) {
