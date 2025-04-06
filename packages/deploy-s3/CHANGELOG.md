@@ -1,5 +1,11 @@
 # @dialogue-foundry/deploy-s3
 
+## 0.2.2
+
+### Patch Changes
+
+- 54d6073: Publishing fixes
+
 ## 0.2.1
 
 ### Patch Changes

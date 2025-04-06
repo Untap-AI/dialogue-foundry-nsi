@@ -1,6 +1,6 @@
 {
   "name": "@dialogue-foundry/deploy-s3",
-  "version": "0.2.1",
+  "version": "0.2.2",
   "description": "Deploy packages to AWS S3 with versioned folders",
   "main": "dist/version-based-deploy.js",
   "types": "dist/version-based-deploy.d.ts",

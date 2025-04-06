@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.1.3
+
+### Patch Changes
+
+- 54d6073: Publishing fixes
+
 ## 0.1.2
 
 ### Patch Changes
