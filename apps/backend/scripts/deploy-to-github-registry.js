@@ -14,7 +14,7 @@
 
 const fs = require('fs')
 const path = require('path')
-const { execSync } = require('child_process')
+const { execSync, spawnSync } = require('child_process')
 
 // Configuration
 const distDir = path.resolve(process.cwd(), 'dist')
@@ -102,46 +102,102 @@ console.log(
   `Preparing to publish ${tempPackageJson.name}@${version} to GitHub Package Registry...`
 )
 
-try {
-  // Navigate to the dist directory
-  process.chdir(distDir)
-  console.log(`Changed directory to: ${process.cwd()}`)
+// Function to check if the package version already exists
+function checkIfPackageVersionExists(packageName, packageVersion) {
+  console.log(`Checking if ${packageName}@${packageVersion} already exists...`)
 
-  // Show .npmrc file content for debugging (without showing the token)
-  console.log('Created .npmrc file with content:')
-  const npmrcContent = fs.readFileSync(npmrcPath, 'utf8')
-  console.log(npmrcContent.replace(/(_authToken=)[^\\n]+/, '$1[REDACTED]'))
-
-  // Publish the package
-  console.log('Publishing package...')
-  try {
-    execSync('npm publish --registry=https://npm.pkg.github.com', {
-      stdio: 'inherit'
-    })
-  } catch (publishError) {
-    console.error(
-      'npm publish command failed with error:',
-      publishError.message
-    )
-    console.error('This might be due to:')
-    console.error('1. Authentication issues with GitHub')
-    console.error('2. Package already exists with same version')
-    console.error('3. Package name conflicts')
-    console.error('4. Network issues')
-    console.error('Try running with npm publish --verbose for more details')
-    throw publishError
-  }
-
-  console.log(
-    `Successfully published ${tempPackageJson.name}@${version} to GitHub Package Registry!`
+  // Use npm view command which will fail if the package doesn't exist
+  const result = spawnSync(
+    'npm',
+    [
+      'view',
+      `${packageName}@${packageVersion}`,
+      'version',
+      '--registry',
+      githubRegistry
+    ],
+    {
+      encoding: 'utf8',
+      env: { ...process.env, NODE_AUTH_TOKEN: token }
+    }
   )
-} catch (error) {
-  console.error('Failed to publish package:', error.message)
-  process.exit(1)
-} finally {
-  // Clean up the .npmrc file
-  if (fs.existsSync(npmrcPath)) {
-    fs.unlinkSync(npmrcPath)
-    console.log('Cleaned up .npmrc file')
+
+  // If the exit code is 0, the package exists
+  const exists = result.status === 0
+  console.log(
+    `Package ${packageName}@${packageVersion} ${exists ? 'already exists' : 'does not exist yet'}`
+  )
+  return exists
+}
+
+function publishPackage() {
+  try {
+    // Navigate to the dist directory
+    process.chdir(distDir)
+    console.log(`Changed directory to: ${process.cwd()}`)
+
+    // Show .npmrc file content for debugging (without showing the token)
+    console.log('Created .npmrc file with content:')
+    const npmrcContent = fs.readFileSync(npmrcPath, 'utf8')
+    console.log(npmrcContent.replace(/(_authToken=)[^\\n]+/, '$1[REDACTED]'))
+
+    // Check if package version already exists
+    const packageExists = checkIfPackageVersionExists(
+      tempPackageJson.name,
+      version
+    )
+
+    if (packageExists) {
+      console.log(
+        `Skipping publication: ${tempPackageJson.name}@${version} already exists in the registry.`
+      )
+      return
+    }
+
+    // Publish the package
+    console.log('Publishing package...')
+    try {
+      execSync('npm publish --registry=https://npm.pkg.github.com', {
+        stdio: 'inherit'
+      })
+    } catch (publishError) {
+      // If the error is about the version already existing, we can just skip
+      if (
+        publishError.message.includes('409 Conflict') ||
+        publishError.message.includes('already exists')
+      ) {
+        console.log(
+          `Package ${tempPackageJson.name}@${version} already exists. Skipping publication.`
+        )
+        return
+      }
+
+      console.error(
+        'npm publish command failed with error:',
+        publishError.message
+      )
+      console.error('This might be due to:')
+      console.error('1. Authentication issues with GitHub')
+      console.error('2. Package already exists with same version')
+      console.error('3. Package name conflicts')
+      console.error('4. Network issues')
+      console.error('Try running with npm publish --verbose for more details')
+      throw publishError
+    }
+
+    console.log(
+      `Successfully published ${tempPackageJson.name}@${version} to GitHub Package Registry!`
+    )
+  } catch (error) {
+    console.error('Failed to publish package:', error.message)
+    process.exit(1)
+  } finally {
+    // Clean up the .npmrc file
+    if (fs.existsSync(npmrcPath)) {
+      fs.unlinkSync(npmrcPath)
+      console.log('Cleaned up .npmrc file')
+    }
   }
 }
+
+publishPackage()
