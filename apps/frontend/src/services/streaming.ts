@@ -206,22 +206,7 @@ export class ChatStreamingService {
           onError(new Error('Failed to parse server response'));
           this.closeEventSource();
         }
-      };
-      
-      // Handle connection errors
-      this.eventSource.onerror = async (err) => {
-        console.error('EventSource error:', err);
-        
-        // Check if we need to reinitialize the chat
-        if (!this.isReconnecting) {
-          this.handleTokenError(content, onChunk, onComplete, onError, companyId);
-        } else {
-          onError(new Error(`Connection error during streaming. Please try again. Attempt ${this.reconnectAttempts}/${this.MAX_RECONNECT_ATTEMPTS}`));
-          this.isReconnecting = false;
-          this.closeEventSource();
-        }
-      };
-      
+      };    
     } catch (error) {
       onError(
         error instanceof Error ? error : new Error('Failed to setup streaming connection')

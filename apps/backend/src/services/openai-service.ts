@@ -121,19 +121,6 @@ export const generateStreamingChatCompletion = async (
       MAX_MESSAGES_PER_CHAT
     )
 
-    console.log('payload', {
-      model: settings.model,
-      input: limitedMessages,
-      temperature: settings.temperature,
-      instructions: settings.systemPrompt,
-      stream: true,
-      text: {
-        format: {
-          type: 'text'
-        }
-      }
-    })
-
     // Create the response with streaming enabled
     const response = await openai.responses.create({
       model: settings.model,
