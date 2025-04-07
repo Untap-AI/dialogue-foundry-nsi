@@ -402,11 +402,9 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     // Check cache first before database query
     let chat = cacheService.getChat(chatId)
 
-    console.log('chat', chat)
     if (!chat) {
       const dbChat = await getChatById(chatId)
 
-      console.log('dbChat', dbChat)
       if (dbChat) {
         chat = dbChat
         cacheService.setChat(chatId, dbChat)

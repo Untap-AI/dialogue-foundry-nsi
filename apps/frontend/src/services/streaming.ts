@@ -16,6 +16,7 @@ interface SSEEventData {
 
 export class ChatStreamingService {
   private apiBaseUrl: string
+  private companyId: string
   private tokenStorageKey: string
   private chatIdStorageKey: string
   private storage: Storage
@@ -23,11 +24,14 @@ export class ChatStreamingService {
   private isReconnecting: boolean = false
   private reconnectAttempts: number = 0
   private lastReconnectTime: number = 0
+  private tokenReconnectAttempts: number = 0  // Add counter specifically for token errors
   private readonly MAX_RECONNECT_ATTEMPTS: number = 3
+  private readonly MAX_TOKEN_RECONNECT_ATTEMPTS: number = 1  // Limit token reconnection to 1 attempt
   private readonly RECONNECT_RESET_TIME: number = 10 * 60 * 1000 // 10 minutes in ms
 
   constructor(config: ChatConfig) {
     this.apiBaseUrl = config.apiBaseUrl
+    this.companyId = config.companyId
     this.tokenStorageKey = config.tokenStorageKey || DEFAULT_TOKEN_STORAGE_KEY
     this.chatIdStorageKey =
       config.chatIdStorageKey || DEFAULT_CHAT_ID_STORAGE_KEY
@@ -39,7 +43,7 @@ export class ChatStreamingService {
    * @param companyId Optional company ID to associate with the chat
    * @returns Promise resolving to the new chat ID
    */
-  async initializeNewChat(companyId?: string): Promise<string> {
+  async initializeNewChat(): Promise<string> {
     try {
       const response = await fetch(`${this.apiBaseUrl}/chats`, {
         method: 'POST',
@@ -48,7 +52,7 @@ export class ChatStreamingService {
         },
         body: JSON.stringify({
           name: 'New Chat',
-          companyId
+          companyId: this.companyId
         })
       });
 
@@ -77,6 +81,7 @@ export class ChatStreamingService {
     // If it's been more than the reset time since the last reconnect attempt, reset counters
     if (now - this.lastReconnectTime > this.RECONNECT_RESET_TIME) {
       this.reconnectAttempts = 0;
+      this.tokenReconnectAttempts = 0;  // Also reset token reconnect attempts
     }
   }
 
@@ -114,7 +119,7 @@ export class ChatStreamingService {
       try {
         if (!this.isReconnecting) {
           console.log('No chat session found. Initializing a new chat...');
-          await this.initializeNewChat(companyId);
+          await this.initializeNewChat();
           chatId = this.storage.getItem(this.chatIdStorageKey);
           token = this.storage.getItem(this.tokenStorageKey);
         } else {
@@ -246,23 +251,31 @@ export class ChatStreamingService {
     
     // Track reconnection attempt
     this.reconnectAttempts++;
+    this.tokenReconnectAttempts++;  // Increment token-specific counter
     this.lastReconnectTime = Date.now();
+    
+    // Check if we've exceeded maximum token reconnection attempts (limit to 1)
+    if (this.tokenReconnectAttempts > this.MAX_TOKEN_RECONNECT_ATTEMPTS) {
+      onError(new Error(`Authentication token is invalid. Only one retry attempt is allowed. Please reload the page to continue.`));
+      this.isReconnecting = false;
+      return;
+    }
     
     // Check if we've exceeded maximum reconnection attempts
     if (this.reconnectAttempts > this.MAX_RECONNECT_ATTEMPTS) {
-      onError(new Error(`Too many reconnection attempts (${this.reconnectAttempts}/${this.MAX_RECONNECT_ATTEMPTS}). Please reload the page to continue.`));
+      onError(new Error(`Too many general reconnection attempts (${this.reconnectAttempts}/${this.MAX_RECONNECT_ATTEMPTS}). Please reload the page to continue.`));
       this.isReconnecting = false;
       return;
     }
     
     if (this.isReconnecting) {
       // Avoid nested reconnection loops
-      onError(new Error(`Authentication failed. Please reload the page and try again. (Attempt ${this.reconnectAttempts}/${this.MAX_RECONNECT_ATTEMPTS})`));
+      onError(new Error(`Authentication already in progress. Please reload the page and try again.`));
       this.isReconnecting = false;
       return;
     }
     
-    console.log(`Token expired or invalid. Reinitializing chat... Attempt ${this.reconnectAttempts}/${this.MAX_RECONNECT_ATTEMPTS}`);
+    console.log(`Token expired or invalid. Reinitializing chat... Attempt ${this.tokenReconnectAttempts}/${this.MAX_TOKEN_RECONNECT_ATTEMPTS}`);
     this.isReconnecting = true;
     
     try {
@@ -277,8 +290,8 @@ export class ChatStreamingService {
       this.storage.removeItem(this.tokenStorageKey);
       this.storage.removeItem(this.chatIdStorageKey);
       
-      // Initialize a new chat
-      await this.initializeNewChat(companyId);
+      // Initialize a new chat (don't pass companyId as it's already a class member)
+      await this.initializeNewChat();
       
       // Retry the streaming request
       console.log('Reconnecting with new chat session...');
@@ -286,7 +299,7 @@ export class ChatStreamingService {
       this.isReconnecting = false;
     } catch (error) {
       console.error('Failed to reinitialize chat:', error);
-      onError(new Error(`Failed to automatically renew your session. Please reload the page. (Attempt ${this.reconnectAttempts}/${this.MAX_RECONNECT_ATTEMPTS})`));
+      onError(new Error(`Failed to automatically renew your session. Please reload the page. (Token attempt ${this.tokenReconnectAttempts}/${this.MAX_TOKEN_RECONNECT_ATTEMPTS})`));
       this.isReconnecting = false;
     }
   }
@@ -314,6 +327,7 @@ export class ChatStreamingService {
    */
   resetReconnectionState(): void {
     this.reconnectAttempts = 0;
+    this.tokenReconnectAttempts = 0;  // Also reset token reconnect attempts
     this.lastReconnectTime = 0;
     this.isReconnecting = false;
   }
