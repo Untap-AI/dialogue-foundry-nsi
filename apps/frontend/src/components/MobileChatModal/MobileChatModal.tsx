@@ -2,7 +2,6 @@ import { useRef, useEffect } from 'react'
 import { ChatInterface } from '../ChatInterface/ChatInterface'
 import ChatHeader from '../ChatHeader/ChatHeader'
 import './MobileChatModal.css'
-import useChatScroll from '../../hooks/useChatScroll'
 
 interface MobileChatModalProps {
   isOpen: boolean
@@ -10,9 +9,8 @@ interface MobileChatModalProps {
 }
 
 export const MobileChatModal = ({ isOpen, onClose }: MobileChatModalProps) => {
+  // eslint-disable-next-line no-null/no-null
   const dialogRef = useRef<HTMLDialogElement>(null)
-
-  const { scrollToBottom } = useChatScroll({ isOpen })
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -23,19 +21,13 @@ export const MobileChatModal = ({ isOpen, onClose }: MobileChatModalProps) => {
       dialog.showModal()
 
       document.body.style.overflow = 'hidden'
-
-      // Initial scroll to bottom after modal opens
-      // Use a longer timeout to ensure all content is rendered
-      setTimeout(() => {
-        scrollToBottom()
-      }, 300)
     } else {
       // Close the dialog
 
       document.body.style.overflow = ''
       dialog.close()
     }
-  }, [isOpen, scrollToBottom])
+  }, [isOpen])
 
   return (
     <dialog

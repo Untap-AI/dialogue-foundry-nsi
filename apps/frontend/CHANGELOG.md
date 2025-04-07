@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.1.11
+
+### Patch Changes
+
+- Fix scroll bugs
+
 ## 0.1.10
 
 ### Patch Changes

@@ -4,6 +4,7 @@ import { ChatWindow } from '../ChatWindow/ChatWindow'
 import { MobileChatModal } from '../MobileChatModal/MobileChatModal'
 import { useResizeObserver } from '../../hooks/useResizeObserver'
 import './ChatWidget.css'
+import { useChatScroll } from '../../hooks/useChatScroll'
 
 export const ChatWidget = () => {
   const [isOpen, setIsOpen] = useState(false)
@@ -63,6 +64,8 @@ export const ChatWidget = () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [isOpen, toggleChat, isMobile])
+
+  useChatScroll({ isOpen })
 
   return (
     <div className="chat-widget">
