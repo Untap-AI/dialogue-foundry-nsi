@@ -5,7 +5,6 @@ import {
   validateOpenAIResponseChunk
 } from '../util/openai-chunk-validators'
 import { MAX_MESSAGES_PER_CHAT } from '../db/messages'
-import { text } from 'express'
 
 dotenv.config()
 
@@ -122,6 +121,19 @@ export const generateStreamingChatCompletion = async (
       MAX_MESSAGES_PER_CHAT
     )
 
+    console.log('payload', {
+      model: settings.model,
+      input: limitedMessages,
+      temperature: settings.temperature,
+      instructions: settings.systemPrompt,
+      stream: true,
+      text: {
+        format: {
+          type: 'text'
+        }
+      }
+    })
+
     // Create the response with streaming enabled
     const response = await openai.responses.create({
       model: settings.model,
@@ -136,37 +148,37 @@ export const generateStreamingChatCompletion = async (
       }
     })
 
-    let fullText = '';
-    
+    let fullText = ''
+
     try {
       for await (const rawChunk of response) {
         // Use our validator instead of type casting
         const chunk = validateOpenAIResponseChunk(rawChunk)
-  
+
         let text = ''
-  
+
         // Use our type guard function instead of checking the type directly
         if (isOpenAIResponseDeltaChunk(chunk)) {
           text = chunk.delta
         }
-  
+
         if (text) {
           // Add to full text and send immediately
-          fullText += text;
-          onChunk(text);
+          fullText += text
+          onChunk(text)
         }
       }
-      
+
       // Add a small delay to ensure all content is properly processed by the client
-      await new Promise(resolve => setTimeout(resolve, 50));
-      
+      await new Promise(resolve => setTimeout(resolve, 50))
+
       // Send a final empty chunk to ensure proper completion
-      onChunk('');
-  
-      return fullText;
+      onChunk('')
+
+      return fullText
     } catch (streamError) {
-      console.error('Error during stream processing:', streamError);
-      throw streamError;
+      console.error('Error during stream processing:', streamError)
+      throw streamError
     }
   } catch (error) {
     console.error('Error generating streaming chat completion:', error)
