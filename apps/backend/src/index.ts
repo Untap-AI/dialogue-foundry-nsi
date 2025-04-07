@@ -50,7 +50,7 @@ app.use('/api/cache', cacheRoutes)
 app.use('/api/admin', adminRoutes)
 
 // 404 handler - must come after routes
-app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((req: express.Request, res: express.Response, _next: express.NextFunction) => {
   res.status(404).json({
     error: 'Not Found',
     message: `Route ${req.method} ${req.url} not found`
@@ -59,7 +59,7 @@ app.use((req: express.Request, res: express.Response, next: express.NextFunction
 
 // Primary error handling middleware
 // Explicitly defining types without using underscores
-app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+app.use((err: any, _req: express.Request, res: express.Response, next: express.NextFunction) => {
   // Log the error
   console.error('Express error handler triggered:');
   console.error(err.stack || err);
