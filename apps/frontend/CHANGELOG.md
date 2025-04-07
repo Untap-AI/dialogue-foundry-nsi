@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.1.8
+
+### Patch Changes
+
+- Fixed streaming with company id
+
 ## 0.1.7
 
 ### Patch Changes
