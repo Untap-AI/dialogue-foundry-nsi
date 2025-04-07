@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.1.9
+
+### Patch Changes
+
+- Logging for event source
+
 ## 0.1.8
 
 ### Patch Changes
