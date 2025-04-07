@@ -108,7 +108,8 @@
 
 .nlux-comp-chatItem>.nlux-comp-message {
     width: auto;
-    align-self: flex-end
+    align-self: flex-end;
+    min-width: unset;
 }
 
 .nlux-comp-chatItem.nlux-comp-chatItem--bubblesLayout.nlux-comp-chatItem--sent {

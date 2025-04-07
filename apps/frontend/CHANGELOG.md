@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.1.10
+
+### Patch Changes
+
+- Fix min bubble width
+
 ## 0.1.9
 
 ### Patch Changes
