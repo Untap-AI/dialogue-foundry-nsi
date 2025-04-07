@@ -49,14 +49,41 @@ app.use('/api/chat-configs', chatConfigRoutes)
 app.use('/api/cache', cacheRoutes)
 app.use('/api/admin', adminRoutes)
 
-// Error handling middleware
-app.use((err: Error, _: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error(err.stack)
-  res.status(500).json({
+// 404 handler - must come after routes
+app.use((req: express.Request, res: express.Response, next: express.NextFunction) => {
+  res.status(404).json({
+    error: 'Not Found',
+    message: `Route ${req.method} ${req.url} not found`
+  });
+});
+
+// Primary error handling middleware
+// Explicitly defining types without using underscores
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+  // Log the error
+  console.error('Express error handler triggered:');
+  console.error(err.stack || err);
+  
+  // Safety check to ensure res is valid and has status method
+  if (!res || typeof res.status !== 'function') {
+    console.error('Invalid response object in error handler:', res);
+    return next(err); // Try to pass to default Express error handler
+  }
+  
+  // Handle CORS errors differently
+  if (err.message && err.message.includes('CORS')) {
+    return res.status(403).json({
+      error: 'CORS Error',
+      message: process.env.NODE_ENV === 'development' ? err.message : 'Origin not allowed'
+    });
+  }
+  
+  // Generic error response
+  return res.status(500).json({
     error: 'An unexpected error occurred',
     message: process.env.NODE_ENV === 'development' ? err.message : undefined
-  })
-})
+  });
+});
 
 // Start the server
 app.listen(port, () => {
