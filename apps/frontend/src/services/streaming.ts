@@ -189,6 +189,7 @@ export class ChatStreamingService {
               break;
               
             case 'error':
+              console.log('SSE error:', data);
               // Check if this is a token error
               if (data.code === 'TOKEN_INVALID' || data.code === 'TOKEN_MISSING') {
                 this.handleTokenError(content, onChunk, onComplete, onError, companyId);
