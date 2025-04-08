@@ -549,6 +549,9 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       
       // Small delay to ensure client receives all data
       await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Send a clean termination signal
+      res.write(':\n\n');
     }
 
     // End the response properly
@@ -567,22 +570,40 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     console.error('Error in streaming chat message endpoint:', error)
     // Only send error response if headers haven't been sent yet
     if (!res.headersSent) {
+      console.log('Sending error response to client - headers not sent yet');
+      
       // Check if this is an authentication error
       if (error instanceof Error && error.message && 
           (error.message.includes('token') || error.message.includes('authenticate'))) {
-        return res.status(401).json({ 
+        const errorData = { 
+          type: 'error', 
           error: 'Invalid or expired token. Please reinitialize your chat session.',
           code: 'TOKEN_INVALID'
-        });
+        };
+        console.log('Error data being sent:', errorData);
+        res.write(`data: ${JSON.stringify(errorData)}\n\n`);
+        // Send a clean termination signal
+        res.write(':\n\n');
+        return res.end();
       }
-      return res.status(500).json({ 
+
+      console.log('Sending generic streaming error to client');
+      const errorData = { 
+        type: 'error', 
         error: 'An error occurred processing your request',
         code: 'STREAMING_ERROR'
-      });
+      };
+      console.log('Error data being sent:', errorData);
+      res.write(`data: ${JSON.stringify(errorData)}\n\n`);
+      // Send a clean termination signal
+      res.write(':\n\n');
+      return res.end();
     }
 
     // Send an error event if headers have been sent
     if (!res.writableEnded) {
+      console.log('Sending error response to client - headers already sent');
+      
       // Determine error code based on the error message
       let errorCode = 'STREAMING_ERROR';
       if (error instanceof Error) {
@@ -591,14 +612,18 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
         }
       }
       
-      res.write(`data: ${JSON.stringify({ 
+      const errorData = { 
         type: 'error', 
         error: error instanceof Error ? error.message : 'Unknown error',
         code: errorCode
-      })}\n\n`);
-      return res.end();
+      };
+      console.log('Error data being sent:', errorData);
+      res.write(`data: ${JSON.stringify(errorData)}\n\n`);
+      // Send a clean termination signal
+      res.write(':\n\n');
     }
-    return
+
+    return res.end();
   }
 }
 

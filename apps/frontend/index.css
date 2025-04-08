@@ -15,9 +15,9 @@
   --df-text-contrast: rgb(255, 244, 231);
   
   /* Alert/Exception colors */
-  --df-alert-bg: tomato;
+  --df-alert-bg: #ffcccc;
   --df-alert-border: darkred;
-  --df-alert-text: white;
+  --df-alert-text: black;
   
   /* Border and outline */
   --df-border-color: black;

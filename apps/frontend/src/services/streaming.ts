@@ -1,5 +1,6 @@
 import { DEFAULT_TOKEN_STORAGE_KEY, DEFAULT_CHAT_ID_STORAGE_KEY } from './api'
 import type { ChatConfig } from './api'
+import { StreamingError, ErrorCodes as ServiceErrorCodes, ErrorCodes } from './errors'
 
 // Define the SSE event types for TypeScript
 interface SSEMessageEvent extends MessageEvent {
@@ -7,7 +8,7 @@ interface SSEMessageEvent extends MessageEvent {
 }
 
 interface SSEEventData {
-  type: 'connected' | 'chunk' | 'done' | 'error';
+  type: 'connected' | 'chunk' | 'done' | 'error' | 'err';
   content?: string;
   fullContent?: string;
   error?: string;
@@ -28,6 +29,7 @@ export class ChatStreamingService {
   private readonly MAX_RECONNECT_ATTEMPTS: number = 3
   private readonly MAX_TOKEN_RECONNECT_ATTEMPTS: number = 1  // Limit token reconnection to 1 attempt
   private readonly RECONNECT_RESET_TIME: number = 10 * 60 * 1000 // 10 minutes in ms
+  private isClosingConnection: boolean = false
 
   constructor(config: ChatConfig) {
     this.apiBaseUrl = config.apiBaseUrl
@@ -40,7 +42,6 @@ export class ChatStreamingService {
 
   /**
    * Initialize a new chat session
-   * @param companyId Optional company ID to associate with the chat
    * @returns Promise resolving to the new chat ID
    */
   async initializeNewChat(): Promise<string> {
@@ -57,7 +58,12 @@ export class ChatStreamingService {
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to create chat: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }));
+        throw new StreamingError(
+          `Failed to create chat: ${errorData.error || response.statusText}`,
+          ServiceErrorCodes.INITIALIZATION_ERROR,
+          true
+        );
       }
 
       const data = await response.json();
@@ -68,8 +74,15 @@ export class ChatStreamingService {
       
       return data.chat.id;
     } catch (error) {
-      console.error('Failed to initialize new chat:', error);
-      throw error;
+      if (error instanceof StreamingError) {
+        throw error;
+      }
+      
+      throw new StreamingError(
+        'Failed to initialize new chat session',
+        ServiceErrorCodes.INITIALIZATION_ERROR,
+        true
+      );
     }
   }
 
@@ -105,8 +118,10 @@ export class ChatStreamingService {
     
     // Check if we've exceeded maximum reconnection attempts
     if (this.reconnectAttempts >= this.MAX_RECONNECT_ATTEMPTS) {
-      onError(new Error(
-        `Too many reconnection attempts. Please reload the page to continue. (${this.reconnectAttempts}/${this.MAX_RECONNECT_ATTEMPTS})`
+      onError(new StreamingError(
+        `We've tried to reconnect several times but couldn't establish a stable connection. Please refresh the page to start a new chat session.`,
+        ServiceErrorCodes.RECONNECT_LIMIT,
+        false
       ));
       return;
     }
@@ -118,19 +133,45 @@ export class ChatStreamingService {
     if (!chatId || !token) {
       try {
         if (!this.isReconnecting) {
-          console.log('No chat session found. Initializing a new chat...');
           await this.initializeNewChat();
           chatId = this.storage.getItem(this.chatIdStorageKey);
           token = this.storage.getItem(this.tokenStorageKey);
         } else {
           // We're already trying to reconnect but still no token/chatId
-          onError(new Error('Failed to initialize chat session'));
+          onError(new StreamingError(
+            'Unable to start a new chat session. Please refresh the page and try again.',
+            ServiceErrorCodes.INITIALIZATION_ERROR,
+            false
+          ));
           return;
         }
       } catch (initError) {
-        onError(new Error('Failed to initialize chat session'));
+        onError(new StreamingError(
+          'Unable to start a new chat session. Please check your internet connection and try again.',
+          ServiceErrorCodes.INITIALIZATION_ERROR,
+          true
+        ));
         return;
       }
+    }
+
+    // Check token validity before proceeding
+    try {
+      const testResponse = await fetch(`${this.apiBaseUrl}/chats/${chatId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!testResponse.ok) {
+        if (testResponse.status === 401) {
+          // If token is invalid, try to reconnect
+          this.handleTokenError(content, onChunk, onComplete, onError, companyId);
+          return;
+        }
+      }
+    } catch (error) {
+      // Continue anyway, as this might just be a network error
     }
 
     // Close any existing EventSource
@@ -149,15 +190,77 @@ export class ChatStreamingService {
       this.eventSource = new EventSource(url.toString());
       
       let fullText = '';
+      let errorCount = 0;
+      const maxSilentErrors = 3; // Only log detailed errors for the first few occurrences
+      
+      // Reset error count when connection successfully opens
+      this.eventSource.onopen = () => {
+        errorCount = 0;
+      };
+      
+      // Implement error handler that distinguishes between expected and unexpected errors
+      this.eventSource.onerror = (event) => {
+        // Track if we're in the process of closing
+        const isClosing = !this.eventSource || 
+                          this.eventSource.readyState === 2 || // CLOSED
+                          this.isClosingConnection;
+        
+        errorCount++;
+        
+        // If we're closing the connection, ignore the error as it's expected
+        if (isClosing) {
+          return;
+        }
+        
+        // Log only the first few errors to avoid console spam
+        if (errorCount <= maxSilentErrors) {
+          console.warn(`EventSource error #${errorCount}`);
+        }
+        
+        // Don't react to reconnection attempts
+        if (this.eventSource?.readyState === 0) { // CONNECTING
+          return;
+        }
+        
+        // Only notify user after multiple consecutive errors (actual connection problems)
+        if (errorCount > 5) {
+          onError(new StreamingError(
+            'The connection to the chat service appears unstable. Your messages may be delayed.',
+            ServiceErrorCodes.CONNECTION_ERROR,
+            true
+          ));
+        }
+      };
       
       // Handle incoming messages
       this.eventSource.onmessage = (event: SSEMessageEvent) => {
+        // Reset error count on successful message reception
+        errorCount = 0;
+        
         try {
           const data = JSON.parse(event.data) as SSEEventData;
           
+          // Check for any kind of error message from the server
+          if (data.type === 'error' || data.type === 'err' || data.error) {
+            // Handle token-related errors specially
+            if (data.code === 'TOKEN_INVALID' || data.code === 'TOKEN_MISSING') {
+              this.handleTokenError(content, onChunk, onComplete, onError, companyId);
+              return;
+            } else {
+              // Handle other error types
+              onError(new StreamingError(
+                data.error || 'There was an issue with the chat service. Please try again.',
+                data.code || ServiceErrorCodes.SERVER_ERROR,
+                true
+              ));
+              this.closeEventSource();
+              return;
+            }
+          }
+          
+          // If not an error, process normal message types
           switch (data.type) {
             case 'connected':
-              console.log('SSE connection established');
               break;
               
             case 'chunk':
@@ -170,47 +273,43 @@ export class ChatStreamingService {
               break;
               
             case 'done':
-              // Use the full content from the server if available
-              if (typeof data.fullContent === 'string') {
-                // Ensure the UI has time to process any final chunks
-                setTimeout(() => {
-                  onComplete(data.fullContent as string);
-                  this.closeEventSource();
-                }, 100); // Increased timeout to ensure all chunks are processed
-              } else {
-                // Make sure we got everything by waiting a short delay
-                setTimeout(() => {
-                  onComplete(fullText);
-                  this.closeEventSource();
-                }, 100); // Increased timeout to ensure all chunks are processed
-              }
+              // Use the full content from the server if available or locally assembled content
+              const finalContent = typeof data.fullContent === 'string' ? data.fullContent : fullText;
+              
+              // Mark that we're intentionally closing before invoking callbacks or cleanup
+              this.isClosingConnection = true;
+              
+              // Process the completion
+              onComplete(finalContent);
+              
+              // Close the connection now that we're done
+              this.closeEventSource();
+              
               // Reset reconnect attempts on successful completion
               this.reconnectAttempts = 0;
               break;
-              
-            case 'error':
-              console.log('SSE error:', data);
-              // Check if this is a token error
-              if (data.code === 'TOKEN_INVALID' || data.code === 'TOKEN_MISSING') {
-                this.handleTokenError(content, onChunk, onComplete, onError, companyId);
-              } else {
-                onError(new Error(data.error || 'Unknown streaming error'));
-                this.closeEventSource();
-              }
-              break;
-              
-            default:
-              console.warn('Unknown event type:', data.type);
           }
         } catch (parseError) {
-          console.error('Error parsing SSE data:', parseError);
-          onError(new Error('Failed to parse server response'));
+          onError(new StreamingError(
+            'There was a problem processing the response from the server. Please try again.',
+            ServiceErrorCodes.PARSE_ERROR,
+            true
+          ));
           this.closeEventSource();
         }
-      };    
+      };
+      
     } catch (error) {
       onError(
-        error instanceof Error ? error : new Error('Failed to setup streaming connection')
+        error instanceof StreamingError
+          ? error
+          : new StreamingError(
+            error instanceof Error 
+              ? `Connection error: ${error.message}. Please check your internet connection.`
+              : 'Failed to establish a connection to the chat service. Please check your internet connection.',
+            ServiceErrorCodes.CONNECTION_ERROR,
+            true
+          )
       );
       this.closeEventSource();
     }
@@ -237,37 +336,47 @@ export class ChatStreamingService {
     
     // Track reconnection attempt
     this.reconnectAttempts++;
-    this.tokenReconnectAttempts++;  // Increment token-specific counter
+    this.tokenReconnectAttempts++;
     this.lastReconnectTime = Date.now();
     
     // Check if we've exceeded maximum token reconnection attempts (limit to 1)
     if (this.tokenReconnectAttempts > this.MAX_TOKEN_RECONNECT_ATTEMPTS) {
-      onError(new Error(`Authentication token is invalid. Only one retry attempt is allowed. Please reload the page to continue.`));
+      onError(new StreamingError(
+        `Your session has expired. Please refresh the page to continue.`,
+        ServiceErrorCodes.TOKEN_INVALID,
+        false
+      ));
       this.isReconnecting = false;
       return;
     }
     
     // Check if we've exceeded maximum reconnection attempts
     if (this.reconnectAttempts > this.MAX_RECONNECT_ATTEMPTS) {
-      onError(new Error(`Too many general reconnection attempts (${this.reconnectAttempts}/${this.MAX_RECONNECT_ATTEMPTS}). Please reload the page to continue.`));
+      onError(new StreamingError(
+        `We couldn't establish a stable connection. Please refresh the page to start a new chat session.`,
+        ServiceErrorCodes.RECONNECT_LIMIT,
+        false
+      ));
       this.isReconnecting = false;
       return;
     }
     
     if (this.isReconnecting) {
       // Avoid nested reconnection loops
-      onError(new Error(`Authentication already in progress. Please reload the page and try again.`));
+      onError(new StreamingError(
+        `We're currently trying to restore your session. Please wait a moment.`,
+        ServiceErrorCodes.TOKEN_INVALID,
+        false
+      ));
       this.isReconnecting = false;
       return;
     }
     
-    console.log(`Token expired or invalid. Reinitializing chat... Attempt ${this.tokenReconnectAttempts}/${this.MAX_TOKEN_RECONNECT_ATTEMPTS}`);
     this.isReconnecting = true;
     
     try {
       // Calculate backoff time for exponential retry
       const backoffTime = this.getBackoffTime();
-      console.log(`Waiting ${backoffTime}ms before reconnecting...`);
       
       // Wait for backoff time before retrying
       await new Promise(resolve => setTimeout(resolve, backoffTime));
@@ -276,16 +385,18 @@ export class ChatStreamingService {
       this.storage.removeItem(this.tokenStorageKey);
       this.storage.removeItem(this.chatIdStorageKey);
       
-      // Initialize a new chat (don't pass companyId as it's already a class member)
+      // Initialize a new chat
       await this.initializeNewChat();
       
       // Retry the streaming request
-      console.log('Reconnecting with new chat session...');
       await this.streamMessage(content, onChunk, onComplete, onError, companyId);
       this.isReconnecting = false;
     } catch (error) {
-      console.error('Failed to reinitialize chat:', error);
-      onError(new Error(`Failed to automatically renew your session. Please reload the page. (Token attempt ${this.tokenReconnectAttempts}/${this.MAX_TOKEN_RECONNECT_ATTEMPTS})`));
+      onError(new StreamingError(
+        `We couldn't automatically renew your session. Please refresh the page.`,
+        ServiceErrorCodes.TOKEN_INVALID,
+        false
+      ));
       this.isReconnecting = false;
     }
   }
@@ -295,6 +406,15 @@ export class ChatStreamingService {
    */
   private closeEventSource(): void {
     if (this.eventSource) {
+      // Set flag before any operations that might trigger events
+      this.isClosingConnection = true;
+      
+      // Remove all event listeners before closing
+      this.eventSource.onmessage = null;
+      this.eventSource.onerror = null;
+      this.eventSource.onopen = null;
+      
+      // Close the connection
       this.eventSource.close();
       this.eventSource = undefined;
     }
@@ -304,6 +424,7 @@ export class ChatStreamingService {
    * Cancel ongoing stream if one exists
    */
   cancelStream(): void {
+    this.isClosingConnection = true;
     this.closeEventSource();
   }
   

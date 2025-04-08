@@ -79,3 +79,38 @@
     opacity: 0.6;
   }
 }
+
+/* Add custom error banner styles */
+
+/* Base error banner styles */
+.df-error-banner {
+  display: flex;
+  align-items: center;
+  padding: 4px 8px;  /* Reduced padding */
+  border-radius: 6px;  /* Smaller radius */
+  margin: 6px 12px;  /* Smaller margins */
+  background-color: var(--df-alert-bg);
+  border-left: 3px solid var(--df-alert-border);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);  /* Lighter shadow */
+  color: var(--df-alert-text);
+  font-family: var(--df-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif);
+}
+
+.df-error-icon {
+  font-size: 18px;  /* Smaller icon */
+  margin-right: 10px;
+  display: flex;
+  align-items: center;
+}
+
+.df-error-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.df-error-message {
+  font-size: 16px;  /* Smaller text */
+  line-height: 1.4;  /* Tighter line height */
+  font-weight: 500;
+}

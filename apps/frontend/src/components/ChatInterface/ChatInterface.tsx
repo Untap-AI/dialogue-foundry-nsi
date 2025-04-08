@@ -6,7 +6,8 @@ import './ChatInterface.css'
 
 import { ChatApiService } from '../../services/api'
 import { ChatStreamingService } from '../../services/streaming'
-import type { ChatItem } from '@nlux/react'
+import { ErrorCategory, categorizeError } from '../../services/errors'
+import type { ChatItem, ErrorEventDetails } from '@nlux/react'
 
 type ChatStatus = 'loading' | 'initialized' | 'error'
 
@@ -40,27 +41,90 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
       chunk => observer.next(chunk),
       // On complete
       () => observer.complete(),
-      // On error
-      error => observer.error(error)
+      // On error - handle the error and pass to the observer
+      error => {
+        console.log('Error from streaming service:', error);
+        // Pass the error to the observer for NLUX to handle
+        observer.error(error);
+      }
     )
   }, messages)
 
+  // Setup chat function
+  const setupChat = async () => {
+    try {
+      setChatStatus('loading');
+      // Initialize service
+      const chatInit = await new ChatApiService(chatConfig).initializeChat()
+      setChatId(chatInit.chatId)
+      setMessages(chatInit.messages)
+      setChatStatus('initialized')
+    } catch (error) {
+      setChatStatus('error');
+      console.error('Chat initialization failed:', error);
+    }
+  };
+
+  // Manual retry functionality
+  const retryConnection = () => {
+    if (streamingServiceRef.current) {
+      streamingServiceRef.current.resetReconnectionState();
+    }
+    setupChat();
+  };
+
+  // Create a custom error handler for the NLUX error event
+  const handleNluxError = (error: ErrorEventDetails) => {
+    if(!error.errorObject) {
+      return
+    }
+    
+    // Find the error box element
+    const errorBox = document.querySelector('.nlux-comp-exceptionBox');
+    if (errorBox) {
+      // Clear the existing content
+      errorBox.innerHTML = '';
+
+      // Process the error through our error handling system
+      const category = categorizeError(error.errorObject)
+      const message = error.errorObject.message
+      
+      // Create our custom error banner
+      const errorBanner = document.createElement('div');
+      errorBanner.className = `df-error-banner df-error-${category}`;
+      
+      // Add the icon based on error category
+      const iconMap: Record<ErrorCategory, string> = {
+        [ErrorCategory.AUTHENTICATION]: '🔒',
+        [ErrorCategory.CONNECTION]: '🔌',
+        [ErrorCategory.SERVER]: '🖥️',
+        [ErrorCategory.RATE_LIMIT]: '⏱️',
+        [ErrorCategory.TIMEOUT]: '⌛',
+        [ErrorCategory.UNKNOWN]: '⚠️'
+      };
+      
+      // Build the error banner content
+      errorBanner.innerHTML = `
+        <div class="df-error-icon">${iconMap[category] || '⚠️'}</div>
+        <div class="df-error-content">
+          <div class="df-error-message">${message}</div>
+        </div>
+      `;
+      
+      // Append our custom error banner
+      errorBox.appendChild(errorBanner);
+
+      setTimeout(() => {
+        errorBox.innerHTML = '';
+      }, 3000);
+    }
+    
+    console.error('NLUX chat error:', error);
+  };
+
   useEffect(() => {
     // Initialize chat on component mount
-    const setupChat = async () => {
-      try {
-        // Initialize service
-        const chatInit = await new ChatApiService(chatConfig).initializeChat()
-        setChatId(chatInit.chatId)
-        setMessages(chatInit.messages)
-        setChatStatus('initialized')
-      } catch (error) {
-        setChatStatus('error')
-        console.error('Failed to initialize chat:', error)
-      }
-    }
-
-    setupChat()
+    setupChat();
 
     // Cleanup
     return () => {
@@ -72,8 +136,6 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
   }, [])
 
   // TODO: ConversationStarter UI
-  // TODO: Loading State
-  // TODO:
   return (
     <div className={`chat-interface-wrapper ${className || ''}`}>
       <div className="chat-interface-content">
@@ -107,6 +169,9 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
                   composerOptions={{
                     placeholder: 'Ask me anything...'
                   }}
+                  events={{
+                    error: handleNluxError
+                  }}
                 />
               )
             case 'error':
@@ -114,6 +179,12 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
                 <div className="chat-error-container">
                   <p className="chat-error-text">Error loading chat.</p>
                   <p className="chat-error-text">Please try again.</p>
+                  {/* <button 
+                    className="chat-reload-button" 
+                    onClick={retryConnection}
+                  >
+                    Reload Chat
+                  </button> */}
                 </div>
               )
           }
@@ -122,3 +193,4 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
     </div>
   )
 }
+

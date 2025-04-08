@@ -85,7 +85,6 @@ export const useChatScroll = ({ isOpen }: UseChatScrollOptions) => {
   useEffect(() => {
     // Handler function for all interaction events
     const handleInteraction = (event: Event) => {
-      console.log('handleInteraction', event.type)
       // Small delay to ensure keyboard is fully shown and UI is ready
       if (event.type === 'touchstart') {
         setTimeout(scrollToBottom, 100)

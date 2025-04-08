@@ -1,6 +1,6 @@
 {
   "name": "@dialogue-foundry/backend",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "Simple chatbot backend for a small company website",
   "main": "dist/index.js",
   "repository": {

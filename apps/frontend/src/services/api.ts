@@ -1,10 +1,24 @@
 import axios from 'axios'
 import type { AxiosError } from 'axios'
 import type { ChatItem } from '@nlux/react'
+import { ApiError, ErrorCodes as ServiceErrorCodes } from './errors'
 
 // Default config values (can be overridden)
 export const DEFAULT_TOKEN_STORAGE_KEY = 'dialogue_foundry_token'
 export const DEFAULT_CHAT_ID_STORAGE_KEY = 'dialogue_foundry_chat_id'
+
+// Custom error class for API errors
+export class ChatApiError extends Error {
+  statusCode?: number;
+  errorCode?: string;
+  
+  constructor(message: string, statusCode?: number, errorCode?: string) {
+    super(message);
+    this.name = 'ChatApiError';
+    this.statusCode = statusCode;
+    this.errorCode = errorCode;
+  }
+}
 
 export interface ChatConfig {
   apiBaseUrl: string
@@ -56,7 +70,8 @@ export class ChatApiService {
       baseURL: this.apiBaseUrl,
       headers: {
         'Content-Type': 'application/json'
-      }
+      },
+      timeout: 30000 // 30 second timeout
     })
 
     // Add a request interceptor to include the token in all requests
@@ -74,6 +89,77 @@ export class ChatApiService {
         return Promise.reject(error)
       }
     )
+    
+    // Add a response interceptor to handle errors consistently
+    this.api.interceptors.response.use(
+      response => response,
+      (error: AxiosError) => {
+        if (error.response) {
+          // The request was made and the server responded with an error status
+          const status = error.response.status;
+          const data = error.response.data as any;
+          
+          let errorMessage = 'An error occurred while communicating with the server.';
+          let errorCode = ServiceErrorCodes.UNKNOWN_ERROR;
+          
+          // Check if there's a specific error in the response
+          if (data && data.error) {
+            errorMessage = typeof data.error === 'string' 
+              ? data.error 
+              : (data.error.message || errorMessage);
+              
+            errorCode = data.code || `HTTP_${status}`;
+          }
+          
+          // Create friendly messages for common HTTP status codes
+          switch (status) {
+            case 401:
+              errorMessage = 'Your session has expired. Please reload the page to continue.';
+              errorCode = ServiceErrorCodes.AUTH_EXPIRED;
+              break;
+            case 403:
+              errorMessage = 'You don\'t have permission to perform this action.';
+              errorCode = ServiceErrorCodes.AUTH_FORBIDDEN;
+              break;
+            case 404:
+              errorMessage = 'The requested resource was not found.';
+              errorCode = ServiceErrorCodes.NOT_FOUND;
+              break;
+            case 429:
+              errorMessage = 'You\'ve made too many requests. Please wait a moment and try again.';
+              errorCode = ServiceErrorCodes.RATE_LIMITED;
+              break;
+            case 500:
+            case 502:
+            case 503:
+            case 504:
+              errorMessage = 'The server encountered an error. Please try again later.';
+              errorCode = ServiceErrorCodes.SERVER_ERROR;
+              break;
+          }
+          
+          return Promise.reject(new ApiError(errorMessage, errorCode, false, status));
+        } else if (error.request) {
+          // The request was made but no response was received
+          return Promise.reject(
+            new ApiError(
+              'No response received from the server. Please check your internet connection.', 
+              ServiceErrorCodes.NETWORK_ERROR,
+              true
+            )
+          );
+        } else {
+          // Something happened in setting up the request
+          return Promise.reject(
+            new ApiError(
+              `Failed to send request: ${error.message}`,
+              ServiceErrorCodes.REQUEST_FAILED,
+              false
+            )
+          );
+        }
+      }
+    );
   }
 
   /**
@@ -100,6 +186,9 @@ export class ChatApiService {
         // If there's an error (e.g., token expired), clear storage and create a new chat
         this.storage.removeItem(this.tokenStorageKey)
         this.storage.removeItem(this.chatIdStorageKey)
+        
+        // Create a new chat with a more informative message about what happened
+        console.info('Creating new chat after failed loading of existing chat');
       }
     }
 
@@ -115,7 +204,6 @@ export class ChatApiService {
   async createNewChat(): Promise<ChatInit> {
     try {
       const response = await this.api.post('/chats', {
-        // TODO: Make this dynamic
         name: 'New Conversation',
         companyId: this.companyId
       })
@@ -130,7 +218,17 @@ export class ChatApiService {
       }
     } catch (error) {
       console.error('Error creating new chat:', error)
-      throw error
+      
+      // Throw a more informative error
+      if (error instanceof ApiError) {
+        throw error;
+      } else {
+        throw new ApiError(
+          'Failed to create a new chat session. Please try again later.',
+          ServiceErrorCodes.CHAT_CREATION_FAILED,
+          false
+        );
+      }
     }
   }
 
