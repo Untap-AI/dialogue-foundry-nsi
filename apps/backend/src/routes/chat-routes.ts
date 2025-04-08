@@ -372,11 +372,11 @@ router.get('/:chatId/stream', authenticateChatAccess, handleStreamRequest)
 // Shared handler function for stream requests
 async function handleStreamRequest(req: CustomRequest, res: express.Response) {
   // Set the proper headers for Server-Sent Events (SSE)
-  res.setHeader('Content-Type', 'text/event-stream');
-  res.setHeader('Cache-Control', 'no-cache');
-  res.setHeader('Connection', 'keep-alive');
-  res.setHeader('X-Accel-Buffering', 'no'); // Disable buffering for Nginx
-  
+  res.setHeader('Content-Type', 'text/event-stream')
+  res.setHeader('Cache-Control', 'no-cache')
+  res.setHeader('Connection', 'keep-alive')
+  res.setHeader('X-Accel-Buffering', 'no') // Disable buffering for Nginx
+
   try {
     const { chatId } = req.params
 
@@ -502,21 +502,23 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     }
 
     // Send initial SSE message to confirm connection
-    res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
-    res.flushHeaders();
+    res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`)
+    res.flushHeaders()
 
     // Define SSE-formatted chunk sender
     const onChunk = (chunk: string) => {
       // Ensure the response is still writable
       if (!res.writableEnded) {
         // Format the chunk as a Server-Sent Event
-        res.write(`data: ${JSON.stringify({ 
-          type: 'chunk', 
-          content: chunk 
-        })}\n\n`);
-        
+        res.write(
+          `data: ${JSON.stringify({
+            type: 'chunk',
+            content: chunk
+          })}\n\n`
+        )
+
         // Force immediate sending of the chunk
-        res.flushHeaders();
+        res.flushHeaders()
       }
     }
 
@@ -539,24 +541,26 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
 
     // Send a completion message
     if (!res.writableEnded) {
-      res.write(`data: ${JSON.stringify({ 
-        type: 'done', 
-        fullContent: aiResponseContent 
-      })}\n\n`);
-      
+      res.write(
+        `data: ${JSON.stringify({
+          type: 'done',
+          fullContent: aiResponseContent
+        })}\n\n`
+      )
+
       // Force flush to ensure all content is sent
-      res.flushHeaders();
-      
+      res.flushHeaders()
+
       // Small delay to ensure client receives all data
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+      await new Promise(resolve => setTimeout(resolve, 100))
+
       // Send a clean termination signal
-      res.write(':\n\n');
+      res.write(':\n\n')
     }
 
     // End the response properly
     if (!res.writableEnded) {
-      res.end();
+      res.end()
     }
 
     // Handle client disconnect
@@ -570,60 +574,68 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     console.error('Error in streaming chat message endpoint:', error)
     // Only send error response if headers haven't been sent yet
     if (!res.headersSent) {
-      console.log('Sending error response to client - headers not sent yet');
-      
+      console.log('Sending error response to client - headers not sent yet')
+
       // Check if this is an authentication error
-      if (error instanceof Error && error.message && 
-          (error.message.includes('token') || error.message.includes('authenticate'))) {
-        const errorData = { 
-          type: 'error', 
-          error: 'Invalid or expired token. Please reinitialize your chat session.',
+      if (
+        error instanceof Error &&
+        error.message &&
+        (error.message.includes('token') ||
+          error.message.includes('authenticate'))
+      ) {
+        const errorData = {
+          type: 'error',
+          error:
+            'Invalid or expired token. Please reinitialize your chat session.',
           code: 'TOKEN_INVALID'
-        };
-        console.log('Error data being sent:', errorData);
-        res.write(`data: ${JSON.stringify(errorData)}\n\n`);
+        }
+        console.log('Error data being sent:', errorData)
+        res.write(`data: ${JSON.stringify(errorData)}\n\n`)
         // Send a clean termination signal
-        res.write(':\n\n');
-        return res.end();
+        res.write(':\n\n')
+        return res.end()
       }
 
-      console.log('Sending generic streaming error to client');
-      const errorData = { 
-        type: 'error', 
+      console.log('Sending generic streaming error to client')
+      const errorData = {
+        type: 'error',
         error: 'An error occurred processing your request',
         code: 'STREAMING_ERROR'
-      };
-      console.log('Error data being sent:', errorData);
-      res.write(`data: ${JSON.stringify(errorData)}\n\n`);
+      }
+      console.log('Error data being sent:', errorData)
+      res.write(`data: ${JSON.stringify(errorData)}\n\n`)
       // Send a clean termination signal
-      res.write(':\n\n');
-      return res.end();
+      res.write(':\n\n')
+      return res.end()
     }
 
     // Send an error event if headers have been sent
     if (!res.writableEnded) {
-      console.log('Sending error response to client - headers already sent');
-      
+      console.log('Sending error response to client - headers already sent')
+
       // Determine error code based on the error message
-      let errorCode = 'STREAMING_ERROR';
+      let errorCode = 'STREAMING_ERROR'
       if (error instanceof Error) {
-        if (error.message.includes('token') || error.message.includes('authenticate')) {
-          errorCode = 'TOKEN_INVALID';
+        if (
+          error.message.includes('token') ||
+          error.message.includes('authenticate')
+        ) {
+          errorCode = 'TOKEN_INVALID'
         }
       }
-      
-      const errorData = { 
-        type: 'error', 
+
+      const errorData = {
+        type: 'error',
         error: error instanceof Error ? error.message : 'Unknown error',
         code: errorCode
-      };
-      console.log('Error data being sent:', errorData);
-      res.write(`data: ${JSON.stringify(errorData)}\n\n`);
+      }
+      console.log('Error data being sent:', errorData)
+      res.write(`data: ${JSON.stringify(errorData)}\n\n`)
       // Send a clean termination signal
-      res.write(':\n\n');
+      res.write(':\n\n')
     }
 
-    return res.end();
+    return res.end()
   }
 }
 

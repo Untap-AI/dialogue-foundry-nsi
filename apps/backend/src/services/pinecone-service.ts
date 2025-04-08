@@ -16,16 +16,9 @@ const pinecone = new Pinecone({
   apiKey: pineconeApiKey
 })
 
-// Define the document type with URL
-export type DocumentWithUrl = {
+type RetrievedDocument = {
   text: string
-  url?: string
-}
-
-// Define the type for Pinecone fields
-type PineconeFields = {
-  chunk_text: string
-  url?: string
+  url?: string | undefined
 }
 
 /**
@@ -66,17 +59,15 @@ export const retrieveDocuments = async (
     // Extract and format the results with URL
     const documents = queryResponse.result.hits
       .map(hit => {
-        const fields = hit.fields as PineconeFields
-        if (!fields?.chunk_text) return undefined
+        const fields = hit.fields
+        if (!('chunk_text' in fields) || !fields.chunk_text || typeof fields.chunk_text !== 'string') return undefined
 
-        const doc: DocumentWithUrl = {
+        return {
           text: fields.chunk_text,
-          url: fields.url
+          ...('url' in fields && fields.url ? { url: fields.url.toString() } : {})
         }
-
-        return doc
       })
-      .filter((doc): doc is DocumentWithUrl => doc !== undefined)
+      .filter((doc) => doc !== undefined)
 
     return documents
   } catch (error) {
@@ -90,13 +81,19 @@ export const retrieveDocuments = async (
  * @param documents The retrieved documents with URLs
  * @returns Formatted context string to append to the LLM prompt
  */
-export const formatDocumentsAsContext = (documents: DocumentWithUrl[]) => {
+export const formatDocumentsAsContext = (documents: RetrievedDocument[]) => {
   if (!documents.length) return ''
 
   // Create a formatted context string from the documents
   const contextParts = documents.map((doc, index) => {
-    return `[Document ${index + 1}]${doc.url ? ` ([View Source](${doc.url}))` : ''}\n${doc.text}`
+    return `
+    [Document ${index + 1}]
+    ${doc.url ? ` ([View Source](${doc.url}))` : ''}
+
+    ${doc.text}`
   })
 
-  return `Relevant information from the knowledge base:\n${contextParts.join('\n\n')}`
+  return `Relevant information from the knowledge base:
+  
+  ${contextParts.join('\n\n')}`
 }
