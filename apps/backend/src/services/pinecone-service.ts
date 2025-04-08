@@ -16,6 +16,18 @@ const pinecone = new Pinecone({
   apiKey: pineconeApiKey
 })
 
+// Define the document type with URL
+export type DocumentWithUrl = {
+  text: string
+  url?: string
+}
+
+// Define the type for Pinecone fields
+type PineconeFields = {
+  chunk_text: string
+  url?: string
+}
+
 /**
  * Retrieves documents from Pinecone index based on the query
  * @param companyId The company ID to determine which index to use
@@ -48,17 +60,23 @@ export const retrieveDocuments = async (
         filter
         // TODO: Add reranking
       },
-      fields: ['chunk_text']
+      fields: ['chunk_text', 'url'] // Only request chunk_text and url
     })
 
-    // Extract and format the results
+    // Extract and format the results with URL
     const documents = queryResponse.result.hits
-      .map(hit =>
-        'chunk_text' in hit.fields
-          ? hit.fields['chunk_text']?.toString()
-          : undefined
-      )
-      .filter(text => text !== undefined) as string[]
+      .map(hit => {
+        const fields = hit.fields as PineconeFields
+        if (!fields?.chunk_text) return undefined
+
+        const doc: DocumentWithUrl = {
+          text: fields.chunk_text,
+          url: fields.url
+        }
+
+        return doc
+      })
+      .filter((doc): doc is DocumentWithUrl => doc !== undefined)
 
     return documents
   } catch (error) {
@@ -69,19 +87,16 @@ export const retrieveDocuments = async (
 
 /**
  * Formats retrieved documents as context for the LLM
- * @param documents The retrieved documents
+ * @param documents The retrieved documents with URLs
  * @returns Formatted context string to append to the LLM prompt
  */
-export const formatDocumentsAsContext = (documents: string[]) => {
+export const formatDocumentsAsContext = (documents: DocumentWithUrl[]) => {
   if (!documents.length) return ''
 
   // Create a formatted context string from the documents
   const contextParts = documents.map((doc, index) => {
-    return `[Document ${index + 1}] ${doc}`
+    return `[Document ${index + 1}]${doc.url ? ` ([View Source](${doc.url}))` : ''}\n${doc.text}`
   })
 
-  return `
-Relevant information from the knowledge base:
-${contextParts.join('\n\n')}
-`
+  return `Relevant information from the knowledge base:\n${contextParts.join('\n\n')}`
 }
