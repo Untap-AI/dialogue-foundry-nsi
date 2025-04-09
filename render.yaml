@@ -67,9 +67,7 @@ services:
         sync: false
       - key: DEFAULT_SENDGRID_TEMPLATE_ID
         sync: false
-      - key: DEFAULT_SUPPORT_EMAIL
-        sync: false
-      - key: FROM_EMAIL
+      - key: SENDGRID_FROM_EMAIL
         sync: false
         
     # Disable auto-deploy for production

@@ -25,13 +25,13 @@ export type Message = {
 export type ChatSettings = {
   model: string
   temperature: number
-  systemPrompt?: string // Add systemPrompt as an optional parameter
-  companyId?: string // Company ID for context in function calls
+  systemPrompt: string // Add systemPrompt as an optional parameter
+  companyId: string // Company ID for context in function calls
   enableEmailFunction?: boolean // Whether to enable the email function
 }
 
 // Default settings to use if none are provided
-export const DEFAULT_SETTINGS: ChatSettings = {
+export const DEFAULT_SETTINGS: Pick<ChatSettings, 'model' | 'temperature'> = {
   // TODO: Assess model performance
   model: 'gpt-4o-mini',
   temperature: 0.7
@@ -92,7 +92,8 @@ const limitMessagesContext = (
 const handleFunctionCall = async (
   functionCall: ResponseFunctionToolCall,
   messages: Message[],
-  companyId?: string
+  companyId: string
+  // TODO: Remove usage of any
 ): Promise<{ success: boolean; details?: any }> => {
     if (functionCall.name === 'send_email') {
       try {
@@ -101,6 +102,7 @@ const handleFunctionCall = async (
           console.error('Function arguments are empty');
           return {
             success: false,
+            // TODO: Make error codes type safe
             details: { error: 'MISSING_ARGUMENTS' }
           };
         }
@@ -130,6 +132,7 @@ const handleFunctionCall = async (
         // Prepare email data
         const emailData: EmailData = {
           userEmail: args.userEmail,
+          subject: args.subject,
           conversationSummary: args.subject ? `${args.subject}: ${args.conversationSummary}` : args.conversationSummary,
           recentMessages,
           companyId: companyId || 'default'
@@ -209,7 +212,7 @@ const generateFollowUpResponse = (
 
 export const generateStreamingChatCompletion = async (
   messages: Message[],
-  settings: ChatSettings = DEFAULT_SETTINGS,
+  settings: ChatSettings,
   onChunk: (chunk: string) => void
 ) => {
   // TODO: Implement token checking and context cutoff

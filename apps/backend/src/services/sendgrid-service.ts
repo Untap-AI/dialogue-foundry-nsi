@@ -1,4 +1,4 @@
-import sgMail from '@sendgrid/mail'
+import sgMail, { MailDataRequired } from '@sendgrid/mail'
 import dotenv from 'dotenv'
 import { getChatConfigByCompanyId } from '../db/chat-configs'
 import { cacheService } from './cache-service'
@@ -24,29 +24,16 @@ if (!DEFAULT_TEMPLATE_ID) {
   throw new Error('DEFAULT_SENDGRID_TEMPLATE_ID is not set in environment variables. Email functionality will not work.')
 }
 
+// TODO: Create zod schema for email data and use in function tool
 export interface EmailData {
   userEmail: string
+  subject: string
   conversationSummary: string
   recentMessages: {
     role: string
     content: string
   }[]
   companyId: string
-}
-
-/**
- * Safely processes content for SendGrid Handlebars templates
- * Handles special characters that might cause issues in templates
- */
-const sanitizeForHandlebars = (content: string): string => {
-  // Sanitize content to make it safe for Handlebars
-  // Basic sanitization to avoid common HTML issues
-  return content
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;')
-    .replace(/'/g, '&#39;');
 }
 
 /**
@@ -90,12 +77,14 @@ export const sendInquiryEmail = async (emailData: EmailData): Promise<boolean> =
     // Create the email with proper types
     const msg = {
       to: [
-        { email: supportEmail, name: 'Support Team' }
+        { email: supportEmail }
       ],
       from: {
         email: FROM_EMAIL,
+        // TODO: Change this
         name: 'Dialogue Foundry'
       },
+      subject: emailData.subject ?? 'New Inquiry from AI Chat Widget',
       templateId,
       dynamicTemplateData: {
         conversationSummary: emailData.conversationSummary,
@@ -104,7 +93,7 @@ export const sendInquiryEmail = async (emailData: EmailData): Promise<boolean> =
         date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
       },
       hideWarnings: true,
-    }
+    } as const satisfies MailDataRequired
     
     // Send the email
     await sgMail.send(msg)

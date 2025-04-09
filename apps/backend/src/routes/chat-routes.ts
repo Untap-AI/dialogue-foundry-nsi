@@ -299,13 +299,10 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
 
     // Get chat settings - using request parameters, chat config, or defaults
     const chatSettings: ChatSettings = {
-      model: model || DEFAULT_SETTINGS.model,
-      temperature: temperature
-        ? parseFloat(temperature as string)
-        : DEFAULT_SETTINGS.temperature,
-      systemPrompt: chatConfig?.system_prompt || undefined,
+     ...DEFAULT_SETTINGS,
+      systemPrompt: chatConfig.system_prompt,
       // Pass company ID and support email if available
-      companyId: companyId,
+      companyId,
       enableEmailFunction: Boolean(chatConfig?.support_email)
     }
 
