@@ -1,13 +1,8 @@
 import OpenAI from 'openai'
 import dotenv from 'dotenv'
-import {
-  isOpenAIResponseDeltaChunk,
-  OpenAIResponseChunk,
-  validateOpenAIResponseChunk
-} from '../util/openai-chunk-validators'
 import { MAX_MESSAGES_PER_CHAT } from '../db/messages'
 import { sendInquiryEmail, EmailData } from './sendgrid-service'
-import { ResponseCreateParams, ResponseFunctionToolCall, ResponseOutputItemAddedEvent } from 'openai/resources/responses/responses.mjs'
+import { ResponseCreateParams, ResponseFunctionToolCall} from 'openai/resources/responses/responses.mjs'
 
 dotenv.config()
 
@@ -94,12 +89,11 @@ const limitMessagesContext = (
 }
 
 // Function to handle email function calls from OpenAI
-const handleFunctionCalls = async (
-  functionCalls: ResponseFunctionToolCall[],
+const handleFunctionCall = async (
+  functionCall: ResponseFunctionToolCall,
   messages: Message[],
   companyId?: string
-): Promise<{ success: boolean; message: string; details?: any }> => {
-  for (const functionCall of functionCalls) {
+): Promise<{ success: boolean; details?: any }> => {
     if (functionCall.name === 'send_email') {
       try {
         // Parse arguments with validation
@@ -107,20 +101,17 @@ const handleFunctionCalls = async (
           console.error('Function arguments are empty');
           return {
             success: false,
-            message: 'Email function arguments are empty',
             details: { error: 'MISSING_ARGUMENTS' }
           };
         }
         
         const args = JSON.parse(functionCall.arguments);
-        console.log('Parsed email arguments:', args);
         
         // Validate required fields
         if (!args.userEmail) {
           console.error('User email is required to send an email');
           return {
             success: false,
-            message: 'User email is required to send an email',
             details: { error: 'MISSING_EMAIL' }
           };
         }
@@ -129,7 +120,6 @@ const handleFunctionCalls = async (
           console.error('Conversation summary is required to send an email');
           return {
             success: false,
-            message: 'Conversation summary is required',
             details: { error: 'MISSING_SUMMARY' }
           };
         }
@@ -145,23 +135,18 @@ const handleFunctionCalls = async (
           companyId: companyId || 'default'
         };
         
-        console.log(`Attempting to send email for company ID: ${companyId || 'default'}`);
-        
         // Send the email
         const emailSent = await sendInquiryEmail(emailData);
         
         if (emailSent) {
-          console.log('Email sent successfully');
           return {
             success: true,
-            message: 'Email sent successfully',
             details: { userEmail: args.userEmail }
           };
         } else {
           console.error('Failed to send email via SendGrid');
           return {
             success: false,
-            message: 'Failed to send email via email service',
             details: { error: 'EMAIL_SERVICE_FAILURE' }
           };
         }
@@ -169,16 +154,13 @@ const handleFunctionCalls = async (
         console.error('Error processing email function call:', error);
         return {
           success: false,
-          message: `Error: ${error instanceof Error ? error.message : String(error)}`,
           details: { error: 'PROCESSING_ERROR' }
         };
       }
     }
-  }
   
   return {
     success: false,
-    message: 'No supported function calls found',
     details: { error: 'NO_FUNCTION_CALLS' }
   };
 };
@@ -186,7 +168,7 @@ const handleFunctionCalls = async (
 // Helper function to generate a follow-up response after a function call
 const generateFollowUpResponse = (
   functionName: string,
-  functionCallResult: { success: boolean; message: string; details?: any },
+  functionCallResult: { success: boolean; details?: any },
   onChunk: (chunk: string) => void,
   updateFullText: (text: string) => void
 ): void => {
@@ -196,41 +178,9 @@ const generateFollowUpResponse = (
   // Handle different function types - currently we only have email, but this makes it extensible
   switch(functionName) {
     case 'send_email':
-      if (functionCallResult.success) {
-        responseText = `\n\nThank you! Your email has been sent. Someone from the team will get back to you soon. Is there anything else I can help you with in the meantime?`;
-      } else {
-        // Customize error message based on the error details
-        const errorType = functionCallResult.details?.error || 'UNKNOWN';
-        
-        switch (errorType) {
-          case 'MISSING_EMAIL':
-            responseText = `\n\nI wasn't able to send your email because I didn't receive a valid email address. Could you please provide your email address so I can help you contact the vineyard?`;
-            break;
-          case 'MISSING_SUMMARY':
-            responseText = `\n\nI need a brief summary of your inquiry to send to the vineyard. Could you please tell me what you'd like to ask or discuss with them?`;
-            break;
-          case 'EMAIL_SERVICE_FAILURE':
-            responseText = `\n\nI apologize, but there seems to be a technical issue with our email service at the moment. You can reach out to the vineyard directly through their website. Is there something else I can help you with?`;
-            break;
-          default:
-            responseText = `\n\nI wasn't able to send your email at this time. You can reach out to the vineyard directly. Is there something else I can help you with today?`;
-        }
+    // TODO: Make this dynamic with separate requests to the LLM
+    responseText = functionCallResult.success ? `\n\nThank you! Your email has been sent. Someone from the team will get back to you soon. Is there anything else I can help you with in the meantime?` : `\n\nI wasn't able to send your email at this time. You can reach out to the vineyard directly. Is there something else I can help you with today?`;
       }
-      break;
-      
-    // Can add more function types here in the future
-    default:
-      if (functionCallResult.success) {
-        responseText = `\n\nI've processed your request successfully. What else would you like to know?`;
-      } else {
-        responseText = `\n\nI wasn't able to process your request at this time. Is there something else I can help you with?`;
-      }
-  }
-  
-  console.log(`Sending follow-up response: ${responseText}`);
-  
-  // Add the full response text to the tracking variable
-  updateFullText(responseText);
   
   // Stream the response back to the client by sending it in small chunks
   const chunkSize = 10; // Characters per chunk
@@ -252,6 +202,9 @@ const generateFollowUpResponse = (
   
   // Start streaming the text chunks
   streamTextChunks();
+
+   // Add the full response text to the tracking variable
+  updateFullText(responseText);
 };
 
 export const generateStreamingChatCompletion = async (
@@ -293,11 +246,8 @@ export const generateStreamingChatCompletion = async (
       for await (const chunk of response) {
         let text = ''
 
-        console.log('chunk', chunk)
-
         // Use our type guard function instead of checking the type directly
         if (chunk.type === 'response.output_text.delta') {
-          console.log('delta', chunk)
           text = 'delta' in chunk ? chunk.delta : ''
         }
         
@@ -306,7 +256,6 @@ export const generateStreamingChatCompletion = async (
           chunk.type === 'response.output_item.done'
           && chunk.item.type === 'function_call'
         ) {
-          console.log('function call detected:', chunk.item);
           functionCalls.push(chunk.item);
           // We'll handle function calls after streaming completes
         }
@@ -320,23 +269,9 @@ export const generateStreamingChatCompletion = async (
       
       // Process function calls after streaming completes if detected
       if (functionCalls.length > 0) {
-          console.log(`Processing ${functionCalls.length} function calls`);
-          const functionCall = functionCalls[0]; // Get the first function call
-          let functionCallDetails: any = {};
-          
-          try {
-            // Parse the function call arguments if available
-            if (functionCall && 'arguments' in functionCall) {
-              functionCallDetails = JSON.parse(functionCall.arguments as string);
-              console.log('Parsed function call details:', functionCallDetails);
-            }
-          } catch (error) {
-            console.error('Error parsing function call arguments:', error);
-          }
-          
-          // Process the function call
-          const result = await handleFunctionCalls(
-            functionCalls,
+        await Promise.all(functionCalls.map(async (functionCall) => {          // Process the function call
+          const result = await handleFunctionCall(
+            functionCall,
             messages,
             settings.companyId
           );
@@ -348,13 +283,8 @@ export const generateStreamingChatCompletion = async (
             onChunk,
             (text) => { fullText += text; }
           );
+        }))
       }
-
-      // Add a small delay to ensure all content is properly processed by the client
-      await new Promise(resolve => setTimeout(resolve, 100))
-
-      // Send a final empty chunk to ensure proper completion
-      onChunk('')
 
       return fullText
     } catch (streamError) {

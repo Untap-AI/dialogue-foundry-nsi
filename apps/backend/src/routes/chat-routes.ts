@@ -371,7 +371,6 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
 
     // Define SSE-formatted chunk sender
     const onChunk = (chunk: string) => {
-      console.log('onChunk', chunk)
       // Ensure the response is still writable
       if (!res.writableEnded) {
         // Format the chunk as a Server-Sent Event
@@ -416,16 +415,8 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       // Force flush to ensure all content is sent
       res.flushHeaders()
 
-      // Small delay to ensure client receives all data
-      await new Promise(resolve => setTimeout(resolve, 100))
-
       // Send a clean termination signal
       res.write(':\n\n')
-    }
-
-    // End the response properly
-    if (!res.writableEnded) {
-      res.end()
     }
 
     // Handle client disconnect

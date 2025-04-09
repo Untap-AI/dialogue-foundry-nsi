@@ -1,5 +1,10 @@
 import { DEFAULT_TOKEN_STORAGE_KEY, DEFAULT_CHAT_ID_STORAGE_KEY } from './api'
-import { StreamingError, ErrorCodes as ServiceErrorCodes } from './errors'
+import { 
+  StreamingError, 
+  ErrorCodes, 
+  isErrorCode, 
+  ErrorCodeValue
+} from './errors'
 import type { ChatConfig } from './api'
 import console from 'console'
 
@@ -59,12 +64,8 @@ export class ChatStreamingService {
       })
 
       if (!response.ok) {
-        const errorData = await response
-          .json()
-          .catch(() => ({ error: 'Unknown error' }))
         throw new StreamingError(
-          `Failed to create chat: ${errorData.error || response.statusText}`,
-          ServiceErrorCodes.INITIALIZATION_ERROR,
+          ErrorCodes.INITIALIZATION_ERROR,
           true
         )
       }
@@ -82,8 +83,7 @@ export class ChatStreamingService {
       }
 
       throw new StreamingError(
-        'Failed to initialize new chat session',
-        ServiceErrorCodes.INITIALIZATION_ERROR,
+        ErrorCodes.INITIALIZATION_ERROR,
         true
       )
     }
@@ -110,7 +110,7 @@ export class ChatStreamingService {
    * @param companyId Optional company ID for initializing a new chat if needed
    */
   async streamMessage(
-    content: string,
+    userQuery: string,
     onChunk: (chunk: string) => void,
     onComplete: (fullText: string) => void,
     onError: (error: Error) => void,
@@ -123,8 +123,7 @@ export class ChatStreamingService {
     if (this.reconnectAttempts >= this.MAX_RECONNECT_ATTEMPTS) {
       onError(
         new StreamingError(
-          `We've tried to reconnect several times but couldn't establish a stable connection. Please refresh the page to start a new chat session.`,
-          ServiceErrorCodes.RECONNECT_LIMIT,
+          ErrorCodes.RECONNECT_LIMIT,
           false
         )
       )
@@ -145,8 +144,7 @@ export class ChatStreamingService {
           // We're already trying to reconnect but still no token/chatId
           onError(
             new StreamingError(
-              'Unable to start a new chat session. Please refresh the page and try again.',
-              ServiceErrorCodes.INITIALIZATION_ERROR,
+              ErrorCodes.INITIALIZATION_ERROR,
               false
             )
           )
@@ -155,8 +153,7 @@ export class ChatStreamingService {
       } catch (initError) {
         onError(
           new StreamingError(
-            'Unable to start a new chat session. Please check your internet connection and try again.',
-            ServiceErrorCodes.INITIALIZATION_ERROR,
+            ErrorCodes.INITIALIZATION_ERROR,
             true
           )
         )
@@ -176,7 +173,7 @@ export class ChatStreamingService {
         if (testResponse.status === 401) {
           // If token is invalid, try to reconnect
           this.handleTokenError(
-            content,
+            userQuery,
             onChunk,
             onComplete,
             onError,
@@ -194,7 +191,7 @@ export class ChatStreamingService {
 
     // Create the URL with query parameters for token and content
     const url = new URL(`${this.apiBaseUrl}/chats/${chatId}/stream`)
-    url.searchParams.append('content', content)
+    url.searchParams.append('content', userQuery)
     // Ensure token is not null before appending
     if (token) {
       url.searchParams.append('token', token)
@@ -213,45 +210,6 @@ export class ChatStreamingService {
         errorCount = 0
       }
 
-      // Implement error handler that distinguishes between expected and unexpected errors
-      this.eventSource.onerror = () => {
-        // Track if we're in the process of closing
-        const isClosing =
-          !this.eventSource ||
-          this.eventSource.readyState === 2 || // CLOSED
-          this.isClosingConnection
-
-        errorCount++
-
-        // If we're closing the connection, ignore the error as it's expected
-        if (isClosing) {
-          return
-        }
-
-        // Log only the first few errors to avoid console spam
-        if (errorCount <= maxSilentErrors) {
-          console.warn(`EventSource error #${errorCount}`)
-        }
-
-        // Don't react to reconnection attempts
-        if (this.eventSource?.readyState === 0) {
-          console.log('CONNECTING')
-          // CONNECTING
-          return
-        }
-
-        // Only notify user after multiple consecutive errors (actual connection problems)
-        if (errorCount > 5) {
-          onError(
-            new StreamingError(
-              'The connection to the chat service appears unstable. Your messages may be delayed.',
-              ServiceErrorCodes.CONNECTION_ERROR,
-              true
-            )
-          )
-        }
-      }
-
       // Handle incoming messages
       this.eventSource.onmessage = (event: SSEMessageEvent) => {
         // Reset error count on successful message reception
@@ -261,83 +219,9 @@ export class ChatStreamingService {
           const data = JSON.parse(event.data) as SSEEventData
 
           // Check for any kind of error message from the server
-          if (data.type === 'error' || data.type === 'err' || data.error) {
-            // Handle token-related errors specially
-            if (
-              data.code === 'TOKEN_INVALID' ||
-              data.code === 'TOKEN_MISSING'
-            ) {
-              this.handleTokenError(
-                content,
-                onChunk,
-                onComplete,
-                onError,
-                companyId
-              )
-              return
-            }
-            // Handle chat-related errors
-            else if (data.code === 'NOT_FOUND') {
-              this.handleChatError(
-                content,
-                onChunk,
-                onComplete,
-                onError,
-                companyId,
-                ServiceErrorCodes.NOT_FOUND,
-                data.error || 'Chat not found. Creating a new chat for you.'
-              )
-              return
-            }
-            else if (data.code === 'INVALID_CHAT') {
-              this.handleChatError(
-                content,
-                onChunk,
-                onComplete,
-                onError,
-                companyId,
-                ServiceErrorCodes.INVALID_CHAT,
-                data.error || 'This chat configuration is invalid. Creating a new chat for you.'
-              )
-              return
-            }
-            else if (data.code === 'INVALID_COMPANY') {
-              this.handleChatError(
-                content,
-                onChunk,
-                onComplete,
-                onError,
-                companyId,
-                ServiceErrorCodes.INVALID_COMPANY,
-                data.error || 'Company configuration not available. Creating a new chat for you.'
-              )
-              return
-            }
-            else if (data.code === 'INVALID_REQUEST') {
-              // Invalid request errors are not recoverable by creating a new chat
-              onError(
-                new StreamingError(
-                  data.error || 'Your request was invalid. Please adjust your message and try again.',
-                  ServiceErrorCodes.INVALID_REQUEST,
-                  true // User can try again with a different message
-                )
-              )
-              this.closeEventSource()
-              return
-            }
-            else {
-              // Handle other error types
-              onError(
-                new StreamingError(
-                  data.error ||
-                    'There was an issue with the chat service. Please try again.',
-                  data.code || ServiceErrorCodes.SERVER_ERROR,
-                  true
-                )
-              )
-              this.closeEventSource()
-              return
-            }
+          if (data.type === 'error') {
+            this.handleServerError(userQuery, data, onChunk, onComplete, onError, companyId);
+            return;
           }
 
           // If not an error, process normal message types
@@ -376,28 +260,122 @@ export class ChatStreamingService {
         } catch (parseError) {
           onError(
             new StreamingError(
-              'There was a problem processing the response from the server. Please try again.',
-              ServiceErrorCodes.PARSE_ERROR,
+              ErrorCodes.PARSE_ERROR,
               true
             )
           )
           this.closeEventSource()
         }
       }
+
+      // Implement error handler that distinguishes between expected and unexpected errors
+      this.eventSource.onerror = () => {
+        // Track if we're in the process of closing
+        const isClosing =
+          !this.eventSource ||
+          this.eventSource.readyState === 2 || // CLOSED
+          this.isClosingConnection
+
+        errorCount++
+
+        // If we're closing the connection, ignore the error as it's expected
+        if (isClosing) {
+          return
+        }
+
+        // Log only the first few errors to avoid console spam
+        if (errorCount <= maxSilentErrors) {
+          console.warn(`EventSource error #${errorCount}`)
+        }
+
+        // Don't react to reconnection attempts
+        if (this.eventSource?.readyState === 0) {
+          // CONNECTING
+          return
+        }
+
+        // Only notify user after multiple consecutive errors (actual connection problems)
+        if (errorCount > 5) {
+          onError(
+            new StreamingError(
+              ErrorCodes.CONNECTION_ERROR,
+              true
+            )
+          )
+        }
+      }
     } catch (error) {
-      console.log('error', error)
       onError(
         error instanceof StreamingError
           ? error
           : new StreamingError(
-              error instanceof Error
-                ? `Connection error: ${error.message}. Please check your internet connection.`
-                : 'Failed to establish a connection to the chat service. Please check your internet connection.',
-              ServiceErrorCodes.CONNECTION_ERROR,
+              ErrorCodes.CONNECTION_ERROR,
               true
             )
       )
       this.closeEventSource()
+    }
+  }
+
+  /**
+   * Process server-side error messages and take appropriate action
+   */
+  private handleServerError(
+    userQuery: string,
+    data: SSEEventData,
+    onChunk: (chunk: string) => void,
+    onComplete: (fullText: string) => void,
+    onError: (error: Error) => void,
+    companyId?: string
+  ): void {
+    // Validate the error code and set a default if invalid
+    const errorCode = data.code && isErrorCode(data.code) 
+      ? data.code 
+      : ErrorCodes.UNKNOWN_ERROR;
+    
+    // Handle different error codes
+    switch (errorCode) {
+      // Authentication errors - need to renew session
+      case ErrorCodes.TOKEN_INVALID:
+      case ErrorCodes.TOKEN_MISSING:
+        this.handleTokenError(userQuery, onChunk, onComplete, onError, companyId);
+        break;
+      
+      // Chat errors - create a new chat session
+      case ErrorCodes.NOT_FOUND:
+      case ErrorCodes.INVALID_CHAT:
+      case ErrorCodes.INVALID_COMPANY:
+        this.handleChatError(
+          userQuery,
+          onChunk, 
+          onComplete, 
+          onError, 
+          companyId,
+          errorCode,
+        );
+        break;
+      
+      // Request errors - can't recover without user changing input
+      case ErrorCodes.INVALID_REQUEST:
+        onError(
+          new StreamingError(
+            errorCode,
+            true // User can try again with a different message
+          )
+        );
+        this.closeEventSource();
+        break;
+      
+      // All other errors
+      default:
+        onError(
+          new StreamingError(
+            errorCode,
+            true
+          )
+        );
+        this.closeEventSource();
+        break;
     }
   }
 
@@ -412,7 +390,7 @@ export class ChatStreamingService {
    * Handle token errors by reinitializing the chat and retrying
    */
   private async handleTokenError(
-    content: string,
+    userQuery: string,
     onChunk: (chunk: string) => void,
     onComplete: (fullText: string) => void,
     onError: (error: Error) => void,
@@ -429,8 +407,7 @@ export class ChatStreamingService {
     if (this.tokenReconnectAttempts > this.MAX_TOKEN_RECONNECT_ATTEMPTS) {
       onError(
         new StreamingError(
-          `Your session has expired. Please refresh the page to continue.`,
-          ServiceErrorCodes.TOKEN_INVALID,
+          ErrorCodes.TOKEN_INVALID,
           false
         )
       )
@@ -442,8 +419,7 @@ export class ChatStreamingService {
     if (this.reconnectAttempts > this.MAX_RECONNECT_ATTEMPTS) {
       onError(
         new StreamingError(
-          `We couldn't establish a stable connection. Please refresh the page to start a new chat session.`,
-          ServiceErrorCodes.RECONNECT_LIMIT,
+          ErrorCodes.RECONNECT_LIMIT,
           false
         )
       )
@@ -455,8 +431,7 @@ export class ChatStreamingService {
       // Avoid nested reconnection loops
       onError(
         new StreamingError(
-          `We're currently trying to restore your session. Please wait a moment.`,
-          ServiceErrorCodes.TOKEN_INVALID,
+          ErrorCodes.TOKEN_INVALID,
           false
         )
       )
@@ -481,13 +456,12 @@ export class ChatStreamingService {
       await this.initializeNewChat()
 
       // Retry the streaming request
-      await this.streamMessage(content, onChunk, onComplete, onError, companyId)
+      await this.streamMessage(userQuery, onChunk, onComplete, onError, companyId)
       this.isReconnecting = false
     } catch (error) {
       onError(
         new StreamingError(
-          `We couldn't automatically renew your session. Please refresh the page.`,
-          ServiceErrorCodes.TOKEN_INVALID,
+          ErrorCodes.TOKEN_INVALID,
           false
         )
       )
@@ -500,13 +474,12 @@ export class ChatStreamingService {
    * Used for NOT_FOUND, INVALID_CHAT, and INVALID_COMPANY errors
    */
   private async handleChatError(
-    content: string,
+    userQuery: string,
     onChunk: (chunk: string) => void,
     onComplete: (fullText: string) => void,
     onError: (error: Error) => void,
     companyId?: string,
-    errorCode: string = ServiceErrorCodes.CONFIGURATION_ERROR,
-    errorMessage: string = 'There was an issue with your chat. Starting a new conversation.'
+    errorCode: ErrorCodeValue = ErrorCodes.CONFIGURATION_ERROR,
   ): Promise<void> {
     this.closeEventSource()
 
@@ -517,7 +490,6 @@ export class ChatStreamingService {
     // Notify the user of the issue
     onError(
       new StreamingError(
-        errorMessage,
         errorCode,
         true // These errors are recoverable
       )
@@ -527,8 +499,7 @@ export class ChatStreamingService {
     if (this.reconnectAttempts > this.MAX_RECONNECT_ATTEMPTS) {
       onError(
         new StreamingError(
-          `We couldn't establish a stable connection. Please refresh the page to start a new chat session.`,
-          ServiceErrorCodes.RECONNECT_LIMIT,
+          ErrorCodes.RECONNECT_LIMIT,
           false
         )
       )
@@ -540,7 +511,6 @@ export class ChatStreamingService {
       // Avoid nested reconnection loops
       onError(
         new StreamingError(
-          `We're currently trying to restore your session. Please wait a moment.`,
           errorCode,
           false
         )
@@ -566,13 +536,12 @@ export class ChatStreamingService {
       await this.initializeNewChat()
 
       // Retry the streaming request
-      await this.streamMessage(content, onChunk, onComplete, onError, companyId)
+      await this.streamMessage(userQuery, onChunk, onComplete, onError, companyId)
       this.isReconnecting = false
     } catch (error) {
       onError(
         new StreamingError(
-          `We couldn't automatically create a new chat. Please refresh the page.`,
-          ServiceErrorCodes.INITIALIZATION_ERROR,
+          ErrorCodes.INITIALIZATION_ERROR,
           false
         )
       )
