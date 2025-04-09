@@ -15,7 +15,9 @@ export interface ChatInterfaceProps {
   className?: string
 }
 
-export const ChatInterface = ({ className }: ChatInterfaceProps) => {
+export const ChatInterface = ({ 
+  className
+}: ChatInterfaceProps) => {
   // Get config from context
   const { conversationStarters, chatConfig, theme, personaOptions } =
     useConfig()

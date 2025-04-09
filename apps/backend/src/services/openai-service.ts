@@ -5,6 +5,8 @@ import {
   validateOpenAIResponseChunk
 } from '../util/openai-chunk-validators'
 import { MAX_MESSAGES_PER_CHAT } from '../db/messages'
+import { sendInquiryEmail, EmailData } from './sendgrid-service'
+import { ResponseCreateParams } from 'openai/resources/responses/responses.mjs'
 
 dotenv.config()
 
@@ -28,14 +30,43 @@ export type ChatSettings = {
   model: string
   temperature: number
   systemPrompt?: string // Add systemPrompt as an optional parameter
+  companyId?: string // Company ID for context in function calls
+  enableEmailFunction?: boolean // Whether to enable the email function
 }
 
 // Default settings to use if none are provided
 export const DEFAULT_SETTINGS: ChatSettings = {
   // TODO: Assess model performance
-  model: 'gpt-4o',
+  model: 'gpt-4o-mini',
   temperature: 0.7
 }
+
+// Define the email tool for OpenAI function calling
+const emailTool = {
+  type: 'function',
+    name: 'send_email',
+    description: 'Send an email to the company with user contact information and conversation details. This should only be used if the user has explicitly consented to sending an email and provided their email address.',
+    parameters: {
+      type: 'object',
+      properties: {
+        subject: {
+          type: 'string',
+          description: 'The subject of the email'
+        },
+        userEmail: {
+          type: 'string',
+          description: 'The email address of the user to contact them'
+        },
+        conversationSummary: {
+          type: 'string',
+          description: 'A brief summary of what the user is looking for or needs help with'
+        }
+      },
+      required: ['userEmail', 'conversationSummary', 'subject'],
+      additionalProperties: false,
+    },
+    strict: true
+} as const satisfies NonNullable<ResponseCreateParams['tools']>[number]
 
 /**
  * Limits the conversation context to the specified maximum number of messages
@@ -61,49 +92,63 @@ const limitMessagesContext = (
   return [...systemMessages, ...nonSystemMessages]
 }
 
-export const generateChatCompletion = async (
+// Function to handle email function calls from OpenAI
+const handleFunctionCalls = async (
+  functionCalls: any[],
   messages: Message[],
-  settings: ChatSettings = DEFAULT_SETTINGS
-) => {
-  try {
-    // Limit the number of messages to avoid exceeding token limits
-    const limitedMessages = limitMessagesContext(
-      messages,
-      MAX_MESSAGES_PER_CHAT
-    )
-
-    const response = await openai.responses.create({
-      model: settings.model,
-      input: limitedMessages,
-      temperature: settings.temperature,
-      instructions: settings.systemPrompt,
-      stream: false,
-      text: {
-        format: {
-          type: 'text'
+  companyId?: string
+): Promise<{ success: boolean; message: string }> => {
+  for (const functionCall of functionCalls) {
+    if (functionCall.name === 'send_email') {
+      try {
+        const args = JSON.parse(functionCall.arguments)
+        
+        // Only proceed if we have an email to contact
+        if (!args.userEmail) {
+          return {
+            success: false,
+            message: 'User email is required to send an email'
+          }
+        }
+        
+        // Get recent messages for context (last 5 messages)
+        const recentMessages = messages.slice(-20)
+        
+        // Prepare email data
+        const emailData: EmailData = {
+          userEmail: args.userEmail,
+          conversationSummary: args.conversationSummary,
+          recentMessages,
+          companyId: companyId || 'default'
+        }
+        
+        // Send the email
+        const emailSent = await sendInquiryEmail(emailData)
+        
+        if (emailSent) {
+          return {
+            success: true,
+            message: 'Email sent successfully'
+          }
+        } else {
+          return {
+            success: false,
+            message: 'Failed to send email'
+          }
+        }
+      } catch (error) {
+        console.error('Error processing email function call:', error)
+        return {
+          success: false,
+          message: `Error: ${error instanceof Error ? error.message : String(error)}`
         }
       }
-    })
-
-    // Extract the text content from the response
-    const outputMessage = response.output.find(
-      item => item.type === 'message' && item.role === 'assistant'
-    )
-
-    if (outputMessage && 'content' in outputMessage) {
-      const textContent = outputMessage.content.find(
-        item => item.type === 'output_text'
-      )
-
-      if (textContent && 'text' in textContent) {
-        return textContent.text
-      }
     }
-
-    throw new Error('No valid response content found')
-  } catch (error) {
-    console.error('Error generating chat completion:', error)
-    throw new Error(`Failed to generate response: ${error}`)
+  }
+  
+  return {
+    success: false,
+    message: 'No email function calls found'
   }
 }
 
@@ -120,9 +165,9 @@ export const generateStreamingChatCompletion = async (
       messages,
       MAX_MESSAGES_PER_CHAT
     )
-
-    // Create the response with streaming enabled
-    const response = await openai.responses.create({
+    
+    // Configure request options with tools if email function is enabled
+    const requestOptions = {
       model: settings.model,
       input: limitedMessages,
       temperature: settings.temperature,
@@ -132,10 +177,15 @@ export const generateStreamingChatCompletion = async (
         format: {
           type: 'text'
         }
-      }
-    })
+      },
+      ...(settings.enableEmailFunction ? { tools: [emailTool] } : {})
+    } as const satisfies ResponseCreateParams
+    
+    // Create the response with streaming enabled
+    const response = await openai.responses.create(requestOptions)
 
     let fullText = ''
+    let functionCalls = []
 
     try {
       for await (const rawChunk of response) {
@@ -146,7 +196,17 @@ export const generateStreamingChatCompletion = async (
 
         // Use our type guard function instead of checking the type directly
         if (isOpenAIResponseDeltaChunk(chunk)) {
+          console.log('chunk', chunk)
           text = chunk.delta
+        }
+        
+        // Check if this chunk contains function calls
+        if (
+          'chunk' in chunk &&
+          chunk.type === 'function_call'
+        ) {
+          functionCalls.push(chunk)
+          // We'll handle function calls after streaming completes
         }
 
         if (text) {
@@ -154,6 +214,25 @@ export const generateStreamingChatCompletion = async (
           fullText += text
           onChunk(text)
         }
+      }
+      
+      // Process function calls after streaming completes if detected
+      if (functionCalls.length > 0) {
+          const result = await handleFunctionCalls(
+            functionCalls,
+            messages,
+            settings.companyId
+          )
+
+          // TODO: Return success message from result
+          
+          if (result.success) {
+            // Send a message indicating email was sent
+            // TODO: Change this
+            const emailSentMessage = '\n\n[Email has been sent successfully]'
+            onChunk(emailSentMessage)
+            fullText += emailSentMessage
+          }
       }
 
       // Add a small delay to ensure all content is properly processed by the client

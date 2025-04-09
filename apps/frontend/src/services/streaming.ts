@@ -1,6 +1,7 @@
 import { DEFAULT_TOKEN_STORAGE_KEY, DEFAULT_CHAT_ID_STORAGE_KEY } from './api'
 import { StreamingError, ErrorCodes as ServiceErrorCodes } from './errors'
 import type { ChatConfig } from './api'
+import console from 'console'
 
 // Define the SSE event types for TypeScript
 interface SSEMessageEvent extends MessageEvent {
@@ -234,6 +235,7 @@ export class ChatStreamingService {
 
         // Don't react to reconnection attempts
         if (this.eventSource?.readyState === 0) {
+          console.log('CONNECTING')
           // CONNECTING
           return
         }
@@ -333,6 +335,7 @@ export class ChatStreamingService {
         }
       }
     } catch (error) {
+      console.log('error', error)
       onError(
         error instanceof StreamingError
           ? error
