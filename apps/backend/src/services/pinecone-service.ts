@@ -40,7 +40,7 @@ export const retrieveDocuments = async (
     let index = cacheService.getPineconeIndex(indexName)
     if (!index) {
       // TODO: Remove this once we have a namespace for each company
-      index = pinecone.index(indexName).namespace('default')
+      index = pinecone.index(indexName).namespace('')
       cacheService.setPineconeIndex(indexName, index)
     }
 
