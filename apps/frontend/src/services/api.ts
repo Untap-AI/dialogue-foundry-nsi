@@ -1,7 +1,7 @@
 import axios from 'axios'
 import type { AxiosError } from 'axios'
 import type { ChatItem } from '@nlux/react'
-import { ApiError, ErrorCodes as ServiceErrorCodes } from './errors'
+import { ApiError, ErrorCodes as ServiceErrorCodes, ErrorCodeValue } from './errors'
 
 // Default config values (can be overridden)
 export const DEFAULT_TOKEN_STORAGE_KEY = 'dialogue_foundry_token'
@@ -100,7 +100,7 @@ export class ChatApiService {
           const data = error.response.data as any;
           
           let errorMessage = 'An error occurred while communicating with the server.';
-          let errorCode = ServiceErrorCodes.UNKNOWN_ERROR;
+          let errorCode: ErrorCodeValue = ServiceErrorCodes.UNKNOWN_ERROR;
           
           // Check if there's a specific error in the response
           if (data && data.error) {
@@ -138,12 +138,11 @@ export class ChatApiService {
               break;
           }
           
-          return Promise.reject(new ApiError(errorMessage, errorCode, false, status));
+          return Promise.reject(new ApiError(errorCode, false));
         } else if (error.request) {
           // The request was made but no response was received
           return Promise.reject(
             new ApiError(
-              'No response received from the server. Please check your internet connection.', 
               ServiceErrorCodes.NETWORK_ERROR,
               true
             )
@@ -152,7 +151,6 @@ export class ChatApiService {
           // Something happened in setting up the request
           return Promise.reject(
             new ApiError(
-              `Failed to send request: ${error.message}`,
               ServiceErrorCodes.REQUEST_FAILED,
               false
             )
@@ -224,7 +222,6 @@ export class ChatApiService {
         throw error;
       } else {
         throw new ApiError(
-          'Failed to create a new chat session. Please try again later.',
           ServiceErrorCodes.CHAT_CREATION_FAILED,
           false
         );
