@@ -6,12 +6,12 @@
 
 // Base error class for all service errors
 export class ServiceError extends Error {
-  code: string;
+  code: ErrorCodeValue;
   recoverable: boolean;
   statusCode?: number;
   
-  constructor(message: string, code: string, recoverable: boolean = false, statusCode?: number) {
-    super(message);
+  constructor(code: ErrorCodeValue, recoverable: boolean = false, statusCode?: number) {
+    super(getFriendlyErrorMessage(code));
     this.name = 'ServiceError';
     this.code = code;
     this.recoverable = recoverable;
@@ -21,16 +21,16 @@ export class ServiceError extends Error {
 
 // API-specific error class
 export class ApiError extends ServiceError {
-  constructor(message: string, code: string, recoverable: boolean = false, statusCode?: number) {
-    super(message, code, recoverable, statusCode);
+  constructor(code: ErrorCodeValue, recoverable: boolean = false) {
+    super(code, recoverable);
     this.name = 'ApiError';
   }
 }
 
 // Streaming-specific error class
 export class StreamingError extends ServiceError {
-  constructor(message: string, code: string, recoverable: boolean = false) {
-    super(message, code, recoverable);
+  constructor(code: ErrorCodeValue, recoverable: boolean = false) {
+    super(code, recoverable);
     this.name = 'StreamingError';
   }
 }
@@ -65,9 +65,26 @@ export const ErrorCodes = {
   INITIALIZATION_ERROR: 'INITIALIZATION_ERROR',
   CHAT_CREATION_FAILED: 'CHAT_CREATION_FAILED',
   
+  // Configuration errors
+  INVALID_REQUEST: 'INVALID_REQUEST',
+  INVALID_CHAT: 'INVALID_CHAT',
+  INVALID_COMPANY: 'INVALID_COMPANY',
+  CONFIGURATION_ERROR: 'CONFIGURATION_ERROR',
+  
   // Generic errors
   UNKNOWN_ERROR: 'UNKNOWN_ERROR'
-};
+} as const;
+
+// Type definitions for error codes
+export type ErrorCode = keyof typeof ErrorCodes;
+export type ErrorCodeValue = typeof ErrorCodes[ErrorCode];
+
+/**
+ * Type guard function to check if a string is a valid ErrorCode
+ */
+export function isErrorCode(code: string): code is ErrorCodeValue {
+  return Object.values(ErrorCodes).includes(code as ErrorCodeValue);
+}
 
 // Error categories for UI handling
 export enum ErrorCategory {
@@ -84,89 +101,29 @@ export enum ErrorCategory {
  * @param error Any error from the application
  * @returns ErrorCategory for consistent UI error display
  */
-export function categorizeError(error: Error): ErrorCategory {
-  // Handle ServiceError types first
-  if (error instanceof ServiceError) {
-    const { code } = error;
-    
-    // Authentication errors
-    if ([
-      ErrorCodes.TOKEN_INVALID,
-      ErrorCodes.TOKEN_MISSING,
-      ErrorCodes.AUTH_EXPIRED,
-      ErrorCodes.AUTH_FORBIDDEN
-    ].includes(code)) {
-      return ErrorCategory.AUTHENTICATION;
+export function categorizeError(code: ErrorCodeValue | string): ErrorCategory {
+    switch (code) {
+      case ErrorCodes.TOKEN_INVALID:
+      case ErrorCodes.TOKEN_MISSING:
+      case ErrorCodes.AUTH_EXPIRED:
+      case ErrorCodes.AUTH_FORBIDDEN:
+        return ErrorCategory.AUTHENTICATION;
+      case ErrorCodes.CONNECTION_ERROR:
+      case ErrorCodes.NETWORK_ERROR:
+        return ErrorCategory.CONNECTION;
+      case ErrorCodes.SERVER_ERROR:
+      case ErrorCodes.REQUEST_FAILED:
+      case ErrorCodes.NOT_FOUND:
+      case ErrorCodes.PARSE_ERROR:
+        return ErrorCategory.SERVER;
+      case ErrorCodes.RATE_LIMITED:
+      case ErrorCodes.RECONNECT_LIMIT:
+        return ErrorCategory.RATE_LIMIT;
+      case ErrorCodes.TIMEOUT_ERROR:
+        return ErrorCategory.TIMEOUT;
+      default:
+        return ErrorCategory.UNKNOWN;
     }
-    
-    // Connection errors
-    if ([
-      ErrorCodes.CONNECTION_ERROR,
-      ErrorCodes.NETWORK_ERROR
-    ].includes(code)) {
-      return ErrorCategory.CONNECTION;
-    }
-    
-    // Server errors
-    if ([
-      ErrorCodes.SERVER_ERROR,
-      ErrorCodes.REQUEST_FAILED,
-      ErrorCodes.NOT_FOUND,
-      ErrorCodes.PARSE_ERROR
-    ].includes(code)) {
-      return ErrorCategory.SERVER;
-    }
-    
-    // Rate limit errors
-    if ([
-      ErrorCodes.RATE_LIMITED,
-      ErrorCodes.RECONNECT_LIMIT
-    ].includes(code)) {
-      return ErrorCategory.RATE_LIMIT;
-    }
-    
-    // Timeout errors
-    if (code === ErrorCodes.TIMEOUT_ERROR) {
-      return ErrorCategory.TIMEOUT;
-    }
-  }
-  
-  // Fallback to checking error message text
-  const message = error.message.toLowerCase();
-  
-  if (message.includes('token') || 
-      message.includes('authentication') || 
-      message.includes('auth') || 
-      message.includes('session')) {
-    return ErrorCategory.AUTHENTICATION;
-  } 
-  
-  if (message.includes('network') || 
-      message.includes('connection') || 
-      message.includes('offline') || 
-      message.includes('unable to connect')) {
-    return ErrorCategory.CONNECTION;
-  } 
-  
-  if (message.includes('server') || 
-      message.includes('500') || 
-      message.includes('404') || 
-      message.includes('503')) {
-    return ErrorCategory.SERVER;
-  } 
-  
-  if (message.includes('rate') || 
-      message.includes('limit') || 
-      message.includes('too many')) {
-    return ErrorCategory.RATE_LIMIT;
-  } 
-  
-  if (message.includes('timeout') || 
-      message.includes('timed out')) {
-    return ErrorCategory.TIMEOUT;
-  }
-  
-  return ErrorCategory.UNKNOWN;
 }
 
 /**
@@ -174,8 +131,8 @@ export function categorizeError(error: Error): ErrorCategory {
  * @param category Error category
  * @param customMessage Optional custom message to use instead of default
  */
-export function getFriendlyErrorMessage(category: ErrorCategory, customMessage?: string): string {
-  if (customMessage) return customMessage;
+export function getFriendlyErrorMessage(code: ErrorCodeValue | string): string {
+  const category = categorizeError(code);
   
   switch (category) {
     case ErrorCategory.AUTHENTICATION:

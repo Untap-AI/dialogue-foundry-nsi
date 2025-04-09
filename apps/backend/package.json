@@ -1,6 +1,6 @@
 {
   "name": "@dialogue-foundry/backend",
-  "version": "1.0.5",
+  "version": "1.1.0",
   "description": "Simple chatbot backend for a small company website",
   "main": "dist/index.js",
   "repository": {
@@ -22,9 +22,9 @@
     "update": "git pull origin main && pnpm run db-migrate:remote && pnpm run db-types:remote",
     "db-reset": "supabase db reset && pnpm run db-types",
     "db-migrate": "supabase migration up && pnpm run db-types",
-    "db-migrate:remote": "supabase migration up --project-ref kmfbpvmlhxkanboppjvh",
+    "db-migrate:remote": "supabase migration up --db-url <fill-in-db-url>",
     "db-types": "supabase gen types typescript --local > src/types/database.ts",
-    "db-types:remote": "supabase gen types typescript --project-ref kmfbpvmlhxkanboppjvh > src/types/database.ts",
+    "db-types:remote": "supabase gen types typescript > src/types/database.ts",
     "db-pull": "supabase db remote commit",
     "db-push": "supabase db push",
     "supabase-start": "supabase start",
@@ -37,9 +37,9 @@
     "install:prod": "pnpm install --production"
   },
   "dependencies": {
-    "tsc": "^2.0.4",
     "@dialogue-foundry/tsconfig": "workspace:*",
     "@pinecone-database/pinecone": "^5.1.1",
+    "@sendgrid/mail": "^8.1.5",
     "@supabase/supabase-js": "^2.49.1",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
@@ -51,7 +51,8 @@
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.2",
     "node-cache": "^5.1.2",
-    "openai": "^4.87.4",
+    "openai": "^4.93.0",
+    "tsc": "^2.0.4",
     "typescript": "^5.3.3",
     "uuid": "^9.0.1",
     "zod": "^3.24.2"

@@ -6,7 +6,7 @@ import './ChatInterface.css'
 
 import { ChatApiService } from '../../services/api'
 import { ChatStreamingService } from '../../services/streaming'
-import { ErrorCategory, categorizeError } from '../../services/errors'
+import { ErrorCategory, categorizeError, ServiceError } from '../../services/errors'
 import type { ChatItem, ErrorEventDetails } from '@nlux/react'
 
 type ChatStatus = 'loading' | 'initialized' | 'error'
@@ -15,7 +15,9 @@ export interface ChatInterfaceProps {
   className?: string
 }
 
-export const ChatInterface = ({ className }: ChatInterfaceProps) => {
+export const ChatInterface = ({ 
+  className
+}: ChatInterfaceProps) => {
   // Get config from context
   const { conversationStarters, chatConfig, theme, personaOptions } =
     useConfig()
@@ -78,6 +80,8 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
     if(!error.errorObject) {
       return
     }
+
+    const errorObject = error.errorObject as ServiceError
     
     // Find the error box element
     const errorBox = document.querySelector('.nlux-comp-exceptionBox');
@@ -86,7 +90,7 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
       errorBox.innerHTML = '';
 
       // Process the error through our error handling system
-      const category = categorizeError(error.errorObject)
+      const category = categorizeError(errorObject.code)
       const message = error.errorObject.message
       
       // Create our custom error banner

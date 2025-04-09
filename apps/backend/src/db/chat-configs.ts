@@ -132,30 +132,5 @@ export const deleteChatConfig = async (companyId: string) => {
   return true
 }
 
-/**
- * Get a chat config by company ID, falling back to the default if not found
- * @param companyId The company ID to lookup
- * @returns The chat config for the company ID or the default config
- */
-export const getChatConfigWithFallback = async (companyId: string) => {
-  try {
-    const chatConfig = await getChatConfigByCompanyId(companyId)
-
-    if (chatConfig) {
-      return chatConfig
-    }
-
-    // If not found, return the default config
-    return await getChatConfigByCompanyId('default')
-  } catch (error) {
-    console.error(
-      `Error getting chat config for company ID ${companyId}:`,
-      error
-    )
-    // If anything fails, try to get the default config
-    return await getChatConfigByCompanyId('default').catch(() => undefined)
-  }
-}
-
 // For backwards compatibility during migration
 export const getChatConfigByDomain = getChatConfigByCompanyId
