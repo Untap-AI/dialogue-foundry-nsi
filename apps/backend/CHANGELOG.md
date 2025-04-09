@@ -1,5 +1,11 @@
 # @dialogue-foundry/backend
 
+## 1.1.0
+
+### Minor Changes
+
+- Added send email function
+
 ## 1.0.5
 
 ### Patch Changes
