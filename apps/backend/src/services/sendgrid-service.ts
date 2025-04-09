@@ -37,6 +37,21 @@ export interface EmailData {
 }
 
 /**
+ * Safely processes content for SendGrid Handlebars templates
+ * Handles special characters that might cause issues in templates
+ */
+const sanitizeForHandlebars = (content: string): string => {
+  // Sanitize content to make it safe for Handlebars
+  // Basic sanitization to avoid common HTML issues
+  return content
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+/**
  * Sends an email using SendGrid template
  * @param emailData The data needed to send the email
  * @returns Promise that resolves when the email is sent
@@ -47,6 +62,7 @@ export const sendInquiryEmail = async (emailData: EmailData): Promise<boolean> =
     const companyConfig = cacheService.getChatConfig(emailData.companyId) ?? await getChatConfigByCompanyId(emailData.companyId)
 
     if (!companyConfig) {
+      console.error(`No company config found for company ID: ${emailData.companyId}`);
       return false
     }
     
@@ -56,7 +72,7 @@ export const sendInquiryEmail = async (emailData: EmailData): Promise<boolean> =
     // Format recent messages for better readability in the email
     const formattedMessages = emailData.recentMessages.map(msg => ({
       role: msg.role.charAt(0).toUpperCase() + msg.role.slice(1), // Capitalize role
-      content: msg.content
+      content: sanitizeForHandlebars(msg.content)
     }))
     
     // Convert messages to presentable format for email
@@ -69,33 +85,25 @@ export const sendInquiryEmail = async (emailData: EmailData): Promise<boolean> =
 
     // This should never happen, but is required for type safety
     if (!supportEmail) {
+      console.error(`No support email found for company ID: ${emailData.companyId}`);
       return false
     }
     
-    // Create recipients array with proper types
-    const recipients = []
     
-    // Add support email
-    recipients.push({ email: supportEmail, name: 'Support Team' })
-    
-    // Add user email as CC if provided
-    // TODO: Should we do this?
-    if (emailData.userEmail) {
-      recipients.push({ email: emailData.userEmail, name: 'User' })
-    }
     
     // Create the email with proper types
     const msg = {
-      to: recipients,
+      to: [
+        { email: supportEmail, name: 'Support Team' }
+      ],
       from: {
         email: fromEmail,
-        // TODO: What should this be?
         name: 'Dialogue Foundry'
       },
       templateId,
       dynamicTemplateData: {
-        conversationSummary: emailData.conversationSummary,
-        chatHistory,
+        conversationSummary: sanitizeForHandlebars(emailData.conversationSummary),
+        chatHistory: sanitizeForHandlebars(chatHistory),
         userEmail: emailData.userEmail,
         date: new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })
       }
@@ -107,6 +115,9 @@ export const sendInquiryEmail = async (emailData: EmailData): Promise<boolean> =
     return true
   } catch (error) {
     console.error('Error sending email:', error)
+    if (error.response) {
+      console.error('SendGrid API response error details:', error.response.body);
+    }
     return false
   }
 } 

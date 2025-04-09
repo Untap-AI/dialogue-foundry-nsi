@@ -275,7 +275,57 @@ export class ChatStreamingService {
                 companyId
               )
               return
-            } else {
+            }
+            // Handle chat-related errors
+            else if (data.code === 'NOT_FOUND') {
+              this.handleChatError(
+                content,
+                onChunk,
+                onComplete,
+                onError,
+                companyId,
+                ServiceErrorCodes.NOT_FOUND,
+                data.error || 'Chat not found. Creating a new chat for you.'
+              )
+              return
+            }
+            else if (data.code === 'INVALID_CHAT') {
+              this.handleChatError(
+                content,
+                onChunk,
+                onComplete,
+                onError,
+                companyId,
+                ServiceErrorCodes.INVALID_CHAT,
+                data.error || 'This chat configuration is invalid. Creating a new chat for you.'
+              )
+              return
+            }
+            else if (data.code === 'INVALID_COMPANY') {
+              this.handleChatError(
+                content,
+                onChunk,
+                onComplete,
+                onError,
+                companyId,
+                ServiceErrorCodes.INVALID_COMPANY,
+                data.error || 'Company configuration not available. Creating a new chat for you.'
+              )
+              return
+            }
+            else if (data.code === 'INVALID_REQUEST') {
+              // Invalid request errors are not recoverable by creating a new chat
+              onError(
+                new StreamingError(
+                  data.error || 'Your request was invalid. Please adjust your message and try again.',
+                  ServiceErrorCodes.INVALID_REQUEST,
+                  true // User can try again with a different message
+                )
+              )
+              this.closeEventSource()
+              return
+            }
+            else {
               // Handle other error types
               onError(
                 new StreamingError(
@@ -438,6 +488,91 @@ export class ChatStreamingService {
         new StreamingError(
           `We couldn't automatically renew your session. Please refresh the page.`,
           ServiceErrorCodes.TOKEN_INVALID,
+          false
+        )
+      )
+      this.isReconnecting = false
+    }
+  }
+
+  /**
+   * Handle chat-related errors by reinitializing the chat and retrying
+   * Used for NOT_FOUND, INVALID_CHAT, and INVALID_COMPANY errors
+   */
+  private async handleChatError(
+    content: string,
+    onChunk: (chunk: string) => void,
+    onComplete: (fullText: string) => void,
+    onError: (error: Error) => void,
+    companyId?: string,
+    errorCode: string = ServiceErrorCodes.CONFIGURATION_ERROR,
+    errorMessage: string = 'There was an issue with your chat. Starting a new conversation.'
+  ): Promise<void> {
+    this.closeEventSource()
+
+    // Track reconnection attempt
+    this.reconnectAttempts++
+    this.lastReconnectTime = Date.now()
+
+    // Notify the user of the issue
+    onError(
+      new StreamingError(
+        errorMessage,
+        errorCode,
+        true // These errors are recoverable
+      )
+    )
+
+    // Check if we've exceeded maximum reconnection attempts
+    if (this.reconnectAttempts > this.MAX_RECONNECT_ATTEMPTS) {
+      onError(
+        new StreamingError(
+          `We couldn't establish a stable connection. Please refresh the page to start a new chat session.`,
+          ServiceErrorCodes.RECONNECT_LIMIT,
+          false
+        )
+      )
+      this.isReconnecting = false
+      return
+    }
+
+    if (this.isReconnecting) {
+      // Avoid nested reconnection loops
+      onError(
+        new StreamingError(
+          `We're currently trying to restore your session. Please wait a moment.`,
+          errorCode,
+          false
+        )
+      )
+      this.isReconnecting = false
+      return
+    }
+
+    this.isReconnecting = true
+
+    try {
+      // Calculate backoff time for exponential retry
+      const backoffTime = this.getBackoffTime()
+
+      // Wait for backoff time before retrying
+      await new Promise(resolve => setTimeout(resolve, backoffTime))
+
+      // Clear existing token and chat ID
+      this.storage.removeItem(this.tokenStorageKey)
+      this.storage.removeItem(this.chatIdStorageKey)
+
+      // Initialize a new chat
+      await this.initializeNewChat()
+
+      // Retry the streaming request
+      await this.streamMessage(content, onChunk, onComplete, onError, companyId)
+      this.isReconnecting = false
+    } catch (error) {
+      onError(
+        new StreamingError(
+          `We couldn't automatically create a new chat. Please refresh the page.`,
+          ServiceErrorCodes.INITIALIZATION_ERROR,
           false
         )
       )

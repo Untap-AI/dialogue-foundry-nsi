@@ -51,8 +51,11 @@ const openAIResponseOutputItemAddedSchema =
       type: z.string(),
       id: z.string(),
       status: z.string(),
-      role: z.string(),
-      content: z.array(z.unknown()) // Replacing any[] with array of unknown
+      role: z.string().nullable(),
+      content: z.array(z.unknown()).nullable(),
+      call_id: z.string().nullable(),
+      name: z.string().nullable(),
+      arguments: z.unknown().nullable()
     })
   })
 

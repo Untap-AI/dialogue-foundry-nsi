@@ -97,7 +97,7 @@ router.get('/:chatId', authenticateChatAccess, async (req, res) => {
 // Create a new chat and return access token
 router.post('/', async (req, res) => {
   try {
-    const { userId, name, companyId } = req.body
+    const { userId: userIdParam, name, companyId } = req.body
 
     if (!name) {
       return res.status(400).json({ error: 'Chat name is required' })
@@ -119,11 +119,11 @@ router.post('/', async (req, res) => {
       }
     }
 
-    console.log('userId', userId)
+    const userId = userIdParam || uuidv4()
 
     const chat = await createChatAdmin({
       name,
-      user_id: userId || uuidv4(),
+      user_id: userId,
       company_id: companyId
     })
 
@@ -218,6 +218,22 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
   res.setHeader('Connection', 'keep-alive')
   res.setHeader('X-Accel-Buffering', 'no') // Disable buffering for Nginx
 
+  // Helper function to send errors via SSE
+  const sendErrorEvent = (errorMessage: string, errorCode: string = 'STREAMING_ERROR') => {
+    if (!res.writableEnded) {
+      const errorData = {
+        type: 'error',
+        error: errorMessage,
+        code: errorCode
+      }
+      console.log('Sending error event:', errorData)
+      res.write(`data: ${JSON.stringify(errorData)}\n\n`)
+      // Send a clean termination signal
+      res.write(':\n\n')
+      res.end()
+    }
+  }
+
   try {
     const { chatId } = req.params
 
@@ -227,20 +243,17 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     const temperature = req.body.temperature || req.query.temperature
     
     if (!chatId) {
-      return res.status(400).json({ error: 'Chat ID is required' })
+      sendErrorEvent('Chat ID is required', 'INVALID_REQUEST')
+      return
     }
 
     // Use the authenticated user's ID from the JWT token
     // This is set by the authenticateChatAccess middleware
     const userId = req.user?.userId
 
-    console.log('userId', userId)
-    console.log('content', content)
-
     if (!userId || !content) {
-      return res
-        .status(400)
-        .json({ error: 'User authentication and message content are required' })
+      sendErrorEvent('User authentication and message content are required', 'INVALID_REQUEST')
+      return
     }
 
     // Check cache first before database query
@@ -256,7 +269,8 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     }
 
     if (!chat) {
-      return res.status(404).json({ error: 'Chat not found' })
+      sendErrorEvent('Chat not found', 'NOT_FOUND')
+      return
     }
 
     // Get the company ID from the chat
@@ -264,10 +278,8 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
 
     // If the chat doesn't have a company_id, return an error
     if (!companyId) {
-      return res.status(400).json({
-        error:
-          'This chat is not associated with any company. Please create a new chat with a company ID.'
-      })
+      sendErrorEvent('This chat is not associated with any company. Please create a new chat with a company ID.', 'INVALID_CHAT')
+      return
     }
 
     // Try to get config from cache first
@@ -280,9 +292,8 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
         cacheService.setChatConfig(companyId, dbConfig)
       }
       else {
-        return res.status(400).json({
-          error: 'The company associated with this chat is not available. Please create a chat with a valid company ID.'
-        })
+        sendErrorEvent('The company associated with this chat is not available. Please create a chat with a valid company ID.', 'INVALID_COMPANY')
+        return
       } 
     }
 
@@ -360,6 +371,7 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
 
     // Define SSE-formatted chunk sender
     const onChunk = (chunk: string) => {
+      console.log('onChunk', chunk)
       // Ensure the response is still writable
       if (!res.writableEnded) {
         // Format the chunk as a Server-Sent Event
@@ -425,70 +437,26 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     })
   } catch (error) {
     console.error('Error in streaming chat message endpoint:', error)
-    // Only send error response if headers haven't been sent yet
-    if (!res.headersSent) {
-      console.log('Sending error response to client - headers not sent yet')
-
-      // Check if this is an authentication error
-      if (
-        error instanceof Error &&
-        error.message &&
-        (error.message.includes('token') ||
-          error.message.includes('authenticate'))
-      ) {
-        const errorData = {
-          type: 'error',
-          error:
-            'Invalid or expired token. Please reinitialize your chat session.',
-          code: 'TOKEN_INVALID'
-        }
-        console.log('Error data being sent:', errorData)
-        res.write(`data: ${JSON.stringify(errorData)}\n\n`)
-        // Send a clean termination signal
-        res.write(':\n\n')
-        return res.end()
-      }
-
-      console.log('Sending generic streaming error to client')
-      const errorData = {
-        type: 'error',
-        error: 'An error occurred processing your request',
-        code: 'STREAMING_ERROR'
-      }
-      console.log('Error data being sent:', errorData)
-      res.write(`data: ${JSON.stringify(errorData)}\n\n`)
-      // Send a clean termination signal
-      res.write(':\n\n')
-      return res.end()
+    
+    // Check if this is an authentication error
+    if (
+      error instanceof Error &&
+      error.message &&
+      (error.message.includes('token') ||
+       error.message.includes('authenticate'))
+    ) {
+      sendErrorEvent(
+        'Invalid or expired token. Please reinitialize your chat session.',
+        'TOKEN_INVALID'
+      )
+    } else {
+      // Send appropriate error message based on the error type
+      sendErrorEvent(
+        error instanceof Error ? error.message : 'An error occurred processing your request'
+      )
     }
-
-    // Send an error event if headers have been sent
-    if (!res.writableEnded) {
-      console.log('Sending error response to client - headers already sent')
-
-      // Determine error code based on the error message
-      let errorCode = 'STREAMING_ERROR'
-      if (error instanceof Error) {
-        if (
-          error.message.includes('token') ||
-          error.message.includes('authenticate')
-        ) {
-          errorCode = 'TOKEN_INVALID'
-        }
-      }
-
-      const errorData = {
-        type: 'error',
-        error: error instanceof Error ? error.message : 'Unknown error',
-        code: errorCode
-      }
-      console.log('Error data being sent:', errorData)
-      res.write(`data: ${JSON.stringify(errorData)}\n\n`)
-      // Send a clean termination signal
-      res.write(':\n\n')
-    }
-
-    return res.end()
+    
+    return
   }
 }
 
