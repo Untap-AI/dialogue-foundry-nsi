@@ -1,17 +1,8 @@
-import { useEffect, useRef } from 'react'
+import { useEffect } from 'react'
 
 interface UseChatScrollOptions {
   // Whether the chat interface is open/visible
   isOpen: boolean
-}
-
-export const scrollToBottom = () => {
-  const conversationContainer = document.querySelector(
-    '.nlux-conversation-container'
-  )
-  if (conversationContainer && conversationContainer instanceof HTMLElement) {
-      conversationContainer.scrollTop = conversationContainer.scrollHeight
-  }
 }
 
 const scrollToBottomSmooth = () => {
@@ -31,68 +22,20 @@ const scrollToBottomSmooth = () => {
  * Manages touch, click, and focus listeners and resize observers to ensure the chat stays scrolled to bottom
  */
 export const useChatScroll = ({ isOpen }: UseChatScrollOptions) => {
-  // Store the resize observer reference
-  // eslint-disable-next-line no-null/no-null
-  const resizeObserverRef = useRef<ResizeObserver | null>(null)
-
   useEffect(() => {
     // Initial scroll to bottom after modal opens
     if (isOpen) {
       setTimeout(() => {
-        scrollToBottom()
+        scrollToBottomSmooth()
       }, 300)
-    }
-  }, [isOpen])
-
-  // Set up a ResizeObserver to detect changes in the conversation container
-  useEffect(() => {
-    const setupResizeObserver = () => {
-      const segmentsContainer = document.querySelector(
-        '.nlux-chatSegments-container'
-      )
-      if (segmentsContainer && !resizeObserverRef.current) {
-        // Create a new ResizeObserver
-        const resizeObserver = new ResizeObserver(() => {
-          // When container resizes, scroll to bottom
-          scrollToBottom()
-        })
-
-        // Start observing the container
-        resizeObserver.observe(segmentsContainer)
-        resizeObserverRef.current = resizeObserver
-      }
-    }
-
-    if (isOpen) {
-      // Try to set up the observer immediately
-      setupResizeObserver()
-
-      // Also try again after a delay to ensure the element is in the DOM
-      setTimeout(setupResizeObserver, 500)
-    }
-
-    return () => {
-      // Clean up the ResizeObserver when component unmounts or modal closes
-      if (resizeObserverRef.current) {
-        resizeObserverRef.current.disconnect()
-        // eslint-disable-next-line no-null/no-null
-        resizeObserverRef.current = null
-      }
     }
   }, [isOpen])
 
   // Set up interaction event listeners (touch, click, focus) for the input area
   useEffect(() => {
     // Handler function for all interaction events
-    const handleInteraction = (event: Event) => {
-      // Small delay to ensure keyboard is fully shown and UI is ready
-      if (event.type === 'touchstart') {
-        setTimeout(scrollToBottom, 100)
-      } else if (event.type === 'click' || event.type === 'focus') {
-
-        setTimeout(scrollToBottomSmooth, 100)
-      }
-    }
+    const handleInteraction = () => setTimeout(scrollToBottomSmooth, 100)
+    
 
     // Set up event listeners for the input area
     const setupInteractionListeners = () => {

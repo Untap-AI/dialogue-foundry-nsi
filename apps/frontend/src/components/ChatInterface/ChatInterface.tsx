@@ -126,6 +126,30 @@ export const ChatInterface = ({
     console.error('NLUX chat error:', error);
   };
 
+  // Handle message sent event - creates ChatGPT-like scrolling
+  const handleMessageSent = () => {
+    // Find the conversation container
+    const conversationContainer = document.querySelector('.nlux-conversation-container');
+    const chatSegmentsContainer = document.querySelector('.nlux-chatSegments-container');
+    
+    if (conversationContainer && conversationContainer instanceof HTMLElement && chatSegmentsContainer && chatSegmentsContainer instanceof HTMLElement) {
+      const chatSegmentsContainerHeight = chatSegmentsContainer.clientHeight;
+      const chatWindowHeight = conversationContainer.clientHeight;
+
+
+      // TODO: Calculate this dynamically based on font height and other factors
+      // Make the chat window tall enough for the latest message to sit at the top of the chat window
+      const newMinHeight = chatSegmentsContainerHeight + chatWindowHeight - 50;
+      chatSegmentsContainer.style.minHeight = `${newMinHeight}px`;
+        
+        // Scroll to show the bottom
+      conversationContainer.scrollTo({
+        top: chatSegmentsContainer.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  };
+
   useEffect(() => {
     // Initialize chat on component mount
     setupChat();
@@ -174,7 +198,8 @@ export const ChatInterface = ({
                     placeholder: 'Ask me anything...'
                   }}
                   events={{
-                    error: handleNluxError
+                    error: handleNluxError,
+                    messageSent: handleMessageSent
                   }}
                 />
               )
