@@ -113,8 +113,7 @@ router.post('/', async (req, res) => {
       if (dbConfig) {
         chatConfig = dbConfig
         cacheService.setChatConfig(companyId, dbConfig)
-      }
-      else {
+      } else {
         return res.status(400).json({ error: 'Chat config not found' })
       }
     }
@@ -204,7 +203,6 @@ router.delete('/:chatId', authenticateChatAccess, async (req, res) => {
   }
 })
 
-
 // Send a streaming message and get a response (requires chat-specific authentication)
 // Support both POST and GET methods for compatibility with EventSource
 router.post('/:chatId/stream', authenticateChatAccess, handleStreamRequest)
@@ -219,7 +217,10 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
   res.setHeader('X-Accel-Buffering', 'no') // Disable buffering for Nginx
 
   // Helper function to send errors via SSE
-  const sendErrorEvent = (errorMessage: string, errorCode: string = 'STREAMING_ERROR') => {
+  const sendErrorEvent = (
+    errorMessage: string,
+    errorCode: string = 'STREAMING_ERROR'
+  ) => {
     if (!res.writableEnded) {
       const errorData = {
         type: 'error',
@@ -241,7 +242,7 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     const content = req.body.content || req.query.content
     const model = req.body.model || req.query.model
     const temperature = req.body.temperature || req.query.temperature
-    
+
     if (!chatId) {
       sendErrorEvent('Chat ID is required', 'INVALID_REQUEST')
       return
@@ -252,7 +253,10 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     const userId = req.user?.userId
 
     if (!userId || !content) {
-      sendErrorEvent('User authentication and message content are required', 'INVALID_REQUEST')
+      sendErrorEvent(
+        'User authentication and message content are required',
+        'INVALID_REQUEST'
+      )
       return
     }
 
@@ -278,7 +282,10 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
 
     // If the chat doesn't have a company_id, return an error
     if (!companyId) {
-      sendErrorEvent('This chat is not associated with any company. Please create a new chat with a company ID.', 'INVALID_CHAT')
+      sendErrorEvent(
+        'This chat is not associated with any company. Please create a new chat with a company ID.',
+        'INVALID_CHAT'
+      )
       return
     }
 
@@ -290,16 +297,18 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       if (dbConfig) {
         chatConfig = dbConfig
         cacheService.setChatConfig(companyId, dbConfig)
-      }
-      else {
-        sendErrorEvent('The company associated with this chat is not available. Please create a chat with a valid company ID.', 'INVALID_COMPANY')
+      } else {
+        sendErrorEvent(
+          'The company associated with this chat is not available. Please create a chat with a valid company ID.',
+          'INVALID_COMPANY'
+        )
         return
-      } 
+      }
     }
 
     // Get chat settings - using request parameters, chat config, or defaults
     const chatSettings: ChatSettings = {
-     ...DEFAULT_SETTINGS,
+      ...DEFAULT_SETTINGS,
       systemPrompt: chatConfig.system_prompt,
       // Pass company ID and support email if available
       companyId,
@@ -425,13 +434,13 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     })
   } catch (error) {
     console.error('Error in streaming chat message endpoint:', error)
-    
+
     // Check if this is an authentication error
     if (
       error instanceof Error &&
       error.message &&
       (error.message.includes('token') ||
-       error.message.includes('authenticate'))
+        error.message.includes('authenticate'))
     ) {
       sendErrorEvent(
         'Invalid or expired token. Please reinitialize your chat session.',
@@ -440,10 +449,12 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     } else {
       // Send appropriate error message based on the error type
       sendErrorEvent(
-        error instanceof Error ? error.message : 'An error occurred processing your request'
+        error instanceof Error
+          ? error.message
+          : 'An error occurred processing your request'
       )
     }
-    
+
     return
   }
 }

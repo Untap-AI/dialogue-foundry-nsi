@@ -6,7 +6,8 @@ import './ChatInterface.css'
 
 import { ChatApiService } from '../../services/api'
 import { ChatStreamingService } from '../../services/streaming'
-import { ErrorCategory, categorizeError, ServiceError } from '../../services/errors'
+import { ErrorCategory, categorizeError } from '../../services/errors'
+import type { ServiceError } from '../../services/errors'
 import type { ChatItem, ErrorEventDetails } from '@nlux/react'
 
 type ChatStatus = 'loading' | 'initialized' | 'error'
@@ -15,9 +16,7 @@ export interface ChatInterfaceProps {
   className?: string
 }
 
-export const ChatInterface = ({ 
-  className
-}: ChatInterfaceProps) => {
+export const ChatInterface = ({ className }: ChatInterfaceProps) => {
   // Get config from context
   const { conversationStarters, chatConfig, theme, personaOptions } =
     useConfig()
@@ -45,9 +44,9 @@ export const ChatInterface = ({
       () => observer.complete(),
       // On error - handle the error and pass to the observer
       error => {
-        console.log('Error from streaming service:', error);
+        console.log('Error from streaming service:', error)
         // Pass the error to the observer for NLUX to handle
-        observer.error(error);
+        observer.error(error)
       }
     )
   }, messages)
@@ -55,48 +54,40 @@ export const ChatInterface = ({
   // Setup chat function
   const setupChat = async () => {
     try {
-      setChatStatus('loading');
+      setChatStatus('loading')
       // Initialize service
       const chatInit = await new ChatApiService(chatConfig).initializeChat()
       setChatId(chatInit.chatId)
       setMessages(chatInit.messages)
       setChatStatus('initialized')
     } catch (error) {
-      setChatStatus('error');
-      console.error('Chat initialization failed:', error);
+      setChatStatus('error')
+      console.error('Chat initialization failed:', error)
     }
-  };
-
-  // Manual retry functionality
-  const retryConnection = () => {
-    if (streamingServiceRef.current) {
-      streamingServiceRef.current.resetReconnectionState();
-    }
-    setupChat();
-  };
+  }
 
   // Create a custom error handler for the NLUX error event
   const handleNluxError = (error: ErrorEventDetails) => {
-    if(!error.errorObject) {
+    if (!error.errorObject) {
       return
     }
 
     const errorObject = error.errorObject as ServiceError
-    
+
     // Find the error box element
-    const errorBox = document.querySelector('.nlux-comp-exceptionBox');
+    const errorBox = document.querySelector('.nlux-comp-exceptionBox')
     if (errorBox) {
       // Clear the existing content
-      errorBox.innerHTML = '';
+      errorBox.innerHTML = ''
 
       // Process the error through our error handling system
       const category = categorizeError(errorObject.code)
       const message = error.errorObject.message
-      
+
       // Create our custom error banner
-      const errorBanner = document.createElement('div');
-      errorBanner.className = `df-error-banner df-error-${category}`;
-      
+      const errorBanner = document.createElement('div')
+      errorBanner.className = `df-error-banner df-error-${category}`
+
       // Add the icon based on error category
       const iconMap: Record<ErrorCategory, string> = {
         [ErrorCategory.AUTHENTICATION]: '🔒',
@@ -105,54 +96,83 @@ export const ChatInterface = ({
         [ErrorCategory.RATE_LIMIT]: '⏱️',
         [ErrorCategory.TIMEOUT]: '⌛',
         [ErrorCategory.UNKNOWN]: '⚠️'
-      };
-      
+      }
+
       // Build the error banner content
       errorBanner.innerHTML = `
         <div class="df-error-icon">${iconMap[category] || '⚠️'}</div>
         <div class="df-error-content">
           <div class="df-error-message">${message}</div>
         </div>
-      `;
-      
+      `
+
       // Append our custom error banner
-      errorBox.appendChild(errorBanner);
+      errorBox.appendChild(errorBanner)
 
       setTimeout(() => {
-        errorBox.innerHTML = '';
-      }, 3000);
+        errorBox.innerHTML = ''
+      }, 3000)
     }
-    
-    console.error('NLUX chat error:', error);
-  };
+
+    console.error('NLUX chat error:', error)
+  }
 
   // Handle message sent event - creates ChatGPT-like scrolling
   const handleMessageSent = () => {
     // Find the conversation container
-    const conversationContainer = document.querySelector('.nlux-conversation-container');
-    const chatSegmentsContainer = document.querySelector('.nlux-chatSegments-container');
-    
-    if (conversationContainer && conversationContainer instanceof HTMLElement && chatSegmentsContainer && chatSegmentsContainer instanceof HTMLElement) {
-      const chatSegmentsContainerHeight = chatSegmentsContainer.clientHeight;
-      const chatWindowHeight = conversationContainer.clientHeight;
+    const conversationContainer = document.querySelector(
+      '.nlux-conversation-container'
+    )
+    const chatSegmentsContainer = document.querySelector(
+      '.nlux-chatSegments-container'
+    )
 
+    if (
+      conversationContainer &&
+      conversationContainer instanceof HTMLElement &&
+      chatSegmentsContainer &&
+      chatSegmentsContainer instanceof HTMLElement
+    ) {
+      // Wait for the last message to be rendered
+      setTimeout(() => {
+        // Find the last sent message - use querySelectorAll and get the last one to ensure we get the most recent
+        const sentMessages = document.querySelectorAll(
+          '.nlux-comp-message.nlux_msg_sent'
+        )
+        const lastMessage =
+          sentMessages.length > 0
+            ? sentMessages[sentMessages.length - 1]
+            : undefined
 
-      // TODO: Calculate this dynamically based on font height and other factors
-      // Make the chat window tall enough for the latest message to sit at the top of the chat window
-      const newMinHeight = chatSegmentsContainerHeight + chatWindowHeight - 50;
-      chatSegmentsContainer.style.minHeight = `${newMinHeight}px`;
-        
-        // Scroll to show the bottom
-      conversationContainer.scrollTo({
-        top: chatSegmentsContainer.scrollHeight,
-        behavior: 'smooth'
-      });
+        if (lastMessage && lastMessage instanceof HTMLElement) {
+          // Get the necessary measurements
+          const chatSegmentsContainerRect =
+            chatSegmentsContainer.getBoundingClientRect()
+          const lastMessageRect = lastMessage.getBoundingClientRect()
+          const conversationContainerHeight = conversationContainer.clientHeight
+
+          // Calculate how far we need to scroll to position the last message at the top of the container
+          // We add a small offset (70px) for better visual appearance
+          const scrollOffset =
+            conversationContainerHeight -
+            (chatSegmentsContainerRect.bottom - lastMessageRect.bottom)
+          // TODO: Calcuate small offset based on font size, etc.
+          chatSegmentsContainer.style.minHeight = `${
+            chatSegmentsContainer.scrollHeight + scrollOffset - 70
+          }px`
+        }
+        // If for some reason we can't find the last message, fall back to scrolling to bottom
+        conversationContainer.scrollTo({
+          top: chatSegmentsContainer.scrollHeight,
+          behavior: 'smooth'
+        })
+      }, 50)
     }
-  };
+  }
 
   useEffect(() => {
     // Initialize chat on component mount
-    setupChat();
+    setupChat()
 
     // Cleanup
     return () => {
@@ -222,4 +242,3 @@ export const ChatInterface = ({
     </div>
   )
 }
-
