@@ -53,7 +53,7 @@ export const retrieveDocuments = async (
         filter
         // TODO: Add reranking
       },
-      fields: ['chunk_text', 'url'] // Only request chunk_text and url
+      fields: ['chunk_text'] // Only request chunk_text and url
     })
 
     // Extract and format the results with URL
@@ -64,7 +64,6 @@ export const retrieveDocuments = async (
 
         return {
           text: fields.chunk_text,
-          ...('url' in fields && fields.url ? { url: fields.url.toString() } : {})
         }
       })
       .filter((doc) => doc !== undefined)
@@ -88,7 +87,6 @@ export const formatDocumentsAsContext = (documents: RetrievedDocument[]) => {
   const contextParts = documents.map((doc, index) => {
     return `
     [Document ${index + 1}]
-    ${doc.url ? ` ([View Source](${doc.url}))` : ''}
 
     ${doc.text}`
   })
