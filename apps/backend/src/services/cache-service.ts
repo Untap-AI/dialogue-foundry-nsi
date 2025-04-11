@@ -20,8 +20,13 @@ export const DEFAULT_TTL = {
  * - chatConfigCache: stores company-specific chat configurations (TTL: 5 minutes)
  * - chatCache: stores chat objects (TTL: 1 minute)
  * - pineconeIndexCache: stores Pinecone index instances (TTL: 30 minutes)
+ *
+ * Note: Caching is disabled in development and smokebox environments
  */
 class CacheService {
+  // Environment check
+  private isCachingEnabled: boolean
+
   // Chat configuration cache (longer TTL since these rarely change)
   private chatConfigCache = new NodeCache({
     stdTTL: DEFAULT_TTL.CHAT_CONFIG,
@@ -40,8 +45,19 @@ class CacheService {
     checkperiod: 300
   })
 
+  constructor() {
+    // Disable caching in development and smokebox environments
+    const env = process.env.NODE_ENV || 'development'
+    this.isCachingEnabled = !['development', 'smokebox'].includes(env)
+
+    if (!this.isCachingEnabled) {
+      console.log(`Caching disabled in ${env} environment`)
+    }
+  }
+
   // Chat Config Cache Methods
   getChatConfig(companyId: string): ChatConfigType | undefined {
+    if (!this.isCachingEnabled) return undefined
     return this.chatConfigCache.get<ChatConfigType>(companyId)
   }
 
@@ -49,6 +65,8 @@ class CacheService {
   setChatConfig(companyId: string, config: ChatConfigType): void
   setChatConfig(companyId: string, config: ChatConfigType, ttl: number): void
   setChatConfig(companyId: string, config: ChatConfigType, ttl?: number): void {
+    if (!this.isCachingEnabled) return
+
     if (ttl !== undefined) {
       this.chatConfigCache.set(companyId, config, ttl)
     } else {
@@ -57,11 +75,13 @@ class CacheService {
   }
 
   deleteChatConfig(companyId: string): void {
+    if (!this.isCachingEnabled) return
     this.chatConfigCache.del(companyId)
   }
 
   // Chat Cache Methods
   getChat(chatId: string): ChatType | undefined {
+    if (!this.isCachingEnabled) return undefined
     return this.chatCache.get<ChatType>(chatId)
   }
 
@@ -69,6 +89,8 @@ class CacheService {
   setChat(chatId: string, chat: ChatType): void
   setChat(chatId: string, chat: ChatType, ttl: number): void
   setChat(chatId: string, chat: ChatType, ttl?: number): void {
+    if (!this.isCachingEnabled) return
+
     if (ttl !== undefined) {
       this.chatCache.set(chatId, chat, ttl)
     } else {
@@ -77,11 +99,13 @@ class CacheService {
   }
 
   deleteChat(chatId: string): void {
+    if (!this.isCachingEnabled) return
     this.chatCache.del(chatId)
   }
 
   // Pinecone Index Cache Methods
   getPineconeIndex(indexName: string): Index<RecordMetadata> | undefined {
+    if (!this.isCachingEnabled) return undefined
     return this.pineconeIndexCache.get<Index<RecordMetadata>>(indexName)
   }
 
@@ -97,6 +121,8 @@ class CacheService {
     index: Index<RecordMetadata>,
     ttl?: number
   ): void {
+    if (!this.isCachingEnabled) return
+
     if (ttl !== undefined) {
       this.pineconeIndexCache.set(indexName, index, ttl)
     } else {
@@ -105,17 +131,21 @@ class CacheService {
   }
 
   deletePineconeIndex(indexName: string): void {
+    if (!this.isCachingEnabled) return
     this.pineconeIndexCache.del(indexName)
   }
 
   // Utility methods
   flushAll(): void {
+    if (!this.isCachingEnabled) return
     this.chatConfigCache.flushAll()
     this.chatCache.flushAll()
     this.pineconeIndexCache.flushAll()
   }
 
   flushCache(cacheName: 'chatConfig' | 'chat' | 'pineconeIndex'): void {
+    if (!this.isCachingEnabled) return
+
     switch (cacheName) {
       case 'chatConfig':
         this.chatConfigCache.flushAll()
@@ -135,6 +165,11 @@ class CacheService {
       chat: this.chatCache.getStats(),
       pineconeIndex: this.pineconeIndexCache.getStats()
     }
+  }
+
+  // Helper method to check if caching is enabled
+  isEnabled(): boolean {
+    return this.isCachingEnabled
   }
 }
 
