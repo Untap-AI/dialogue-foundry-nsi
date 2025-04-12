@@ -91,8 +91,8 @@ app.use(
       return res.status(403).json({
         error: 'CORS Error',
         message:
-          process.env.NODE_ENV === 'development' ||
-          process.env.NODE_ENV === 'smokebox'
+          process.env.DEPLOYMENT_ENV === 'development' ||
+          process.env.DEPLOYMENT_ENV === 'smokebox'
             ? err.message
             : 'Origin not allowed'
       })
@@ -102,8 +102,8 @@ app.use(
     return res.status(500).json({
       error: 'An unexpected error occurred',
       message:
-        process.env.NODE_ENV === 'development' ||
-        process.env.NODE_ENV === 'smokebox'
+        process.env.DEPLOYMENT_ENV === 'development' ||
+        process.env.DEPLOYMENT_ENV === 'smokebox'
           ? err.message
           : undefined
     })

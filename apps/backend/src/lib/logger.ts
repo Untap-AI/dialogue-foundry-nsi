@@ -4,7 +4,7 @@ import dotenv from 'dotenv'
 dotenv.config()
 
 // Environment detection
-const environment = process.env.NODE_ENV || 'development'
+const environment = process.env.DEPLOYMENT_ENV || 'development'
 const isDevelopment = environment === 'development'
 const isSmokebox = environment === 'smokebox'
 const isProduction = environment === 'production'

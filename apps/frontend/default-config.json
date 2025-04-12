@@ -1,6 +1,6 @@
 {
   "chatConfig": {
-    "apiBaseUrl": "https://dialogue-foundry-backend-smokebox.onrender.com/api",
+    "apiBaseUrl": "https://dialogue-foundry-backend-smokebox-swjv.onrender.com",
     "companyId": "west-hills-vineyards"
   },
   "theme": "light",

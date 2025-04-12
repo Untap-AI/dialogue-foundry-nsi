@@ -47,7 +47,7 @@ class CacheService {
 
   constructor() {
     // Disable caching in development and smokebox environments
-    const env = process.env.NODE_ENV || 'development'
+    const env = process.env.DEPLOYMENT_ENV || 'development'
     this.isCachingEnabled = !['development', 'smokebox'].includes(env)
 
     if (!this.isCachingEnabled) {

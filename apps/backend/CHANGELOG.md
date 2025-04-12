@@ -1,5 +1,11 @@
 # @dialogue-foundry/backend
 
+## 1.1.1
+
+### Patch Changes
+
+- Change api url and env vars
+
 ## 1.1.0
 
 ### Minor Changes

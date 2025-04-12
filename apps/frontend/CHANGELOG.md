@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.8
+
+### Patch Changes
+
+- Change api url and env vars
+
 ## 0.2.7
 
 ### Patch Changes

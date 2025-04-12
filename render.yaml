@@ -11,6 +11,8 @@ services:
     branch: main
     healthCheckPath: /health
     envVars:
+      - key: ALLOWED_ORIGINS
+        sync: false
       - key: NODE_ENV
         value: production
       - key: DEPLOYMENT_ENV
@@ -32,6 +34,8 @@ services:
       - key: DEFAULT_SENDGRID_TEMPLATE_ID
         sync: false
       - key: SENDGRID_FROM_EMAIL
+        sync: false
+      - key: SENTRY_DSN
         sync: false
     autoDeploy: true
   
@@ -68,6 +72,8 @@ services:
       - key: DEFAULT_SENDGRID_TEMPLATE_ID
         sync: false
       - key: SENDGRID_FROM_EMAIL
+        sync: false
+      - key: SENTRY_DSN
         sync: false
       - key: JWT_SECRET
         sync: false
