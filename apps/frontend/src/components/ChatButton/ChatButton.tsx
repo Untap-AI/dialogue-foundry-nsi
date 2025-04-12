@@ -5,13 +5,12 @@ import { PopupMessage } from './PopupMessage'
 
 const POPUP_DELAY = 3000
 const POPUP_DURATION = 10000
+const DIALOGUE_FOUNDRY_POPUP_KEY = 'dialogue_foundry_popup'
 
 interface ChatButtonProps {
   onClick: () => void
   isOpen: boolean
 }
-
-const DIALOGUE_FOUNDRY_POPUP_KEY = 'dialogue_foundry_popup'
 
 export const ChatButton: React.FC<ChatButtonProps> = ({ onClick, isOpen }) => {
   // eslint-disable-next-line no-null/no-null

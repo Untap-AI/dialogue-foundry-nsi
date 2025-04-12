@@ -48,7 +48,7 @@ export const defaultConfig: DialogueFoundryConfig = {
         'https://michigangrown.org/wp-content/uploads/2022/09/grapes-wine-main-updated-1024x683.jpg'
     }
   },
-  popupMessage: 'Need help? Click me!'
+  popupMessage: 'Have questions? Click here for help! 💬'
 }
 
 // Create the context with default values
