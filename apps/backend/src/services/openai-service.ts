@@ -1,8 +1,12 @@
 import OpenAI from 'openai'
 import dotenv from 'dotenv'
 import { MAX_MESSAGES_PER_CHAT } from '../db/messages'
-import { sendInquiryEmail, EmailData } from './sendgrid-service'
-import { ResponseCreateParams, ResponseFunctionToolCall} from 'openai/resources/responses/responses.mjs'
+import { sendInquiryEmail } from './sendgrid-service'
+import type {
+  ResponseCreateParams,
+  ResponseFunctionToolCall
+} from 'openai/resources/responses/responses.mjs'
+import type { EmailData } from './sendgrid-service'
 
 dotenv.config()
 
@@ -40,28 +44,30 @@ export const DEFAULT_SETTINGS: Pick<ChatSettings, 'model' | 'temperature'> = {
 // Define the email tool for OpenAI function calling
 const emailTool = {
   type: 'function',
-    name: 'send_email',
-    description: 'Send an email to the company with user contact information and conversation details. This should only be used if the user has explicitly consented to sending an email and provided their email address.',
-    parameters: {
-      type: 'object',
-      properties: {
-        subject: {
-          type: 'string',
-          description: 'The subject of the email'
-        },
-        userEmail: {
-          type: 'string',
-          description: 'The email address of the user to contact them'
-        },
-        conversationSummary: {
-          type: 'string',
-          description: 'A brief summary of what the user is looking for or needs help with'
-        }
+  name: 'send_email',
+  description:
+    'Send an email to the company with user contact information and conversation details. This should only be used if the user has explicitly consented to sending an email and provided their email address.',
+  parameters: {
+    type: 'object',
+    properties: {
+      subject: {
+        type: 'string',
+        description: 'The subject of the email'
       },
-      required: ['userEmail', 'conversationSummary', 'subject'],
-      additionalProperties: false,
+      userEmail: {
+        type: 'string',
+        description: 'The email address of the user to contact them'
+      },
+      conversationSummary: {
+        type: 'string',
+        description:
+          'A brief summary of what the user is looking for or needs help with'
+      }
     },
-    strict: true
+    required: ['userEmail', 'conversationSummary', 'subject'],
+    additionalProperties: false
+  },
+  strict: true
 } as const satisfies NonNullable<ResponseCreateParams['tools']>[number]
 
 /**
@@ -95,78 +101,82 @@ const handleFunctionCall = async (
   companyId: string
   // TODO: Remove usage of any
 ): Promise<{ success: boolean; details?: any }> => {
-    if (functionCall.name === 'send_email') {
-      try {
-        // Parse arguments with validation
-        if (!functionCall.arguments) {
-          console.error('Function arguments are empty');
-          return {
-            success: false,
-            // TODO: Make error codes type safe
-            details: { error: 'MISSING_ARGUMENTS' }
-          };
-        }
-        
-        const args = JSON.parse(functionCall.arguments);
-        
-        // Validate required fields
-        if (!args.userEmail) {
-          console.error('User email is required to send an email');
-          return {
-            success: false,
-            details: { error: 'MISSING_EMAIL' }
-          };
-        }
-
-        if (!args.conversationSummary) {
-          console.error('Conversation summary is required to send an email');
-          return {
-            success: false,
-            details: { error: 'MISSING_SUMMARY' }
-          };
-        }
-        
-        // Get recent messages for context (limited to last 20 messages)
-        const recentMessages = messages.slice(-20).filter(msg => msg.role !== 'system');
-        
-        // Prepare email data
-        const emailData: EmailData = {
-          userEmail: args.userEmail,
-          subject: args.subject,
-          conversationSummary: args.subject ? `${args.subject}: ${args.conversationSummary}` : args.conversationSummary,
-          recentMessages,
-          companyId: companyId || 'default'
-        };
-        
-        // Send the email
-        const emailSent = await sendInquiryEmail(emailData);
-        
-        if (emailSent) {
-          return {
-            success: true,
-            details: { userEmail: args.userEmail }
-          };
-        } else {
-          console.error('Failed to send email via SendGrid');
-          return {
-            success: false,
-            details: { error: 'EMAIL_SERVICE_FAILURE' }
-          };
-        }
-      } catch (error) {
-        console.error('Error processing email function call:', error);
+  if (functionCall.name === 'send_email') {
+    try {
+      // Parse arguments with validation
+      if (!functionCall.arguments) {
+        console.error('Function arguments are empty')
         return {
           success: false,
-          details: { error: 'PROCESSING_ERROR' }
-        };
+          // TODO: Make error codes type safe
+          details: { error: 'MISSING_ARGUMENTS' }
+        }
+      }
+
+      const args = JSON.parse(functionCall.arguments)
+
+      // Validate required fields
+      if (!args.userEmail) {
+        console.error('User email is required to send an email')
+        return {
+          success: false,
+          details: { error: 'MISSING_EMAIL' }
+        }
+      }
+
+      if (!args.conversationSummary) {
+        console.error('Conversation summary is required to send an email')
+        return {
+          success: false,
+          details: { error: 'MISSING_SUMMARY' }
+        }
+      }
+
+      // Get recent messages for context (limited to last 20 messages)
+      const recentMessages = messages
+        .slice(-20)
+        .filter(msg => msg.role !== 'system')
+
+      // Prepare email data
+      const emailData: EmailData = {
+        userEmail: args.userEmail,
+        subject: args.subject,
+        conversationSummary: args.subject
+          ? `${args.subject}: ${args.conversationSummary}`
+          : args.conversationSummary,
+        recentMessages,
+        companyId: companyId || 'default'
+      }
+
+      // Send the email
+      const emailSent = await sendInquiryEmail(emailData)
+
+      if (emailSent) {
+        return {
+          success: true,
+          details: { userEmail: args.userEmail }
+        }
+      } else {
+        console.error('Failed to send email via SendGrid')
+        return {
+          success: false,
+          details: { error: 'EMAIL_SERVICE_FAILURE' }
+        }
+      }
+    } catch (error) {
+      console.error('Error processing email function call:', error)
+      return {
+        success: false,
+        details: { error: 'PROCESSING_ERROR' }
       }
     }
-  
+  }
+
   return {
     success: false,
     details: { error: 'NO_FUNCTION_CALLS' }
-  };
-};
+  }
+}
 
 // Helper function to generate a follow-up response after a function call
 const generateFollowUpResponse = (
@@ -176,39 +186,41 @@ const generateFollowUpResponse = (
   updateFullText: (text: string) => void
 ): void => {
   // Create a simple follow-up response based on the function call result
-  let responseText = "";
-  
+  let responseText = ''
+
   // Handle different function types - currently we only have email, but this makes it extensible
-  switch(functionName) {
+  switch (functionName) {
     case 'send_email':
-    // TODO: Make this dynamic with separate requests to the LLM
-    responseText = functionCallResult.success ? `\n\nThank you! Your email has been sent. Someone from the team will get back to you soon. Is there anything else I can help you with in the meantime?` : `\n\nI wasn't able to send your email at this time. You can reach out to the vineyard directly. Is there something else I can help you with today?`;
-      }
-  
+      // TODO: Make this dynamic with separate requests to the LLM
+      responseText = functionCallResult.success
+        ? `\n\nThank you! Your email has been sent. Someone from the team will get back to you soon. Is there anything else I can help you with in the meantime?`
+        : `\n\nI wasn't able to send your email at this time. You can reach out to the vineyard directly. Is there something else I can help you with today?`
+  }
+
   // Stream the response back to the client by sending it in small chunks
-  const chunkSize = 10; // Characters per chunk
-  let startIndex = 0;
-  
+  const chunkSize = 10 // Characters per chunk
+  let startIndex = 0
+
   // Function to stream text in chunks with a delay
   const streamTextChunks = () => {
-    while(startIndex < responseText.length) {
-      const endIndex = Math.min(startIndex + chunkSize, responseText.length);
-      const chunk = responseText.substring(startIndex, endIndex);
-      
-      // Send this chunk to the client
-      onChunk(chunk);
-      
-      // Move to the next chunk
-      startIndex = endIndex;
-    }
-  };
-  
-  // Start streaming the text chunks
-  streamTextChunks();
+    while (startIndex < responseText.length) {
+      const endIndex = Math.min(startIndex + chunkSize, responseText.length)
+      const chunk = responseText.substring(startIndex, endIndex)
 
-   // Add the full response text to the tracking variable
-  updateFullText(responseText);
-};
+      // Send this chunk to the client
+      onChunk(chunk)
+
+      // Move to the next chunk
+      startIndex = endIndex
+    }
+  }
+
+  // Start streaming the text chunks
+  streamTextChunks()
+
+  // Add the full response text to the tracking variable
+  updateFullText(responseText)
+}
 
 export const generateStreamingChatCompletion = async (
   messages: Message[],
@@ -223,13 +235,15 @@ export const generateStreamingChatCompletion = async (
       messages,
       MAX_MESSAGES_PER_CHAT
     )
-    
+
+    const systemPromptWithCurrentDate = `${settings.systemPrompt}\n\nThe current date is ${new Date().toLocaleDateString()}.`
+
     // Configure request options with tools if email function is enabled
     const requestOptions = {
       model: settings.model,
       input: limitedMessages,
       temperature: settings.temperature,
-      instructions: settings.systemPrompt,
+      instructions: systemPromptWithCurrentDate,
       stream: true,
       text: {
         format: {
@@ -238,12 +252,12 @@ export const generateStreamingChatCompletion = async (
       },
       ...(settings.enableEmailFunction ? { tools: [emailTool] } : {})
     } as const satisfies ResponseCreateParams
-    
+
     // Create the response with streaming enabled
     const response = await openai.responses.create(requestOptions)
 
     let fullText = ''
-    let functionCalls: ResponseFunctionToolCall[] = []
+    const functionCalls: ResponseFunctionToolCall[] = []
 
     try {
       for await (const chunk of response) {
@@ -253,40 +267,45 @@ export const generateStreamingChatCompletion = async (
         if (chunk.type === 'response.output_text.delta') {
           text = 'delta' in chunk ? chunk.delta : ''
         }
-        
+
         // Check if this chunk contains function calls
         if (
-          chunk.type === 'response.output_item.done'
-          && chunk.item.type === 'function_call'
+          chunk.type === 'response.output_item.done' &&
+          chunk.item.type === 'function_call'
         ) {
-          functionCalls.push(chunk.item);
+          functionCalls.push(chunk.item)
           // We'll handle function calls after streaming completes
         }
 
         if (text) {
           // Add to full text and send immediately
-          fullText += text;
-          onChunk(text);
+          fullText += text
+          onChunk(text)
         }
       }
-      
+
       // Process function calls after streaming completes if detected
       if (functionCalls.length > 0) {
-        await Promise.all(functionCalls.map(async (functionCall) => {          // Process the function call
-          const result = await handleFunctionCall(
-            functionCall,
-            messages,
-            settings.companyId
-          );
-          
-          // Generate and stream a simple follow-up response
-          generateFollowUpResponse(
-            functionCall.name,
-            result,
-            onChunk,
-            (text) => { fullText += text; }
-          );
-        }))
+        await Promise.all(
+          functionCalls.map(async functionCall => {
+            // Process the function call
+            const result = await handleFunctionCall(
+              functionCall,
+              messages,
+              settings.companyId
+            )
+
+            // Generate and stream a simple follow-up response
+            generateFollowUpResponse(
+              functionCall.name,
+              result,
+              onChunk,
+              text => {
+                fullText += text
+              }
+            )
+          })
+        )
       }
 
       return fullText
