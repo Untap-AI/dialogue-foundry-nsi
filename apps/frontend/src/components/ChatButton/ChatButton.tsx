@@ -57,7 +57,7 @@ export const ChatButton: React.FC<ChatButtonProps> = ({ onClick, isOpen }) => {
   }, [popupEnabled])
 
   return (
-    <div className="chat-button-container">
+    <>
       <button
         ref={buttonRef}
         data-chat-button
@@ -74,6 +74,6 @@ export const ChatButton: React.FC<ChatButtonProps> = ({ onClick, isOpen }) => {
       </button>
 
       {popupVisible && <PopupMessage buttonRef={buttonRef} />}
-    </div>
+    </>
   )
 }
