@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.7
+
+### Patch Changes
+
+- Fix popup race condition
+
 ## 0.2.6
 
 ### Patch Changes

@@ -6,6 +6,7 @@ import { PopupMessage } from './PopupMessage'
 const POPUP_DELAY = 3000
 const POPUP_DURATION = 10000
 const DIALOGUE_FOUNDRY_POPUP_KEY = 'dialogue_foundry_popup'
+const ANIMATION_CLASS = `chat-button-animation-twist`
 
 interface ChatButtonProps {
   onClick: () => void
@@ -18,18 +19,13 @@ export const ChatButton: React.FC<ChatButtonProps> = ({ onClick, isOpen }) => {
   const { popupMessage } = useConfig()
   const [popupVisible, setPopupVisible] = useState(false)
 
-  const popupEnabled = useMemo(
-    () =>
-      popupMessage &&
-      popupMessage.length > 0 &&
-      // This ensures the user is not shown the popup if they have already seen it
-      !localStorage.getItem(DIALOGUE_FOUNDRY_POPUP_KEY),
-    [popupMessage]
-  )
+  const popupEnabled = popupMessage &&
+      popupMessage.length > 0
 
   const handleClick = useCallback(() => {
     if (popupEnabled) {
       localStorage.setItem(DIALOGUE_FOUNDRY_POPUP_KEY, 'true')
+      buttonRef.current?.classList.remove()
       setPopupVisible(false)
     }
 
@@ -38,29 +34,29 @@ export const ChatButton: React.FC<ChatButtonProps> = ({ onClick, isOpen }) => {
 
   // Synchronize animation with popup visibility
   useEffect(() => {
-    if (!buttonRef.current || !popupEnabled) return
+    if (!buttonRef.current || !popupEnabled || localStorage.getItem(DIALOGUE_FOUNDRY_POPUP_KEY)) return
 
     const button = buttonRef.current
-    const animationClass = `chat-button-animation-twist`
 
     // Add animation class after popup delay (when popup appears)
     const startAnimationTimer = setTimeout(() => {
-      button.classList.add(animationClass)
+      if (localStorage.getItem(DIALOGUE_FOUNDRY_POPUP_KEY)) return
+
+      localStorage.setItem(DIALOGUE_FOUNDRY_POPUP_KEY, 'true')
+      button.classList.add(ANIMATION_CLASS)
       setPopupVisible(true)
     }, POPUP_DELAY)
 
-    localStorage.setItem(DIALOGUE_FOUNDRY_POPUP_KEY, 'true')
-
     // Remove animation class when popup disappears
     const stopAnimationTimer = setTimeout(() => {
-      button.classList.remove(animationClass)
+      button.classList.remove(ANIMATION_CLASS)
       setPopupVisible(false)
     }, POPUP_DELAY + POPUP_DURATION)
 
     return () => {
       clearTimeout(startAnimationTimer)
       clearTimeout(stopAnimationTimer)
-      button.classList.remove(animationClass)
+      button.classList.remove(ANIMATION_CLASS)
     }
   }, [popupEnabled])
 
