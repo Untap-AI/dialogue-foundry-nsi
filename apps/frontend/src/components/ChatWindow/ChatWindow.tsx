@@ -28,7 +28,7 @@ export const ChatWindow = forwardRef<HTMLDivElement, ChatWindowProps>(
     return (
       <div ref={ref} className={getClassName()} aria-hidden={!isOpen}>
         <ChatHeader onClose={onClose} />
-        <ChatInterface />
+        <ChatInterface isOpen={isOpen} />
       </div>
     )
   }
