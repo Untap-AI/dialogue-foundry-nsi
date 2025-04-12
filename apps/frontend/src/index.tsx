@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom/client'
 // Component CSS files are imported directly in their respective components
 import App from './App'
 import { ConfigProvider } from './contexts/ConfigContext'
+import { initLogger } from './services/logger'
 
 // For production builds, CSS will be included through the normal build process
 // The development CSS is injected via the script in index.html
@@ -12,7 +13,6 @@ import { ConfigProvider } from './contexts/ConfigContext'
 interface DialogueFoundryOptions {
   // Add any configuration options here
   theme?: 'light' | 'dark'
-  // Add more options as needed
 }
 
 /**
@@ -28,6 +28,12 @@ function init(
     console.error('DialogueFoundry: Root element not found')
     return
   }
+
+  console.log((import.meta as any).env.REACT_APP_SENTRY_DSN)
+
+  initLogger({
+    dsn: (import.meta as any).env.REACT_APP_SENTRY_DSN
+  })
 
   // Create React root
   const root = ReactDOM.createRoot(rootElement)

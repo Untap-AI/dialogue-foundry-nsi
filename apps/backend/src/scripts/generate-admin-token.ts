@@ -12,13 +12,16 @@ import * as readline from 'readline'
 import path from 'path'
 import dotenv from 'dotenv'
 import { generateAdminAccessToken } from '../lib/jwt-utils'
+import { logger } from '../lib/logger'
 
 // Load environment variables from project root
 dotenv.config({ path: path.resolve(process.cwd(), '.env') })
 
 // Check for required environment variables
 if (!process.env.ADMIN_JWT_SECRET) {
-  console.error('Error: ADMIN_JWT_SECRET environment variable is not set.')
+  logger.error('ADMIN_JWT_SECRET environment variable is not set', {
+    service: 'generate-admin-token'
+  })
   console.error('Please set it in your .env file and try again.')
   process.exit(1)
 }
@@ -41,6 +44,11 @@ async function main() {
       : 43200) / 3600
 
   // Output the token with usage instructions
+  logger.info(`Admin token generated for user ${userId}`, {
+    expiryHours,
+    service: 'generate-admin-token'
+  })
+
   console.log('\n-------- ADMIN ACCESS TOKEN --------')
   console.log(`\nToken for user "${userId}":\n`)
   console.log(token)
@@ -72,6 +80,9 @@ async function promptForUserId(): Promise<string> {
 
 // Run the script
 main().catch(error => {
-  console.error('Error generating admin token:', error)
+  logger.error('Error generating admin token', {
+    error: error as Error,
+    service: 'generate-admin-token'
+  })
   process.exit(1)
 })

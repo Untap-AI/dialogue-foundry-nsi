@@ -28,6 +28,7 @@ import {
   formatDocumentsAsContext
 } from '../services/pinecone-service'
 import { cacheService } from '../services/cache-service'
+import { logger } from '../lib/logger'
 import type { CustomRequest } from '../middleware/auth-middleware'
 import type { Message, ChatSettings } from '../services/openai-service'
 
@@ -151,8 +152,11 @@ router.get('/company/:companyId', async (req, res) => {
 
     return res.json({ chats })
   } catch (error) {
-    console.error('Error getting company chats:', error)
-    return res.status(500).json({ error })
+    logger.error('Error getting company chats', {
+      error: error as Error,
+      companyId: req.params.companyId
+    })
+    return res.status(500).json({ error: 'Failed to get company chats' })
   }
 })
 
@@ -227,7 +231,11 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
         error: errorMessage,
         code: errorCode
       }
-      console.log('Sending error event:', errorData)
+      logger.warn('Sending error event to client', {
+        errorCode,
+        errorMessage,
+        endpoint: req.originalUrl
+      })
       res.write(`data: ${JSON.stringify(errorData)}\n\n`)
       // Send a clean termination signal
       res.write(':\n\n')
@@ -433,7 +441,11 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       }
     })
   } catch (error) {
-    console.error('Error in streaming chat message endpoint:', error)
+    logger.error('Error in streaming chat message endpoint', {
+      error: error as Error,
+      chatId: req.params.chatId,
+      userId: req.user?.userId
+    })
 
     // Check if this is an authentication error
     if (

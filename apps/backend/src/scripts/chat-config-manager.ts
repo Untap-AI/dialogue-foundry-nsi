@@ -9,6 +9,7 @@ import {
   updateChatConfig,
   deleteChatConfig
 } from '../db/chat-configs'
+import { logger } from '../lib/logger'
 
 // Load environment variables
 dotenv.config()
@@ -268,6 +269,8 @@ async function main(): Promise<void> {
 
 // Run the script
 main().catch(error => {
-  console.error('Error running chat configuration manager:', error)
+  logger.error('Error running chat configuration manager', {
+    error: error as Error
+  })
   process.exit(1)
 })

@@ -8,6 +8,7 @@ import {
   updateChatConfig,
   deleteChatConfig
 } from '../db/chat-configs'
+import { logger } from '../lib/logger'
 
 // Load environment variables
 dotenv.config()
@@ -207,6 +208,6 @@ Usage:
 }
 
 main().catch(error => {
-  console.error('Unhandled error:', error)
+  logger.error('Unhandled error in chat config CLI', { error: error as Error })
   process.exit(1)
 })

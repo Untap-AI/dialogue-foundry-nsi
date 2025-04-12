@@ -69,6 +69,9 @@ services:
         sync: false
       - key: SENDGRID_FROM_EMAIL
         sync: false
-        
+      - key: JWT_SECRET
+        sync: false
+      - key: JWT_EXPIRY
+        sync: false
     # Disable auto-deploy for production
     autoDeploy: false 

@@ -73,7 +73,7 @@ export function ConfigProvider({
   useEffect(() => {
     // Function to load config from an external JSON file
     const loadExternalConfig = async () => {
-      if (process.env.NODE_ENV === 'development') {
+      if ((import.meta as any).env.REACT_APP_ENV === 'development') {
         setConfigLoaded(true)
         return
       }

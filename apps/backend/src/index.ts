@@ -5,6 +5,7 @@ import chatRoutes from './routes/chat-routes'
 import chatConfigRoutes from './routes/chat-config-routes'
 import cacheRoutes from './routes/cache-routes'
 import adminRoutes from './routes/admin-routes'
+import { logger } from './lib/logger'
 
 // Load environment variables
 dotenv.config()
@@ -72,13 +73,16 @@ app.use(
     res: express.Response,
     next: express.NextFunction
   ) => {
-    // Log the error
-    console.error('Express error handler triggered:')
-    console.error(err.stack || err)
+    // Log the error with our Sentry logger
+    logger.error(err, {
+      stack: err.stack,
+      message: err.message,
+      name: err.name
+    })
 
     // Safety check to ensure res is valid and has status method
     if (!res || typeof res.status !== 'function') {
-      console.error('Invalid response object in error handler:', res)
+      logger.error('Invalid response object in error handler', { res })
       return next(err) // Try to pass to default Express error handler
     }
 
@@ -108,8 +112,8 @@ app.use(
 
 // Start the server
 app.listen(port, () => {
-  console.info(`Server is running on port ${port}`)
-  console.info(`Health check: http://localhost:${port}/health`)
+  logger.info(`Server is running on port ${port}`)
+  logger.info(`Health check: http://localhost:${port}/health`)
 })
 
 export default app

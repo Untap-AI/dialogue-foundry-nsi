@@ -2,6 +2,7 @@ import express from 'express'
 import dotenv from 'dotenv'
 import { authenticateAdmin } from '../middleware/auth-middleware'
 import { generateAdminAccessToken } from '../lib/jwt-utils'
+import { logger } from '../lib/logger'
 import type { CustomRequest } from '../middleware/auth-middleware'
 
 dotenv.config()
@@ -29,7 +30,10 @@ router.post('/token', authenticateAdmin, async (req: CustomRequest, res) => {
       timestamp: new Date().toISOString()
     })
   } catch (error) {
-    console.error('Error generating admin token:', error)
+    logger.error('Error generating admin token', {
+      error: error as Error,
+      userId: req.body.userId || req.user?.userId || 'admin-user'
+    })
     return res.status(500).json({ error: 'Failed to generate admin token' })
   }
 })
@@ -47,7 +51,10 @@ router.get('/verify', authenticateAdmin, async (req: CustomRequest, res) => {
       timestamp: new Date().toISOString()
     })
   } catch (error) {
-    console.error('Error in admin verification:', error)
+    logger.error('Error in admin verification', {
+      error: error as Error,
+      requestedBy: req.user?.userId
+    })
     return res.status(500).json({ error: 'Admin verification failed' })
   }
 })

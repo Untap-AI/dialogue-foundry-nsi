@@ -1,6 +1,7 @@
 import sgMail from '@sendgrid/mail'
 import dotenv from 'dotenv'
 import { getChatConfigByCompanyId } from '../db/chat-configs'
+import { logger } from '../lib/logger'
 import { cacheService } from './cache-service'
 import type { MailDataRequired } from '@sendgrid/mail'
 
@@ -58,8 +59,12 @@ export const sendInquiryEmail = async (
       (await getChatConfigByCompanyId(emailData.companyId))
 
     if (!companyConfig) {
-      console.error(
-        `No company config found for company ID: ${emailData.companyId}`
+      logger.error(
+        `No company config found for company ID: ${emailData.companyId}`,
+        {
+          companyId: emailData.companyId,
+          service: 'sendgrid-service'
+        }
       )
       return false
     }
@@ -84,8 +89,12 @@ export const sendInquiryEmail = async (
 
     // This should never happen, but is required for type safety
     if (!supportEmail) {
-      console.error(
-        `No support email found for company ID: ${emailData.companyId}`
+      logger.error(
+        `No support email found for company ID: ${emailData.companyId}`,
+        {
+          companyId: emailData.companyId,
+          service: 'sendgrid-service'
+        }
       )
       return false
     }
@@ -115,12 +124,25 @@ export const sendInquiryEmail = async (
 
     // Send the email
     await sgMail.send(msg)
+    logger.info('Email sent successfully', {
+      to: supportEmail,
+      subject: emailData.subject,
+      service: 'sendgrid-service'
+    })
 
     return true
   } catch (error) {
-    console.error('Error sending email:', error)
+    logger.error('Error sending email', {
+      error: error as Error,
+      userEmail: emailData.userEmail,
+      companyId: emailData.companyId,
+      service: 'sendgrid-service'
+    })
     if (error.response) {
-      console.error('SendGrid API response error details:', error.response.body)
+      logger.error('SendGrid API response error details', {
+        responseBody: error.response.body,
+        service: 'sendgrid-service'
+      })
     }
     return false
   }

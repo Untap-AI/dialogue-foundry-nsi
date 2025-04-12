@@ -1,6 +1,7 @@
 import express from 'express'
 import { authenticateAdmin } from '../middleware/auth-middleware'
 import { cacheService } from '../services/cache-service'
+import { logger } from '../lib/logger'
 import type { CustomRequest } from '../middleware/auth-middleware'
 
 const router = express.Router()
@@ -20,7 +21,10 @@ router.get('/stats', authenticateAdmin, async (req: CustomRequest, res) => {
       requestedBy: req.user?.userId
     })
   } catch (error) {
-    console.error('Error retrieving cache statistics:', error)
+    logger.error('Error retrieving cache statistics', {
+      error: error as Error,
+      requestedBy: req.user?.userId
+    })
     return res
       .status(500)
       .json({ error: 'Failed to retrieve cache statistics' })
@@ -43,7 +47,10 @@ router.post('/flush', authenticateAdmin, async (req: CustomRequest, res) => {
       requestedBy: req.user?.userId
     })
   } catch (error) {
-    console.error('Error flushing caches:', error)
+    logger.error('Error flushing caches', {
+      error: error as Error,
+      requestedBy: req.user?.userId
+    })
     return res.status(500).json({ error: 'Failed to flush caches' })
   }
 })
@@ -80,7 +87,11 @@ router.post(
         requestedBy: req.user?.userId
       })
     } catch (error) {
-      console.error('Error flushing specific cache:', error)
+      logger.error('Error flushing specific cache', {
+        error: error as Error,
+        cacheName: req.params.cacheName,
+        requestedBy: req.user?.userId
+      })
       return res.status(500).json({ error: 'Failed to flush cache' })
     }
   }

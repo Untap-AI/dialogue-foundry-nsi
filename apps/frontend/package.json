@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && BUILD_MODE=full vite build",
+    "build": "tsc -b && BUILD_MODE=full REACT_APP_ENV=production vite build",
     "start": "vite --host",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf dist && rm -rf node_modules",
@@ -19,6 +19,8 @@
   "dependencies": {
     "@nlux/react": "^2",
     "@nlux/themes": "^2",
+    "@sentry/browser": "^9.12.0",
+    "@sentry/react": "^9.12.0",
     "axios": "^1.8.4",
     "lodash": "^4.17.21",
     "react": "^19.0.0",

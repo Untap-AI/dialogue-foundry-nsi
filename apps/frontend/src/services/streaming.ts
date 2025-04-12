@@ -1,12 +1,8 @@
 import { DEFAULT_TOKEN_STORAGE_KEY, DEFAULT_CHAT_ID_STORAGE_KEY } from './api'
-import { 
-  StreamingError, 
-  ErrorCodes, 
-  isErrorCode, 
-  ErrorCodeValue
-} from './errors'
+import { StreamingError, ErrorCodes, isErrorCode } from './errors'
+import { logger } from './logger'
+import type { ErrorCodeValue } from './errors'
 import type { ChatConfig } from './api'
-import console from 'console'
 
 // Define the SSE event types for TypeScript
 interface SSEMessageEvent extends MessageEvent {
@@ -44,6 +40,12 @@ export class ChatStreamingService {
     this.chatIdStorageKey =
       config.chatIdStorageKey || DEFAULT_CHAT_ID_STORAGE_KEY
     this.storage = localStorage
+
+    // Log service initialization
+    logger.info('ChatStreamingService initialized', {
+      apiBaseUrl: this.apiBaseUrl,
+      companyId: this.companyId
+    })
   }
 
   /**
@@ -52,6 +54,8 @@ export class ChatStreamingService {
    */
   async initializeNewChat(): Promise<string> {
     try {
+      logger.info('Initializing new chat session')
+
       const response = await fetch(`${this.apiBaseUrl}/chats`, {
         method: 'POST',
         headers: {
@@ -64,10 +68,15 @@ export class ChatStreamingService {
       })
 
       if (!response.ok) {
-        throw new StreamingError(
-          ErrorCodes.INITIALIZATION_ERROR,
-          true
-        )
+        const error = new StreamingError(ErrorCodes.INITIALIZATION_ERROR, true)
+
+        logger.captureException(error, {
+          status: response.status,
+          statusText: response.statusText,
+          url: response.url
+        })
+
+        throw error
       }
 
       const data = await response.json()
@@ -76,16 +85,28 @@ export class ChatStreamingService {
       this.storage.setItem(this.tokenStorageKey, data.accessToken)
       this.storage.setItem(this.chatIdStorageKey, data.chat.id)
 
+      logger.info('New chat initialized successfully', {
+        chatId: data.chat.id
+      })
+
       return data.chat.id
     } catch (error) {
+      logger.error('Failed to initialize new chat', { error })
+
       if (error instanceof StreamingError) {
         throw error
       }
 
-      throw new StreamingError(
+      const initError = new StreamingError(
         ErrorCodes.INITIALIZATION_ERROR,
         true
       )
+
+      logger.captureException(initError, {
+        originalError: error
+      })
+
+      throw initError
     }
   }
 
@@ -98,6 +119,8 @@ export class ChatStreamingService {
     if (now - this.lastReconnectTime > this.RECONNECT_RESET_TIME) {
       this.reconnectAttempts = 0
       this.tokenReconnectAttempts = 0 // Also reset token reconnect attempts
+
+      logger.debug('Reset reconnection counters due to elapsed time')
     }
   }
 
@@ -121,12 +144,17 @@ export class ChatStreamingService {
 
     // Check if we've exceeded maximum reconnection attempts
     if (this.reconnectAttempts >= this.MAX_RECONNECT_ATTEMPTS) {
-      onError(
-        new StreamingError(
-          ErrorCodes.RECONNECT_LIMIT,
-          false
-        )
+      const reconnectError = new StreamingError(
+        ErrorCodes.RECONNECT_LIMIT,
+        false
       )
+
+      logger.captureException(reconnectError, {
+        reconnectAttempts: this.reconnectAttempts,
+        maxReconnectAttempts: this.MAX_RECONNECT_ATTEMPTS
+      })
+
+      onError(reconnectError)
       return
     }
 
@@ -137,32 +165,42 @@ export class ChatStreamingService {
     if (!chatId || !token) {
       try {
         if (!this.isReconnecting) {
+          logger.info('Missing chat ID or token, initializing new chat')
           await this.initializeNewChat()
           chatId = this.storage.getItem(this.chatIdStorageKey)
           token = this.storage.getItem(this.tokenStorageKey)
         } else {
           // We're already trying to reconnect but still no token/chatId
-          onError(
-            new StreamingError(
-              ErrorCodes.INITIALIZATION_ERROR,
-              false
-            )
+          const initError = new StreamingError(
+            ErrorCodes.INITIALIZATION_ERROR,
+            false
           )
+
+          logger.captureException(initError, {
+            isReconnecting: this.isReconnecting,
+            chatId: !!chatId,
+            token: !!token
+          })
+
+          onError(initError)
           return
         }
       } catch (initError) {
-        onError(
-          new StreamingError(
-            ErrorCodes.INITIALIZATION_ERROR,
-            true
-          )
-        )
+        const error = new StreamingError(ErrorCodes.INITIALIZATION_ERROR, true)
+
+        logger.captureException(error, {
+          originalError: initError
+        })
+
+        onError(error)
         return
       }
     }
 
     // Check token validity before proceeding
     try {
+      logger.debug('Checking token validity', { chatId })
+
       const testResponse = await fetch(`${this.apiBaseUrl}/chats/${chatId}`, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -171,6 +209,11 @@ export class ChatStreamingService {
 
       if (!testResponse.ok) {
         if (testResponse.status === 401) {
+          logger.warning('Token is invalid, attempting to reconnect', {
+            status: testResponse.status,
+            chatId
+          })
+
           // If token is invalid, try to reconnect
           this.handleTokenError(
             userQuery,
@@ -183,7 +226,10 @@ export class ChatStreamingService {
         }
       }
     } catch (error) {
-      // Continue anyway, as this might just be a network error
+      // Log the error but continue anyway, as this might just be a network error
+      logger.debug('Error checking token validity, continuing anyway', {
+        error
+      })
     }
 
     // Close any existing EventSource
@@ -198,6 +244,8 @@ export class ChatStreamingService {
     }
 
     try {
+      logger.debug('Establishing SSE connection', { chatId })
+
       // Create a new EventSource connection
       this.eventSource = new EventSource(url.toString())
 
@@ -208,6 +256,7 @@ export class ChatStreamingService {
       // Reset error count when connection successfully opens
       this.eventSource.onopen = () => {
         errorCount = 0
+        logger.debug('SSE connection opened successfully')
       }
 
       // Handle incoming messages
@@ -220,13 +269,26 @@ export class ChatStreamingService {
 
           // Check for any kind of error message from the server
           if (data.type === 'error') {
-            this.handleServerError(userQuery, data, onChunk, onComplete, onError, companyId);
-            return;
+            logger.warning('Received error in SSE message', {
+              errorMessage: data.error,
+              errorCode: data.code
+            })
+
+            this.handleServerError(
+              userQuery,
+              data,
+              onChunk,
+              onComplete,
+              onError,
+              companyId
+            )
+            return
           }
 
           // If not an error, process normal message types
           switch (data.type) {
             case 'connected':
+              logger.debug('SSE connected message received')
               break
 
             case 'chunk':
@@ -240,6 +302,11 @@ export class ChatStreamingService {
               break
 
             case 'done':
+              logger.info('SSE stream completed successfully', {
+                chatId,
+                messageLength: fullText.length
+              })
+
               // Mark that we're intentionally closing before invoking callbacks or cleanup
               this.isClosingConnection = true
 
@@ -258,12 +325,14 @@ export class ChatStreamingService {
               break
           }
         } catch (parseError) {
-          onError(
-            new StreamingError(
-              ErrorCodes.PARSE_ERROR,
-              true
-            )
-          )
+          const error = new StreamingError(ErrorCodes.PARSE_ERROR, true)
+
+          logger.captureException(error, {
+            originalError: parseError,
+            rawData: event.data
+          })
+
+          onError(error)
           this.closeEventSource()
         }
       }
@@ -285,7 +354,9 @@ export class ChatStreamingService {
 
         // Log only the first few errors to avoid console spam
         if (errorCount <= maxSilentErrors) {
-          console.warn(`EventSource error #${errorCount}`)
+          logger.warning(`EventSource error #${errorCount}`, {
+            readyState: this.eventSource?.readyState
+          })
         }
 
         // Don't react to reconnection attempts
@@ -296,23 +367,31 @@ export class ChatStreamingService {
 
         // Only notify user after multiple consecutive errors (actual connection problems)
         if (errorCount > 5) {
-          onError(
-            new StreamingError(
-              ErrorCodes.CONNECTION_ERROR,
-              true
-            )
+          const connectionError = new StreamingError(
+            ErrorCodes.CONNECTION_ERROR,
+            true
           )
+
+          logger.captureException(connectionError, {
+            errorCount,
+            readyState: this.eventSource?.readyState
+          })
+
+          onError(connectionError)
         }
       }
     } catch (error) {
-      onError(
+      const streamError =
         error instanceof StreamingError
           ? error
-          : new StreamingError(
-              ErrorCodes.CONNECTION_ERROR,
-              true
-            )
-      )
+          : new StreamingError(ErrorCodes.CONNECTION_ERROR, true)
+
+      logger.captureException(streamError, {
+        originalError: error,
+        chatId
+      })
+
+      onError(streamError)
       this.closeEventSource()
     }
   }
@@ -329,53 +408,70 @@ export class ChatStreamingService {
     companyId?: string
   ): void {
     // Validate the error code and set a default if invalid
-    const errorCode = data.code && isErrorCode(data.code) 
-      ? data.code 
-      : ErrorCodes.UNKNOWN_ERROR;
-    
+    const errorCode =
+      data.code && isErrorCode(data.code) ? data.code : ErrorCodes.UNKNOWN_ERROR
+
+    logger.warning('Handling server error', {
+      errorCode,
+      errorMessage: data.error
+    })
+
     // Handle different error codes
     switch (errorCode) {
       // Authentication errors - need to renew session
       case ErrorCodes.TOKEN_INVALID:
       case ErrorCodes.TOKEN_MISSING:
-        this.handleTokenError(userQuery, onChunk, onComplete, onError, companyId);
-        break;
-      
+        this.handleTokenError(
+          userQuery,
+          onChunk,
+          onComplete,
+          onError,
+          companyId
+        )
+        break
+
       // Chat errors - create a new chat session
       case ErrorCodes.NOT_FOUND:
       case ErrorCodes.INVALID_CHAT:
       case ErrorCodes.INVALID_COMPANY:
         this.handleChatError(
           userQuery,
-          onChunk, 
-          onComplete, 
-          onError, 
+          onChunk,
+          onComplete,
+          onError,
           companyId,
-          errorCode,
-        );
-        break;
-      
+          errorCode
+        )
+        break
+
       // Request errors - can't recover without user changing input
       case ErrorCodes.INVALID_REQUEST:
-        onError(
-          new StreamingError(
-            errorCode,
-            true // User can try again with a different message
-          )
-        );
-        this.closeEventSource();
-        break;
-      
+        // eslint-disable-next-line no-case-declarations
+        const requestError = new StreamingError(
+          errorCode,
+          true // User can try again with a different message
+        )
+
+        logger.captureException(requestError, {
+          errorMessage: data.error
+        })
+
+        onError(requestError)
+        this.closeEventSource()
+        break
+
       // All other errors
       default:
-        onError(
-          new StreamingError(
-            errorCode,
-            true
-          )
-        );
-        this.closeEventSource();
-        break;
+        // eslint-disable-next-line no-case-declarations
+        const genericError = new StreamingError(errorCode, true)
+
+        logger.captureException(genericError, {
+          errorMessage: data.error
+        })
+
+        onError(genericError)
+        this.closeEventSource()
+        break
     }
   }
 
@@ -403,38 +499,51 @@ export class ChatStreamingService {
     this.tokenReconnectAttempts++
     this.lastReconnectTime = Date.now()
 
+    logger.info('Handling token error', {
+      reconnectAttempts: this.reconnectAttempts,
+      tokenReconnectAttempts: this.tokenReconnectAttempts
+    })
+
     // Check if we've exceeded maximum token reconnection attempts (limit to 1)
     if (this.tokenReconnectAttempts > this.MAX_TOKEN_RECONNECT_ATTEMPTS) {
-      onError(
-        new StreamingError(
-          ErrorCodes.TOKEN_INVALID,
-          false
-        )
-      )
+      const tokenError = new StreamingError(ErrorCodes.TOKEN_INVALID, false)
+
+      logger.captureException(tokenError, {
+        tokenReconnectAttempts: this.tokenReconnectAttempts,
+        maxTokenReconnectAttempts: this.MAX_TOKEN_RECONNECT_ATTEMPTS
+      })
+
+      onError(tokenError)
       this.isReconnecting = false
       return
     }
 
     // Check if we've exceeded maximum reconnection attempts
     if (this.reconnectAttempts > this.MAX_RECONNECT_ATTEMPTS) {
-      onError(
-        new StreamingError(
-          ErrorCodes.RECONNECT_LIMIT,
-          false
-        )
+      const reconnectError = new StreamingError(
+        ErrorCodes.RECONNECT_LIMIT,
+        false
       )
+
+      logger.captureException(reconnectError, {
+        reconnectAttempts: this.reconnectAttempts,
+        maxReconnectAttempts: this.MAX_RECONNECT_ATTEMPTS
+      })
+
+      onError(reconnectError)
       this.isReconnecting = false
       return
     }
 
     if (this.isReconnecting) {
       // Avoid nested reconnection loops
-      onError(
-        new StreamingError(
-          ErrorCodes.TOKEN_INVALID,
-          false
-        )
-      )
+      const nestingError = new StreamingError(ErrorCodes.TOKEN_INVALID, false)
+
+      logger.captureException(nestingError, {
+        message: 'Nested reconnection attempt prevented'
+      })
+
+      onError(nestingError)
       this.isReconnecting = false
       return
     }
@@ -444,6 +553,8 @@ export class ChatStreamingService {
     try {
       // Calculate backoff time for exponential retry
       const backoffTime = this.getBackoffTime()
+
+      logger.debug(`Waiting for backoff time before retry: ${backoffTime}ms`)
 
       // Wait for backoff time before retrying
       await new Promise(resolve => setTimeout(resolve, backoffTime))
@@ -455,16 +566,25 @@ export class ChatStreamingService {
       // Initialize a new chat
       await this.initializeNewChat()
 
+      logger.info('Retrying stream after token error resolution')
+
       // Retry the streaming request
-      await this.streamMessage(userQuery, onChunk, onComplete, onError, companyId)
+      await this.streamMessage(
+        userQuery,
+        onChunk,
+        onComplete,
+        onError,
+        companyId
+      )
       this.isReconnecting = false
     } catch (error) {
-      onError(
-        new StreamingError(
-          ErrorCodes.TOKEN_INVALID,
-          false
-        )
-      )
+      const retryError = new StreamingError(ErrorCodes.TOKEN_INVALID, false)
+
+      logger.captureException(retryError, {
+        originalError: error
+      })
+
+      onError(retryError)
       this.isReconnecting = false
     }
   }
@@ -479,7 +599,7 @@ export class ChatStreamingService {
     onComplete: (fullText: string) => void,
     onError: (error: Error) => void,
     companyId?: string,
-    errorCode: ErrorCodeValue = ErrorCodes.CONFIGURATION_ERROR,
+    errorCode: ErrorCodeValue = ErrorCodes.CONFIGURATION_ERROR
   ): Promise<void> {
     this.closeEventSource()
 
@@ -487,34 +607,47 @@ export class ChatStreamingService {
     this.reconnectAttempts++
     this.lastReconnectTime = Date.now()
 
+    logger.info('Handling chat error', {
+      errorCode,
+      reconnectAttempts: this.reconnectAttempts
+    })
+
     // Notify the user of the issue
-    onError(
-      new StreamingError(
-        errorCode,
-        true // These errors are recoverable
-      )
+    const chatError = new StreamingError(
+      errorCode,
+      true // These errors are recoverable
     )
+
+    logger.captureException(chatError)
+    onError(chatError)
 
     // Check if we've exceeded maximum reconnection attempts
     if (this.reconnectAttempts > this.MAX_RECONNECT_ATTEMPTS) {
-      onError(
-        new StreamingError(
-          ErrorCodes.RECONNECT_LIMIT,
-          false
-        )
+      const reconnectError = new StreamingError(
+        ErrorCodes.RECONNECT_LIMIT,
+        false
       )
+
+      logger.captureException(reconnectError, {
+        reconnectAttempts: this.reconnectAttempts,
+        maxReconnectAttempts: this.MAX_RECONNECT_ATTEMPTS
+      })
+
+      onError(reconnectError)
       this.isReconnecting = false
       return
     }
 
     if (this.isReconnecting) {
       // Avoid nested reconnection loops
-      onError(
-        new StreamingError(
-          errorCode,
-          false
-        )
-      )
+      const nestingError = new StreamingError(errorCode, false)
+
+      logger.captureException(nestingError, {
+        message: 'Nested reconnection attempt prevented',
+        errorCode
+      })
+
+      onError(nestingError)
       this.isReconnecting = false
       return
     }
@@ -524,6 +657,8 @@ export class ChatStreamingService {
     try {
       // Calculate backoff time for exponential retry
       const backoffTime = this.getBackoffTime()
+
+      logger.debug(`Waiting for backoff time before retry: ${backoffTime}ms`)
 
       // Wait for backoff time before retrying
       await new Promise(resolve => setTimeout(resolve, backoffTime))
@@ -535,16 +670,28 @@ export class ChatStreamingService {
       // Initialize a new chat
       await this.initializeNewChat()
 
+      logger.info('Retrying stream after chat error resolution')
+
       // Retry the streaming request
-      await this.streamMessage(userQuery, onChunk, onComplete, onError, companyId)
+      await this.streamMessage(
+        userQuery,
+        onChunk,
+        onComplete,
+        onError,
+        companyId
+      )
       this.isReconnecting = false
     } catch (error) {
-      onError(
-        new StreamingError(
-          ErrorCodes.INITIALIZATION_ERROR,
-          false
-        )
+      const initError = new StreamingError(
+        ErrorCodes.INITIALIZATION_ERROR,
+        false
       )
+
+      logger.captureException(initError, {
+        originalError: error
+      })
+
+      onError(initError)
       this.isReconnecting = false
     }
   }
@@ -554,6 +701,8 @@ export class ChatStreamingService {
    */
   private closeEventSource(): void {
     if (this.eventSource) {
+      logger.debug('Closing EventSource connection')
+
       // Set flag before any operations that might trigger events
       this.isClosingConnection = true
 
@@ -575,6 +724,7 @@ export class ChatStreamingService {
    * Cancel ongoing stream if one exists
    */
   cancelStream(): void {
+    logger.debug('Cancelling active stream')
     this.isClosingConnection = true
     this.closeEventSource()
   }
@@ -584,6 +734,8 @@ export class ChatStreamingService {
    * Call this when the user manually reloads or takes action to resolve issues
    */
   resetReconnectionState(): void {
+    logger.info('Resetting reconnection state')
+
     this.reconnectAttempts = 0
     this.tokenReconnectAttempts = 0 // Also reset token reconnect attempts
     this.lastReconnectTime = 0
