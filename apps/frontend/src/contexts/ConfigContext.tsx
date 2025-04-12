@@ -23,26 +23,7 @@ export interface DialogueFoundryConfig {
   logoUrl?: string
   
   // Welcome popup configuration
-  welcomePopup?: {
-    enabled: boolean;
-    message: string;
-    delay: number;
-    duration: number;
-    fontSize: string;
-    backgroundColor: string;
-    textColor: string;
-    borderRadius: string;
-    padding: string;
-    boxShadow: string;
-    maxWidth: string;
-  };
-  
-  // Button animation configuration
-  buttonAnimation?: {
-    enabled: boolean;
-    type: string;
-    duration: string;
-  };
+  popupMessage?: string
 }
 
 // Default configuration
@@ -67,28 +48,7 @@ export const defaultConfig: DialogueFoundryConfig = {
         'https://michigangrown.org/wp-content/uploads/2022/09/grapes-wine-main-updated-1024x683.jpg'
     }
   },
-  
-  // Welcome popup configuration
-  welcomePopup: {
-    enabled: true,
-    message: "🍷 Hi! I'm your West Hills Vineyards assistant, click me if you need help or have any questions!",
-    delay: 2000,
-    duration: 10000,
-    fontSize: "16px",
-    backgroundColor: "var(--df-primary-color)",
-    textColor: "var(--df-bg-primary)",
-    borderRadius: "10px",
-    padding: "16px 20px",
-    boxShadow: "0 6px 16px rgba(0, 0, 0, 0.18)",
-    maxWidth: "320px"
-  },
-  
-  // Button animation configuration
-  buttonAnimation: {
-    enabled: true,
-    type: "twist",
-    duration: "3s"
-  }
+  popupMessage: '🍷 Hi! I’m your West Hills Vineyards assistant, click me if you need help or have any questions!'
 }
 
 // Create the context with default values

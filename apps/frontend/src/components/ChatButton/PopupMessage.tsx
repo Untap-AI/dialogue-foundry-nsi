@@ -1,71 +1,56 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import './PopupMessage.css';
+import { useConfig } from 'src/contexts/ConfigContext';
 
 interface PopupMessageProps {
-  config: {
-    enabled: boolean;
-    message: string;
-    delay: number;
-    duration: number;
-    fontSize: string;
-    backgroundColor: string;
-    textColor: string;
-    borderRadius: string;
-    padding: string;
-    boxShadow: string;
-    maxWidth: string;
-  };
-  buttonRef: React.RefObject<HTMLButtonElement>;
-  visible: boolean;
-  setVisible: (visible: boolean) => void;
+
 }
 
 export const PopupMessage: React.FC<PopupMessageProps> = ({ 
   config, 
   buttonRef, 
   visible,
-  setVisible 
 }) => {
-  // Calculate position relative to the button
-  const getPosition = () => {
-    if (!buttonRef.current) return { right: '20px', bottom: '80px' };
-    
-    const buttonRect = buttonRef.current.getBoundingClientRect();
-    const buttonHeight = buttonRect.height;
-    // Use button height + an offset to calculate position
-    const offset = buttonHeight + 33;
-    
-    return {
-      right: '20px',
-      bottom: `${offset}px`
-    };
-  };
 
+  const { popupMessage } = useConfig()
+
+  const [popupVisible, setPopupVisible] = useState(false);
+  
+  // Synchronize animation with popup visibility
   useEffect(() => {
-    if (!config.enabled) return;
+    if (!buttonRef.current || !buttonAnimation.enabled || !welcomePopup.enabled) return;
 
-    // The parent component now controls visibility
+    const button = buttonRef.current;
+    const animationClass = `chat-button-animation-${buttonAnimation.type}`;
+    
+    // Add animation class after popup delay (when popup appears)
+    const startAnimationTimer = setTimeout(() => {
+      console.log('Starting button animation');
+      button.classList.add(animationClass);
+      setPopupVisible(true);
+    }, welcomePopup.delay);
+    
+    // Remove animation class when popup disappears
+    const stopAnimationTimer = setTimeout(() => {
+      console.log('Stopping button animation');
+      button.classList.remove(animationClass);
+      setPopupVisible(false);
+    }, welcomePopup.delay + welcomePopup.duration);
+    
     return () => {
-      // Cleanup if needed
+      clearTimeout(startAnimationTimer);
+      clearTimeout(stopAnimationTimer);
+      button.classList.remove(animationClass);
     };
-  }, [config]);
-
-  if (!config.enabled || !visible) return null;
+  }, [buttonAnimation, welcomePopup]);
 
   const popupStyle = {
     ...getPosition(),
-    fontSize: config.fontSize,
-    backgroundColor: config.backgroundColor,
-    color: config.textColor,
-    borderRadius: config.borderRadius,
-    padding: config.padding,
-    boxShadow: config.boxShadow,
-    maxWidth: config.maxWidth
   };
 
   return (
     <div className="chat-popup-message" style={popupStyle}>
-      <p>{config.message}</p>
+      <p>{popupMessage}</p>
       <div className="chat-popup-arrow"></div>
     </div>
   );
