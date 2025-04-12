@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, useState, useMemo } from 'react'
+import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react'
 import './ChatButton.css'
 import { useConfig } from '../../contexts/ConfigContext'
 import { PopupMessage } from './PopupMessage'
@@ -26,6 +26,15 @@ export const ChatButton: React.FC<ChatButtonProps> = ({ onClick, isOpen }) => {
       !localStorage.getItem(DIALOGUE_FOUNDRY_POPUP_KEY),
     [popupMessage]
   )
+
+  const handleClick = useCallback(() => {
+    if (popupEnabled) {
+      localStorage.setItem(DIALOGUE_FOUNDRY_POPUP_KEY, 'true')
+      setPopupVisible(false)
+    }
+
+    onClick()
+  }, [popupEnabled, onClick]) 
 
   // Synchronize animation with popup visibility
   useEffect(() => {
@@ -61,7 +70,7 @@ export const ChatButton: React.FC<ChatButtonProps> = ({ onClick, isOpen }) => {
         ref={buttonRef}
         data-chat-button
         className="chat-icon-button"
-        onClick={onClick}
+        onClick={handleClick}
         aria-label={isOpen ? 'Close chat' : 'Open chat'}
       >
         {/* Icon */}
