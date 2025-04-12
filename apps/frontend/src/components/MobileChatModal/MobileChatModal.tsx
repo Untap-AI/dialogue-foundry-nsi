@@ -50,5 +50,3 @@ export const MobileChatModal = ({ isOpen, onClose }: MobileChatModalProps) => {
     </dialog>
   )
 }
-
-export default MobileChatModal
