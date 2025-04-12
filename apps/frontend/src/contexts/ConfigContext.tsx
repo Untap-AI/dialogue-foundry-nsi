@@ -48,7 +48,7 @@ export const defaultConfig: DialogueFoundryConfig = {
         'https://michigangrown.org/wp-content/uploads/2022/09/grapes-wine-main-updated-1024x683.jpg'
     }
   },
-  popupMessage: '🍷 Hi! I’m your West Hills Vineyards assistant, click me if you need help or have any questions!'
+  popupMessage: 'Need help? Click me!'
 }
 
 // Create the context with default values

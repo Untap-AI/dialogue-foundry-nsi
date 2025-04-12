@@ -1,57 +1,33 @@
-import React, { useEffect, useState } from 'react';
-import './PopupMessage.css';
-import { useConfig } from 'src/contexts/ConfigContext';
+import React, { useCallback } from 'react'
+import './PopupMessage.css'
+import { useConfig } from '../../contexts/ConfigContext'
 
 interface PopupMessageProps {
-
+  buttonRef: React.RefObject<HTMLButtonElement | null>
 }
 
-export const PopupMessage: React.FC<PopupMessageProps> = ({ 
-  config, 
-  buttonRef, 
-  visible,
-}) => {
-
+export const PopupMessage: React.FC<PopupMessageProps> = ({ buttonRef }) => {
   const { popupMessage } = useConfig()
 
-  const [popupVisible, setPopupVisible] = useState(false);
-  
-  // Synchronize animation with popup visibility
-  useEffect(() => {
-    if (!buttonRef.current || !buttonAnimation.enabled || !welcomePopup.enabled) return;
+  // Calculate position relative to the button
+  const getPosition = useCallback(() => {
+    if (!buttonRef.current) return { insetInlineEnd: '20px', bottom: '80px' }
 
-    const button = buttonRef.current;
-    const animationClass = `chat-button-animation-${buttonAnimation.type}`;
-    
-    // Add animation class after popup delay (when popup appears)
-    const startAnimationTimer = setTimeout(() => {
-      console.log('Starting button animation');
-      button.classList.add(animationClass);
-      setPopupVisible(true);
-    }, welcomePopup.delay);
-    
-    // Remove animation class when popup disappears
-    const stopAnimationTimer = setTimeout(() => {
-      console.log('Stopping button animation');
-      button.classList.remove(animationClass);
-      setPopupVisible(false);
-    }, welcomePopup.delay + welcomePopup.duration);
-    
-    return () => {
-      clearTimeout(startAnimationTimer);
-      clearTimeout(stopAnimationTimer);
-      button.classList.remove(animationClass);
-    };
-  }, [buttonAnimation, welcomePopup]);
+    const buttonRect = buttonRef.current.getBoundingClientRect()
+    const buttonHeight = buttonRect.height
+    // Use button height + an offset to calculate position
+    const offset = buttonHeight + 33
 
-  const popupStyle = {
-    ...getPosition(),
-  };
+    return {
+      insetInlineEnd: '20px',
+      bottom: `${offset}px`
+    }
+  }, [buttonRef])
 
   return (
-    <div className="chat-popup-message" style={popupStyle}>
-      <p>{popupMessage}</p>
+    <div className="chat-popup-message" style={{ ...getPosition() }}>
+      <div>{popupMessage}</div>
       <div className="chat-popup-arrow"></div>
     </div>
-  );
-}; 
+  )
+}

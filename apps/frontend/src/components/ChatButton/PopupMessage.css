@@ -1,24 +1,14 @@
 .chat-popup-message {
   position: fixed;
-  z-index: 9998;
   animation: popIn 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.25));
-  "delay": 2000,
-    "duration": 10000,
-    "fontSize": "16px",
-    "backgroundColor": "var(--df-primary-color)",
-    "textColor": "var(--df-bg-primary)",
-    "borderRadius": "10px",
-    "padding": "16px 20px",
-    "boxShadow": "0 6px 16px rgba(0, 0, 0, 0.18)",
-    "maxWidth": "320px"
-}
-
-.chat-popup-message p {
-  margin: 0;
-  font-weight: 500;
-  line-height: 1.5;
-  letter-spacing: 0.2px;
+  font-size: var(--df-font-size-base);
+  background-color: var(--df-primary-color);
+  color: var(--df-bg-primary);
+  border-radius: 10px;
+  padding: 16px 20px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  max-width: 320px;
 }
 
 .chat-popup-arrow {
@@ -49,8 +39,8 @@
 
 @media (max-width: 768px) {
   .chat-popup-message {
-    max-width: 250px !important;
-    font-size: 14px !important;
+    max-width: 250px;
+    font-size: var(--df-font-size-base);
     /* Mobile positioning now also handled by inline style */
   }
 } 

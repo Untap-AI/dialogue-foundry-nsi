@@ -1,3 +1,8 @@
+
+.chat-button-container {
+  position: relative;
+}
+
 .chat-icon-button {
   width: 60px;
   height: 60px;
@@ -12,6 +17,7 @@
   background-color: var(--df-primary-color);
   transition: all 200ms;
   cursor: pointer;
+  animation-duration: 10s;
 }
 
 .chat-icon-button:hover {
@@ -29,68 +35,10 @@
   fill: var(--df-bg-primary);
 }
 
-/* Button animations */
-.chat-button-animation-pulse {
-  animation-name: pulse;
-  animation-iteration-count: infinite;
-  animation-timing-function: ease-in-out;
-}
-
-.chat-button-animation-bounce {
-  animation-name: bounce;
-  animation-iteration-count: infinite;
-  animation-timing-function: ease-in-out;
-}
-
-.chat-button-animation-shake {
-  animation-name: shake;
-  animation-iteration-count: infinite;
-  animation-timing-function: ease-in-out;
-}
-
 .chat-button-animation-twist {
   animation-name: twist;
   animation-iteration-count: infinite;
   animation-timing-function: ease-in-out;
-}
-
-@keyframes pulse {
-  0% {
-    transform: scale(1);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  }
-  50% {
-    transform: scale(1.12);
-    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15), 0 10px 10px -5px rgba(0, 0, 0, 0.08);
-  }
-  100% {
-    transform: scale(1);
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-  }
-}
-
-@keyframes bounce {
-  0%, 20%, 50%, 80%, 100% {
-    transform: translateY(0);
-  }
-  40% {
-    transform: translateY(-10px);
-  }
-  60% {
-    transform: translateY(-5px);
-  }
-}
-
-@keyframes shake {
-  0%, 100% {
-    transform: translateX(0);
-  }
-  10%, 30%, 50%, 70%, 90% {
-    transform: translateX(-3px);
-  }
-  20%, 40%, 60%, 80% {
-    transform: translateX(3px);
-  }
 }
 
 @keyframes twist {
