@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.6
+
+### Patch Changes
+
+- Cancel popup message on click
+
 ## 0.2.5
 
 ### Patch Changes
