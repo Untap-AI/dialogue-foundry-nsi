@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.2
+
+### Patch Changes
+
+- Add logger
+
 ## 0.2.1
 
 ### Patch Changes
