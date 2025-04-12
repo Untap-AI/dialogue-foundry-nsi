@@ -1,5 +1,17 @@
 # @dialogue-foundry/frontend
 
+## 0.2.5
+
+### Patch Changes
+
+- Popup message mobile width
+
+## 0.2.4
+
+### Patch Changes
+
+- Added autofocus
+
 ## 0.2.3
 
 ### Patch Changes

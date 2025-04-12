@@ -39,7 +39,7 @@
 
 @media (max-width: 768px) {
   .chat-popup-message {
-    max-width: 250px;
+    max-width: 80vw;
     font-size: var(--df-font-size-base);
     /* Mobile positioning now also handled by inline style */
   }

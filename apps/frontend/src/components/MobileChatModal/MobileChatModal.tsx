@@ -45,7 +45,7 @@ export const MobileChatModal = ({ isOpen, onClose }: MobileChatModalProps) => {
     >
       <div className="mobile-chat-content">
         <ChatHeader onClose={onClose} />
-        <ChatInterface className="mobile-chat-interface mobile-chat-bubbles" />
+        <ChatInterface className="mobile-chat-interface mobile-chat-bubbles" isOpen={isOpen} />
       </div>
     </dialog>
   )

@@ -14,9 +14,10 @@ type ChatStatus = 'loading' | 'initialized' | 'error'
 
 export interface ChatInterfaceProps {
   className?: string
+  isOpen: boolean
 }
 
-export const ChatInterface = ({ className }: ChatInterfaceProps) => {
+export const ChatInterface = ({ className, isOpen }: ChatInterfaceProps) => {
   // Get config from context
   const { conversationStarters, chatConfig, theme, personaOptions } =
     useConfig()
@@ -183,6 +184,20 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
+  // Focus input field when chat is initialized
+  useEffect(() => {
+    if (chatStatus === 'initialized' && isOpen) {
+      // Add a small delay to ensure the composer input is rendered
+      setTimeout(() => {
+        const inputField = document.querySelector('textarea')
+
+        if (inputField instanceof HTMLElement) {
+          inputField.focus()
+        }
+      }, 300)
+    }
+  }, [chatStatus, isOpen])
+
   // TODO: ConversationStarter UI
   return (
     <div className={`chat-interface-wrapper ${className || ''}`}>
@@ -215,7 +230,8 @@ export const ChatInterface = ({ className }: ChatInterfaceProps) => {
                     assistant: personaOptions?.assistant
                   }}
                   composerOptions={{
-                    placeholder: 'Ask me anything...'
+                    placeholder: 'Ask me anything...',
+                    autoFocus: true
                   }}
                   events={{
                     error: handleNluxError,
