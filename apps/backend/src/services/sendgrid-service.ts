@@ -107,9 +107,9 @@ export const sendInquiryEmail = async (
         // TODO: Change this
         name: 'Dialogue Foundry'
       },
-      subject: emailData.subject ?? 'New Inquiry from AI Chat Widget',
       templateId,
       dynamicTemplateData: {
+        subject: emailData.subject,
         conversationSummary: emailData.conversationSummary,
         chatHistory,
         userEmail: emailData.userEmail,

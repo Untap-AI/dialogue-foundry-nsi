@@ -114,3 +114,8 @@
   line-height: 1.4;  /* Tighter line height */
   font-weight: 500;
 }
+
+/* Center the textarea. Needed for safari. */
+textarea {
+  align-content: center;
+}

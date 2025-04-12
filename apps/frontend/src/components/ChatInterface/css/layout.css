@@ -10,9 +10,9 @@
 
     /** Welcome message */
     --nlux-WelcomeMessage-Avatar--Width: 48px;
-    --nlux-WelcomeMessage-PersonaName--FontSize: 18px;
+    --nlux-WelcomeMessage-PersonaName--FontSize: calc(var(--df-font-size-base) + 2px);
     --nlux-WelcomeMessage-PersonaName--FontWeight: 600;
-    --nlux-WelcomeMessage-Text--FontSize: 15px;
+    --nlux-WelcomeMessage-Text--FontSize: calc(var(--df-font-size-base) - 2px);
     --nlux-WelcomeMessage-Text--FontWeight: 400;
     --nlux-WelcomeMessage--Gap: 4px;
 
@@ -25,7 +25,7 @@
     --nlux-ChatRoom--LineHeight: var(--df-line-height);
     --nlux-ChatRoom--FontWeight: 400;
     --nlux-ChatRoom--FontFamily: var(--df-font-family);
-    --nlux-ChatRoom--FontSize: 16px;
+    --nlux-ChatRoom--FontSize: var(--df-font-size-base);
 
     --nlux-ChatRoom--Padding: 20px;
     --nlux-ChatRoom--BorderRadius: var(--df-border-radius);
@@ -40,7 +40,7 @@
     /** Chat item participant info */
     --nlux-ChatItem-ParticipantInfo--Gap: var(--df-flex-gap);
     --nlux-ChatItem-ParticipantInfo--Padding: 0px;
-    --nlux-ChatItem-ParticipantName--FontSize: 16px;
+    --nlux-ChatItem-ParticipantName--FontSize: var(--df-font-size-base);
     --nlux-ChatItem-ParticipantName--FontWeight: 700;
 
     /** Chat item avatar */
@@ -78,7 +78,7 @@
 
     /** Composer input */
     --nlux-PromptInput--FontFamily: var(--df-font-family);
-    --nlux-PromptInput--FontSize: 16px;
+    --nlux-PromptInput--FontSize: var(--df-font-size-base);
     --nlux-PromptInput--BorderWidth: 0;
     --nlux-PromptInput--BorderRadius: var(--df-border-radius);
     --nlux-PromptInput-Focus-Outline--Width: 2px;

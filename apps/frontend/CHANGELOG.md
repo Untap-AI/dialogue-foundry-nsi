@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.3
+
+### Patch Changes
+
+- Fix textarea and subject
+
 ## 0.2.2
 
 ### Patch Changes
