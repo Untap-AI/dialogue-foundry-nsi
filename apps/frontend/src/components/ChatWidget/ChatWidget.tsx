@@ -5,8 +5,10 @@ import { MobileChatModal } from '../MobileChatModal/MobileChatModal'
 import { useResizeObserver } from '../../hooks/useResizeObserver'
 import './ChatWidget.css'
 import { useChatScroll } from '../../hooks/useChatScroll'
+import { useConfig } from '../../contexts/ConfigContext'
 
 export const ChatWidget = () => {
+  const config = useConfig()
   const [isOpen, setIsOpen] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
 
@@ -82,7 +84,30 @@ export const ChatWidget = () => {
       )}
 
       {/* Chat button */}
-      <ChatButton onClick={toggleChat} isOpen={isOpen} />
+      <ChatButton 
+        onClick={toggleChat} 
+        isOpen={isOpen} 
+        config={{
+          welcomePopup: config.welcomePopup || {
+            enabled: false,
+            message: '',
+            delay: 2000,
+            duration: 10000,
+            fontSize: '14px',
+            backgroundColor: '#ffffff',
+            textColor: '#333333',
+            borderRadius: '8px',
+            padding: '12px 16px',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            maxWidth: '280px'
+          },
+          buttonAnimation: config.buttonAnimation || {
+            enabled: false,
+            type: 'pulse',
+            duration: '1.5s'
+          }
+        }} 
+      />
     </div>
   )
 }
