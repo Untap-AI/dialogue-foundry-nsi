@@ -82,7 +82,10 @@ export const ChatWidget = () => {
       )}
 
       {/* Chat button */}
-      <ChatButton onClick={toggleChat} isOpen={isOpen} />
+      <ChatButton 
+        onClick={toggleChat} 
+        isOpen={isOpen} 
+      />
     </div>
   )
 }

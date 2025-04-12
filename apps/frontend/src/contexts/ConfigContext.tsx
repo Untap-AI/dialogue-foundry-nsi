@@ -21,6 +21,9 @@ export interface DialogueFoundryConfig {
   // Widget customization
   title: string
   logoUrl?: string
+  
+  // Welcome popup configuration
+  popupMessage?: string
 }
 
 // Default configuration
@@ -44,7 +47,8 @@ export const defaultConfig: DialogueFoundryConfig = {
       avatar:
         'https://michigangrown.org/wp-content/uploads/2022/09/grapes-wine-main-updated-1024x683.jpg'
     }
-  }
+  },
+  popupMessage: 'Have questions? Click here for help! 💬'
 }
 
 // Create the context with default values

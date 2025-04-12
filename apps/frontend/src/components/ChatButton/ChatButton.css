@@ -12,6 +12,7 @@
   background-color: var(--df-primary-color);
   transition: all 200ms;
   cursor: pointer;
+  animation-duration: 10s;
 }
 
 .chat-icon-button:hover {
@@ -27,4 +28,22 @@
   width: 30px;
   height: 30px;
   fill: var(--df-bg-primary);
+}
+
+.chat-button-animation-twist {
+  animation-name: twist;
+  animation-iteration-count: infinite;
+  animation-timing-function: ease-in-out;
+}
+
+@keyframes twist {
+  0%, 30%, 100% {
+    transform: rotate(0deg);
+  }
+  40% {
+    transform: rotate(-15deg) scale(1.08);
+  }
+  70% {
+    transform: rotate(15deg) scale(1.08);
+  }
 }
