@@ -290,11 +290,6 @@ export class ChatStreamingService {
               break
 
             case 'done':
-              ('SSE stream completed successfully', {
-                chatId,
-                messageLength: fullText.length
-              })
-
               // Mark that we're intentionally closing before invoking callbacks or cleanup
               this.isClosingConnection = true
 
@@ -487,11 +482,6 @@ export class ChatStreamingService {
     this.tokenReconnectAttempts++
     this.lastReconnectTime = Date.now()
 
-    ('Handling token error', {
-      reconnectAttempts: this.reconnectAttempts,
-      tokenReconnectAttempts: this.tokenReconnectAttempts
-    })
-
     // Check if we've exceeded maximum token reconnection attempts (limit to 1)
     if (this.tokenReconnectAttempts > this.MAX_TOKEN_RECONNECT_ATTEMPTS) {
       const tokenError = new StreamingError(ErrorCodes.TOKEN_INVALID, false)
@@ -554,8 +544,6 @@ export class ChatStreamingService {
       // Initialize a new chat
       await this.initializeNewChat()
 
-      ('Retrying stream after token error resolution')
-
       // Retry the streaming request
       await this.streamMessage(
         userQuery,
@@ -594,11 +582,6 @@ export class ChatStreamingService {
     // Track reconnection attempt
     this.reconnectAttempts++
     this.lastReconnectTime = Date.now()
-
-    ('Handling chat error', {
-      errorCode,
-      reconnectAttempts: this.reconnectAttempts
-    })
 
     // Notify the user of the issue
     const chatError = new StreamingError(
@@ -657,8 +640,6 @@ export class ChatStreamingService {
 
       // Initialize a new chat
       await this.initializeNewChat()
-
-      ('Retrying stream after chat error resolution')
 
       // Retry the streaming request
       await this.streamMessage(
