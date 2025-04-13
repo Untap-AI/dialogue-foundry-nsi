@@ -4,6 +4,7 @@
   /* Core colors that can be customized by customers */
   --df-primary-color: rgb(50, 79, 68);
   --df-secondary-color: rgb(242, 207, 191);
+  --df-tertiary-color: rgb(50, 79, 68);
   
   /* Background colors */
   --df-bg-primary: rgb(255, 244, 231);
@@ -46,4 +47,9 @@
 .nlux-comp-composer>button>.nlux-comp-sendIcon>.nlux-comp-sendIcon-container {
   border: 1px solid var(--df-border-color);
   border-radius: 50%;
+}
+
+.nlux-comp-composer>button>.nlux-comp-sendIcon>.nlux-comp-sendIcon-container:hover {
+  border: 1px solid var(--df-tertiary-color);
+  color: var(--df-tertiary-color);
 }
