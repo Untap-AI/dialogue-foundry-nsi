@@ -78,6 +78,7 @@ export function ConfigProvider({
     // Function to load config from an external JSON file
     const loadExternalConfig = async () => {
       if ((import.meta as any).env.REACT_APP_ENV === 'development') {
+        console.log('Loading development config')
         setConfigLoaded(true)
         return
       }
@@ -85,6 +86,8 @@ export function ConfigProvider({
       try {
         // Try to load from a script tag with id="dialogue-foundry-config"
         const configScript = document.getElementById('dialogue-foundry-config')
+
+        console.log('configScript', configScript)
 
         if (configScript && configScript.textContent) {
           try {
