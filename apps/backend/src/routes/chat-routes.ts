@@ -435,7 +435,6 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
 
     // Handle client disconnect
     return req.on('close', () => {
-      console.info('Client disconnected')
       if (!res.writableEnded) {
         res.end()
       }

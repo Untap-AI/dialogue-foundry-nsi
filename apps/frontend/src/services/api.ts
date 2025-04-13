@@ -67,12 +67,6 @@ export class ChatApiService {
       config.chatIdStorageKey || DEFAULT_CHAT_ID_STORAGE_KEY
     this.storage = localStorage
 
-    // Log API service initialization
-    logger.info('Initializing Chat API Service', {
-      apiBaseUrl: this.apiBaseUrl,
-      companyId: this.companyId
-    })
-
     // Create axios instance
     this.api = axios.create({
       baseURL: this.apiBaseUrl,
@@ -199,14 +193,7 @@ export class ChatApiService {
     // If we have both a token and chat ID, try to load the existing chat
     if (storedToken && storedChatId) {
       try {
-        logger.info('Loading existing chat', { chatId: storedChatId })
-
         const response = await this.api.get(`/chats/${storedChatId}`)
-
-        logger.info('Existing chat loaded successfully', {
-          chatId: storedChatId,
-          messageCount: response.data.messages?.length || 0
-        })
 
         return {
           chatId: storedChatId,
@@ -221,13 +208,8 @@ export class ChatApiService {
         // If there's an error (e.g., token expired), clear storage and create a new chat
         this.storage.removeItem(this.tokenStorageKey)
         this.storage.removeItem(this.chatIdStorageKey)
-
-        // Create a new chat with a more informative message about what happened
-        logger.info('Creating new chat after failed loading of existing chat')
       }
     }
-
-    logger.info('Creating new chat')
 
     // Create a new chat
     return this.createNewChat()
@@ -246,10 +228,6 @@ export class ChatApiService {
       // Store token and chat ID
       this.storage.setItem(this.tokenStorageKey, response.data.accessToken)
       this.storage.setItem(this.chatIdStorageKey, response.data.chat.id)
-
-      logger.info('New chat created successfully', {
-        chatId: response.data.chat.id
-      })
 
       return {
         chatId: response.data.chat.id,
@@ -280,8 +258,6 @@ export class ChatApiService {
    * Clear the current chat session and create a new one
    */
   async startNewChat(): Promise<ChatInit> {
-    logger.info('Starting a new chat')
-
     this.storage.removeItem(this.tokenStorageKey)
     this.storage.removeItem(this.chatIdStorageKey)
 

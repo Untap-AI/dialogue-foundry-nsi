@@ -43,12 +43,6 @@ async function main() {
       ? parseInt(process.env.ADMIN_JWT_EXPIRY)
       : 43200) / 3600
 
-  // Output the token with usage instructions
-  logger.info(`Admin token generated for user ${userId}`, {
-    expiryHours,
-    service: 'generate-admin-token'
-  })
-
   console.log('\n-------- ADMIN ACCESS TOKEN --------')
   console.log(`\nToken for user "${userId}":\n`)
   console.log(token)

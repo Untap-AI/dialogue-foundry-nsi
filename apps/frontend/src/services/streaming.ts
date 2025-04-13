@@ -40,12 +40,6 @@ export class ChatStreamingService {
     this.chatIdStorageKey =
       config.chatIdStorageKey || DEFAULT_CHAT_ID_STORAGE_KEY
     this.storage = localStorage
-
-    // Log service initialization
-    logger.info('ChatStreamingService initialized', {
-      apiBaseUrl: this.apiBaseUrl,
-      companyId: this.companyId
-    })
   }
 
   /**
@@ -54,8 +48,6 @@ export class ChatStreamingService {
    */
   async initializeNewChat(): Promise<string> {
     try {
-      logger.info('Initializing new chat session')
-
       const response = await fetch(`${this.apiBaseUrl}/chats`, {
         method: 'POST',
         headers: {
@@ -84,10 +76,6 @@ export class ChatStreamingService {
       // Store the new token and chat ID
       this.storage.setItem(this.tokenStorageKey, data.accessToken)
       this.storage.setItem(this.chatIdStorageKey, data.chat.id)
-
-      logger.info('New chat initialized successfully', {
-        chatId: data.chat.id
-      })
 
       return data.chat.id
     } catch (error) {
@@ -165,7 +153,7 @@ export class ChatStreamingService {
     if (!chatId || !token) {
       try {
         if (!this.isReconnecting) {
-          logger.info('Missing chat ID or token, initializing new chat')
+          ('Missing chat ID or token, initializing new chat')
           await this.initializeNewChat()
           chatId = this.storage.getItem(this.chatIdStorageKey)
           token = this.storage.getItem(this.tokenStorageKey)
@@ -302,7 +290,7 @@ export class ChatStreamingService {
               break
 
             case 'done':
-              logger.info('SSE stream completed successfully', {
+              ('SSE stream completed successfully', {
                 chatId,
                 messageLength: fullText.length
               })
@@ -499,7 +487,7 @@ export class ChatStreamingService {
     this.tokenReconnectAttempts++
     this.lastReconnectTime = Date.now()
 
-    logger.info('Handling token error', {
+    ('Handling token error', {
       reconnectAttempts: this.reconnectAttempts,
       tokenReconnectAttempts: this.tokenReconnectAttempts
     })
@@ -566,7 +554,7 @@ export class ChatStreamingService {
       // Initialize a new chat
       await this.initializeNewChat()
 
-      logger.info('Retrying stream after token error resolution')
+      ('Retrying stream after token error resolution')
 
       // Retry the streaming request
       await this.streamMessage(
@@ -607,7 +595,7 @@ export class ChatStreamingService {
     this.reconnectAttempts++
     this.lastReconnectTime = Date.now()
 
-    logger.info('Handling chat error', {
+    ('Handling chat error', {
       errorCode,
       reconnectAttempts: this.reconnectAttempts
     })
@@ -670,7 +658,7 @@ export class ChatStreamingService {
       // Initialize a new chat
       await this.initializeNewChat()
 
-      logger.info('Retrying stream after chat error resolution')
+      ('Retrying stream after chat error resolution')
 
       // Retry the streaming request
       await this.streamMessage(
@@ -734,7 +722,7 @@ export class ChatStreamingService {
    * Call this when the user manually reloads or takes action to resolve issues
    */
   resetReconnectionState(): void {
-    logger.info('Resetting reconnection state')
+    ('Resetting reconnection state')
 
     this.reconnectAttempts = 0
     this.tokenReconnectAttempts = 0 // Also reset token reconnect attempts

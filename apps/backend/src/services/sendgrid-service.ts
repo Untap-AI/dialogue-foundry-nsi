@@ -9,7 +9,6 @@ dotenv.config()
 
 // Get SendGrid API key from environment variables
 const API_KEY = process.env.SENDGRID_API_KEY
-const FROM_EMAIL = process.env.SENDGRID_FROM_EMAIL
 const DEFAULT_TEMPLATE_ID = process.env.DEFAULT_SENDGRID_TEMPLATE_ID
 
 if (!API_KEY) {
@@ -18,12 +17,6 @@ if (!API_KEY) {
   )
 } else {
   sgMail.setApiKey(API_KEY)
-}
-
-if (!FROM_EMAIL) {
-  throw new Error(
-    'FROM_EMAIL is not set in environment variables. Email functionality will not work.'
-  )
 }
 
 if (!DEFAULT_TEMPLATE_ID) {
@@ -123,12 +116,7 @@ export const sendInquiryEmail = async (
 
     // Send the email
     await sgMail.send(msg)
-    logger.info('Email sent successfully', {
-      to: supportEmail,
-      subject: emailData.subject,
-      service: 'sendgrid-service'
-    })
-
+    
     return true
   } catch (error) {
     logger.error('Error sending email', {

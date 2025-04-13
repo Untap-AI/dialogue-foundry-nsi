@@ -28,8 +28,6 @@ export const getChatConfigByCompanyId = async (companyId: string) => {
   // Use serviceSupabase to bypass RLS if available, otherwise fall back to regular client
   const client = serviceSupabase || supabase
 
-  console.log('Getting chat config for company ID:', companyId)
-
   const { data: chatConfig, error } = await client
     .from('chat_configs')
     .select('*')
