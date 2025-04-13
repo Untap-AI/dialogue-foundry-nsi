@@ -22,7 +22,7 @@
     "update": "git pull origin main && pnpm run db-migrate:remote && pnpm run db-types:remote",
     "db-reset": "supabase db reset && pnpm run db-types",
     "db-migrate": "supabase migration up && pnpm run db-types",
-    "db-migrate:remote": "supabase migration up --db-url <fill-in-db-url>",
+    "db-migrate:remote": "supabase migration up",
     "db-types": "supabase gen types typescript --local > src/types/database.ts",
     "db-types:remote": "supabase gen types typescript > src/types/database.ts",
     "db-pull": "supabase db remote commit",

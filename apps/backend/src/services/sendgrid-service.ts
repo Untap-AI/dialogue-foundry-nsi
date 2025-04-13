@@ -103,9 +103,8 @@ export const sendInquiryEmail = async (
     const msg = {
       to: [{ email: supportEmail }],
       from: {
-        email: FROM_EMAIL,
-        // TODO: Change this
-        name: 'Dialogue Foundry'
+        email: 'no-reply@untap-ai.com',
+        name: 'Untap AI'
       },
       templateId,
       dynamicTemplateData: {
