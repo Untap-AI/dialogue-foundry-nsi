@@ -17,6 +17,41 @@ export default defineConfig(({ command, mode }) => {
       react(),
       // Inject CSS into JS for library mode
       cssInjectedByJsPlugin(),
+      // Custom plugin to copy index.html and inject config
+      isFullBuild && {
+        name: 'copy-index-html-and-inject-config',
+        closeBundle: () => {
+          const srcHtml = path.resolve(__dirname, 'index.html');
+          const destDir = path.resolve(__dirname, 'dist');
+          const destHtml = path.resolve(destDir, 'index.html');
+          const configPath = path.resolve(__dirname, 'default-config.json');
+
+          if (fs.existsSync(srcHtml) && fs.existsSync(configPath)) {
+            // Ensure the dist directory exists
+            if (!fs.existsSync(destDir)) {
+              fs.mkdirSync(destDir, { recursive: true });
+            }
+            
+            // Read the config file
+            const configContent = fs.readFileSync(configPath, 'utf8');
+            
+            // Read the HTML file
+            let htmlContent = fs.readFileSync(srcHtml, 'utf8');
+            
+            // Replace the placeholder in the script tag with actual JSON content
+            htmlContent = htmlContent.replace(
+              /<script id="dialogue-foundry-config" type="application\/json">[\s\S]*?<\/script>/,
+              `<script id="dialogue-foundry-config" type="application/json">${configContent}</script>`
+            );
+            
+            // Write the updated HTML to the dist directory
+            fs.writeFileSync(destHtml, htmlContent);
+            console.log('✅ Copied index.html and injected config');
+          } else {
+            console.warn('⚠️ index.html or default-config.json not found');
+          }
+        }
+      },
       // Custom plugin to copy index.css directly to output for full build
       isFullBuild && {
         name: 'copy-index-css',
@@ -163,7 +198,7 @@ export default defineConfig(({ command, mode }) => {
           warn(warning);
         },
         input: {
-          main: resolve(__dirname, 'index.html'),
+          main: resolve(__dirname, 'src/index.tsx'),
         },
         output: {
           entryFileNames: 'index.js',
