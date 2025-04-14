@@ -2,7 +2,7 @@
 
 :root {
   /* Core colors that can be customized by customers */
-  --df-primary-color: rgb(50, 79, 68);
+  --df-primary-color: rgba(25, 40, 34);
   --df-secondary-color: rgb(242, 207, 191);
   --df-tertiary-color: rgb(50, 79, 68);
   

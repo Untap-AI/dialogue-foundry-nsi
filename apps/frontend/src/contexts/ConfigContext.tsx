@@ -21,7 +21,7 @@ export interface DialogueFoundryConfig {
   // Widget customization
   title: string
   logoUrl?: string
-  
+
   // Welcome popup configuration
   popupMessage?: string
 }
@@ -30,7 +30,8 @@ export interface DialogueFoundryConfig {
 export const defaultConfig: DialogueFoundryConfig = {
   chatConfig: {
     apiBaseUrl:
-      (import.meta as any).env.VITE_API_BASE_URL || 'http://localhost:3000/api',
+      (import.meta.env as { VITE_API_BASE_URL?: string }).VITE_API_BASE_URL ||
+      'http://localhost:3000/api',
     companyId: 'west-hills-vineyards'
   },
   theme: 'light',
@@ -77,7 +78,9 @@ export function ConfigProvider({
   useEffect(() => {
     // Function to load config from an external JSON file
     const loadExternalConfig = async () => {
-      if ((import.meta as any).env.REACT_APP_ENV === 'development') {
+      if (
+        (import.meta.env as { VITE_ENV?: string }).VITE_ENV === 'development'
+      ) {
         console.log('Loading development config')
         setConfigLoaded(true)
         return

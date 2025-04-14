@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.11
+
+### Patch Changes
+
+- Fix appending
+
 ## 0.2.10
 
 ### Patch Changes

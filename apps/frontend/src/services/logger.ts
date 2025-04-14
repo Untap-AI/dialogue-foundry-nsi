@@ -2,22 +2,31 @@ import * as Sentry from '@sentry/react'
 import { categorizeError } from './errors'
 import type { ErrorCodeValue } from './errors'
 
+// Add this at the top of the file
+interface ImportMetaEnv {
+  VITE_ENV?: string
+  VITE_SENTRY_DSN?: string
+}
+
+declare global {
+  interface ImportMeta {
+    env: ImportMetaEnv
+  }
+}
+
 // Environment type for better type safety
 export type Environment = 'development' | 'smokebox' | 'production' | string
 
 // Default configuration with sensible values
 const DEFAULT_CONFIG = {
   dsn: '', // Empty string as default DSN
-  environment:
-    ((import.meta as any).env.REACT_APP_ENV as Environment) || 'development',
+  environment: import.meta.env.VITE_ENV || 'development',
   release: 'development',
   debug: false,
   // Only enable in production and smokebox environments
-  enabled: ['production', 'smokebox'].includes(
-    (import.meta as any).env.REACT_APP_ENV || ''
-  ),
+  enabled: ['production', 'smokebox'].includes(import.meta.env.VITE_ENV || ''),
   // In smokebox, show all logs; in production, show only errors
-  consoleLevel: ((import.meta as any).env.REACT_APP_ENV === 'smokebox'
+  consoleLevel: (import.meta.env.VITE_ENV === 'smokebox'
     ? 'debug'
     : 'error') as LogLevel
 }
@@ -125,7 +134,8 @@ export class Logger {
     this.config.enabled = ['production', 'smokebox'].includes(environment)
 
     // Update console level based on environment
-    this.config.consoleLevel = environment === 'smokebox' ? 'debug' : 'error'
+    this.config.consoleLevel =
+      environment === 'smokebox' ? 'debug' : ('error' as LogLevel)
 
     if (this.initialized) {
       Sentry.setTag('environment', environment)

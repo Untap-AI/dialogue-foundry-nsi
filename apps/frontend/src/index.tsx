@@ -52,10 +52,13 @@ function init(
 
 // Auto-initialize if in standard mode (not being used as a library)
 if (typeof window !== 'undefined' && !window.DialogueFoundry) {
-  const rootElement = document.getElementById('root')
-  if (rootElement) {
-    init(rootElement)
-  }
+  // Create a container div for the app
+  const appContainer = document.createElement('div')
+  appContainer.id = 'dialogue-foundry-app'
+  document.body.appendChild(appContainer)
+
+  // Initialize the app in the container
+  init(appContainer)
 }
 
 // Export public API
