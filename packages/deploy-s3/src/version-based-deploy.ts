@@ -187,7 +187,7 @@ async function main() {
     }
 
     // Check if we need to update the "latest" folder
-    let shouldUpdateLatest = false;
+    let shouldUpdateLatest = true; // Always update latest folder
     try {
       const response = await s3.getObject({
         Bucket: options.bucket,
@@ -196,11 +196,13 @@ async function main() {
       
       const latestVersion = response.Body?.toString('utf-8').trim() || '';
       
-      // Update "latest" if current version is greater than existing latest version
-      shouldUpdateLatest = latestVersion === '' || semver.gt(currentVersion, latestVersion) || options.force === true;
+      // We'll still log if the version is different, but we'll always update
+      if (latestVersion !== '' && semver.gt(currentVersion, latestVersion)) {
+        console.log(chalk.blue(`Updating latest from ${latestVersion} to ${currentVersion}`));
+      }
     } catch (error: any) {
-      // If file doesn't exist, we should update the latest folder
-      shouldUpdateLatest = true;
+      // If file doesn't exist, we'll create it
+      console.log(chalk.blue('Creating new latest folder'));
     }
 
     // Create a temporary version.txt file to upload
