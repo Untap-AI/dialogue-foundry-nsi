@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.13
+
+### Patch Changes
+
+- Timezone fix
+
 ## 0.2.12
 
 ### Patch Changes
