@@ -32,6 +32,7 @@ export type ChatSettings = {
   systemPrompt: string // Add systemPrompt as an optional parameter
   companyId: string // Company ID for context in function calls
   enableEmailFunction?: boolean // Whether to enable the email function
+  timezone?: string // User's timezone
 }
 
 // Default settings to use if none are provided
@@ -236,13 +237,14 @@ export const generateStreamingChatCompletion = async (
       MAX_MESSAGES_PER_CHAT
     )
 
-    const systemPromptWithCurrentDate = `${settings.systemPrompt}\n\nThe current time is ${new Date().toLocaleString('en-US', {
+    const systemPromptWithCurrentDate = `${settings.systemPrompt}\n\nThe current date and time is ${new Date().toLocaleString('en-US', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
       hour: 'numeric',
       minute: 'numeric',
+      timeZone: settings.timezone || 'UTC'
     })}.`
 
     // Configure request options with tools if email function is enabled

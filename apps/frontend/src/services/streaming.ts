@@ -130,6 +130,9 @@ export class ChatStreamingService {
     // Reset reconnection counters if it's been a while
     this.checkAndResetReconnectCounters()
 
+    // Get user's timezone
+    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+
     // Check if we've exceeded maximum reconnection attempts
     if (this.reconnectAttempts >= this.MAX_RECONNECT_ATTEMPTS) {
       const reconnectError = new StreamingError(
@@ -226,6 +229,7 @@ export class ChatStreamingService {
     // Create the URL with query parameters for token and content
     const url = new URL(`${this.apiBaseUrl}/chats/${chatId}/stream`)
     url.searchParams.append('content', userQuery)
+    url.searchParams.append('timezone', userTimezone)
     // Ensure token is not null before appending
     if (token) {
       url.searchParams.append('token', token)

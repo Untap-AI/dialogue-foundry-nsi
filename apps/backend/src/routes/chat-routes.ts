@@ -250,6 +250,7 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     const content = req.body.content || req.query.content
     const model = req.body.model || req.query.model
     const temperature = req.body.temperature || req.query.temperature
+    const timezone = req.body.timezone || req.query.timezone || 'UTC'
 
     if (!chatId) {
       sendErrorEvent('Chat ID is required', 'INVALID_REQUEST')
@@ -320,7 +321,8 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       systemPrompt: chatConfig.system_prompt,
       // Pass company ID and support email if available
       companyId,
-      enableEmailFunction: Boolean(chatConfig?.support_email)
+      enableEmailFunction: Boolean(chatConfig?.support_email),
+      timezone
     }
 
     // Get all previous messages in this chat
