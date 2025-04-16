@@ -286,7 +286,7 @@ export const generateStreamingChatCompletion = async (
           // We'll handle function calls after streaming completes
         }
 
-        if (text) {
+        if (text.length > 0) {
           // Add to full text and send immediately
           fullText += text
           onChunk(text)
