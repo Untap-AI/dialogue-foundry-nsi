@@ -286,6 +286,10 @@ export const generateStreamingChatCompletion = async (
           // We'll handle function calls after streaming completes
         }
 
+        if (chunk.type !== 'response.output_text.delta' && chunk.type !== 'response.output_item.done') {
+          console.log('chunk', chunk)
+        }
+
         if (text.length > 0) {
           // Add to full text and send immediately
           fullText += text
