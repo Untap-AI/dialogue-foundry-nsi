@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.14
+
+### Patch Changes
+
+- Fix default config overlap
+
 ## 0.2.13
 
 ### Patch Changes

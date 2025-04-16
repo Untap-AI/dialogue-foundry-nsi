@@ -2,18 +2,18 @@
 
 :root {
   /* Core colors that can be customized by customers */
-  --df-primary-color: rgba(25, 40, 34);
-  --df-secondary-color: rgb(242, 207, 191);
-  --df-tertiary-color: rgb(50, 79, 68);
+  --df-primary-color: rgb(2, 122, 41);
+  --df-secondary-color: rgb(241, 241, 241);
+  --df-tertiary-color: rgb(0, 0, 0);
   
   /* Background colors */
-  --df-bg-primary: rgb(255, 244, 231);
-  --df-bg-secondary: #ffffff;
+  --df-bg-primary: rgb(255, 255, 255);
+  --df-bg-secondary: rgb(241, 241, 241);
   
   /* Text colors */
-  --df-text-primary: rgb(25, 40, 34);
-  --df-text-secondary: rgba(91,97,110,0.2);
-  --df-text-contrast: rgb(255, 244, 231);
+  --df-text-primary: rgb(102, 102, 102);
+  --df-text-secondary: rgb(102, 102, 102);
+  --df-text-contrast: #ffffff;
   
   /* Alert/Exception colors */
   --df-alert-bg: #ffcccc;
@@ -21,35 +21,32 @@
   --df-alert-text: black;
   
   /* Border and outline */
-  --df-border-color: black;
+  --df-border-color: rgb(235, 235, 235);
   --df-focus-outline: transparent;
   
   /* Common transparency */
   --df-transparent: transparent;
   /* Need slightly darker gray for disabled text */
-  --df-disabled: rgb(242, 207, 191, 0.5);
+  --df-disabled: rgb(2, 122, 41, 0.5);
 
-  --df-font-family: avenir-lt-w01_35-light1475496, sans-serif;
-  --df-mono-font-family: monospace;
+  --df-font-family: Montserrat, Helvetica, Arial, Verdana, sans-serif;
+  /* --df-mono-font-family: monospace; */
   --df-font-size-base: 16px;
 
   --df-border-width: 0;
   --df-border-radius: 20px;
-  --df-line-height: 1.4;
+  --df-line-height: 1.5;
   --df-flex-gap: 12px;
 }
 
 .nlux-comp-composer>button:disabled>.nlux-comp-sendIcon>.nlux-comp-sendIcon-container {
-  border: 1px solid var(--df-secondary-color);
-  border-radius: 50%;
+  color: var(--df-disabled);
 }
 
 .nlux-comp-composer>button>.nlux-comp-sendIcon>.nlux-comp-sendIcon-container {
-  border: 1px solid var(--df-border-color);
-  border-radius: 50%;
+  color: var(--df-primary-color);
 }
 
 .nlux-comp-composer>button>.nlux-comp-sendIcon>.nlux-comp-sendIcon-container:hover {
-  border: 1px solid var(--df-tertiary-color);
   color: var(--df-tertiary-color);
 }
