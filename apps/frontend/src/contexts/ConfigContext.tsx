@@ -32,7 +32,7 @@ export const defaultConfig: DialogueFoundryConfig = {
     apiBaseUrl:
       (import.meta.env as { VITE_API_BASE_URL?: string }).VITE_API_BASE_URL ||
       'http://localhost:3000/api',
-    companyId: 'gt-landscape-solutions'
+    companyId: 'west-hills-vineyards'
   },
 
   // TODO: Check logo
@@ -121,6 +121,7 @@ export function ConfigProvider({
 
         // If no config was found, just use defaults
         console.log('No external config found, using defaults')
+        setConfigState(defaultConfig)
         setConfigLoaded(true)
       } catch (error) {
         console.error('Error loading dialogue foundry configuration:', error)

@@ -101,10 +101,16 @@ router.post('/', async (req, res) => {
     const { userId: userIdParam, name, companyId } = req.body
 
     if (!name) {
+      logger.error('Chat name is required', {
+        userId: req.body.userId
+      })
       return res.status(400).json({ error: 'Chat name is required' })
     }
 
     if (!companyId) {
+      logger.error('Company ID is required', {
+        userId: req.body.userId
+      })
       return res.status(400).json({ error: 'Company ID is required' })
     }
 
@@ -115,6 +121,9 @@ router.post('/', async (req, res) => {
         chatConfig = dbConfig
         cacheService.setChatConfig(companyId, dbConfig)
       } else {
+        logger.error('Chat config not found', {
+          userId: req.body.userId
+        })
         return res.status(400).json({ error: 'Chat config not found' })
       }
     }
@@ -135,6 +144,10 @@ router.post('/', async (req, res) => {
       accessToken
     })
   } catch (error) {
+    logger.error('Error creating chat', {
+      error: error as Error,
+      userId: req.body.userId
+    })
     return res.status(500).json({ error })
   }
 })
@@ -403,13 +416,21 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     }
 
     // Generate streaming response from OpenAI
-    const aiResponseContent = await generateStreamingChatCompletion(
-      openaiMessages,
-      chatSettings,
-      onChunk
-    )
+    let aiResponseContent
+    try {
+      aiResponseContent = await generateStreamingChatCompletion(
+        openaiMessages,
+        chatSettings,
+        onChunk
+      )
+    } catch (streamError) {
+      logger.error('Error in streaming chat completion', {
+        error: streamError as Error,
+        chatId
+      })
+      aiResponseContent = '' // Fallback to empty string on error
+    }
 
-    // Store the complete AI response in the database
     await createMessageAdmin({
       chat_id: chatId,
       user_id: userId,
@@ -421,18 +442,30 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
 
     // Send a completion message
     if (!res.writableEnded) {
-      res.write(
-        `data: ${JSON.stringify({
-          type: 'done',
-          fullContent: aiResponseContent
-        })}\n\n`
-      )
+      try {
+        res.write(
+          `data: ${JSON.stringify({
+            type: 'done',
+            fullContent: aiResponseContent
+          })}\n\n`
+        )
 
-      // Force flush to ensure all content is sent
-      res.flushHeaders()
+        // Force flush to ensure all content is sent
+        res.flushHeaders()
 
-      // Send a clean termination signal
-      res.write(':\n\n')
+        // Send a clean termination signal
+        res.write(':\n\n')
+      } catch (responseError) {
+        logger.error('Error sending completion event', {
+          error: responseError as Error,
+          chatId
+        })
+      } finally {
+        // Always close the connection
+        if (!res.writableEnded) {
+          res.end()
+        }
+      }
     }
 
     // Handle client disconnect
