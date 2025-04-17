@@ -220,11 +220,6 @@ router.delete('/:chatId', authenticateChatAccess, async (req, res) => {
   }
 })
 
-// Send a streaming message and get a response (requires chat-specific authentication)
-// Support both POST and GET methods for compatibility with EventSource
-router.post('/:chatId/stream', authenticateChatAccess, handleStreamRequest)
-router.get('/:chatId/stream', authenticateChatAccess, handleStreamRequest)
-
 // Shared handler function for stream requests
 async function handleStreamRequest(req: CustomRequest, res: express.Response) {
   // Set the proper headers for Server-Sent Events (SSE)
@@ -503,6 +498,12 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
 
     return
   }
+}
+
+// Expose the function to apply rate limiting from index.ts
+export const applyStreamRateLimit = (limiter: any) => {
+  router.post('/:chatId/stream', limiter, authenticateChatAccess, handleStreamRequest)
+  router.get('/:chatId/stream', limiter, authenticateChatAccess, handleStreamRequest)
 }
 
 export default router
