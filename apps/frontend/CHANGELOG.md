@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.16
+
+### Patch Changes
+
+- Minor styling
+
 ## 0.2.15
 
 ### Patch Changes

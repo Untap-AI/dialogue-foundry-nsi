@@ -82,9 +82,6 @@ app.use('/api/admin', adminRoutes)
 // Apply the chat stream rate limiter to the streaming routes
 applyStreamRateLimit(chatStreamRateLimit)
 
-// Apply the chat creation rate limiter to the chat creation route
-applyCreationRateLimit(chatCreationRateLimit)
-
 // 404 handler - must come after routes
 app.use(
   (

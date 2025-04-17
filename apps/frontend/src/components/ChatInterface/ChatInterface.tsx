@@ -19,7 +19,7 @@ export interface ChatInterfaceProps {
 
 export const ChatInterface = ({ className, isOpen }: ChatInterfaceProps) => {
   // Get config from context
-  const { conversationStarters, chatConfig, theme, personaOptions } =
+  const { conversationStarters, chatConfig, theme = 'light', personaOptions } =
     useConfig()
 
   const [chatId, setChatId] = useState<string | undefined>(undefined)

@@ -8,9 +8,6 @@
     --nlux-WelcomeMessage-Avatar--BorderColor: var(--df-transparent);
     --nlux-WelcomeMessage-Avatar--BackgroundColor: var(--df-transparent);
 
-    /** Divider between composer and messages */
-    --nlux-ChatRoom-Divider--Color: var(--df-text-secondary);
-
     /** Conversation loader */
     --nlux-ChatRoom-Loader--Color: var(--df-text-secondary);
 
