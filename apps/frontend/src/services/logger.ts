@@ -2,33 +2,19 @@ import * as Sentry from '@sentry/react'
 import { categorizeError } from './errors'
 import type { ErrorCodeValue } from './errors'
 
-// Add this at the top of the file
-interface ImportMetaEnv {
-  VITE_ENV?: string
-  VITE_SENTRY_DSN?: string
-}
-
-declare global {
-  interface ImportMeta {
-    env: ImportMetaEnv
-  }
-}
-
 // Environment type for better type safety
-export type Environment = 'development' | 'smokebox' | 'production' | string
+export type Environment = 'development' | 'production' | string
 
 // Default configuration with sensible values
 const DEFAULT_CONFIG = {
   dsn: '', // Empty string as default DSN
-  environment: import.meta.env.VITE_ENV || 'development',
+  environment: import.meta.env.PROD ? 'production' : 'development',
   release: 'development',
   debug: false,
-  // Only enable in production and smokebox environments
-  enabled: ['production', 'smokebox'].includes(import.meta.env.VITE_ENV || ''),
-  // In smokebox, show all logs; in production, show only errors
-  consoleLevel: (import.meta.env.VITE_ENV === 'smokebox'
-    ? 'debug'
-    : 'error') as LogLevel
+  // Only enable in production environments
+  enabled: import.meta.env.PROD,
+  // In production, show only errors
+  consoleLevel: import.meta.env.PROD ? 'error' : ('debug' as LogLevel)
 }
 
 // Supported log levels
@@ -111,13 +97,6 @@ export class Logger {
   }
 
   /**
-   * Check if we're in smokebox environment
-   */
-  public isSmokebox(): boolean {
-    return this.getEnvironment() === 'smokebox'
-  }
-
-  /**
    * Check if we're in development environment
    */
   public isDevelopment(): boolean {
@@ -131,11 +110,11 @@ export class Logger {
     this.config.environment = environment
 
     // Update enabled status based on environment
-    this.config.enabled = ['production', 'smokebox'].includes(environment)
+    this.config.enabled = environment === 'production'
 
     // Update console level based on environment
     this.config.consoleLevel =
-      environment === 'smokebox' ? 'debug' : ('error' as LogLevel)
+      environment === 'production' ? 'error' : ('debug' as LogLevel)
 
     if (this.initialized) {
       Sentry.setTag('environment', environment)
@@ -171,7 +150,7 @@ export class Logger {
         dsn: this.config.dsn,
         environment: this.config.environment,
         release: this.config.release,
-        debug: this.config.debug || this.isSmokebox(),
+        debug: this.config.debug,
 
         // Performance monitoring using modern Sentry API
         integrations: [Sentry.browserTracingIntegration()],
@@ -465,14 +444,9 @@ export function isProduction(): boolean {
   return logger.isProduction()
 }
 
-// Check if we're in smokebox
-export function isSmokebox(): boolean {
-  return logger.isSmokebox()
-}
-
 // Check if Sentry should be enabled
 export function isSentryEnabled(): boolean {
-  return logger.isProduction() || logger.isSmokebox()
+  return logger.isProduction()
 }
 
 // Export Sentry directly for advanced usage

@@ -1,7 +1,7 @@
 {
   "name": "@dialogue-foundry/frontend",
   "private": true,
-  "version": "0.2.14",
+  "version": "0.2.15",
   "type": "module",
   "repository": {
     "type": "git",
@@ -9,7 +9,7 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && BUILD_MODE=full REACT_APP_ENV=production vite build",
+    "build": "tsc -b && BUILD_MODE=full vite build",
     "start": "vite --host",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf dist && rm -rf node_modules",

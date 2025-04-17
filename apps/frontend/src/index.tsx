@@ -29,10 +29,8 @@ function init(
     return
   }
 
-  console.log((import.meta as any).env.REACT_APP_SENTRY_DSN)
-
   initLogger({
-    dsn: (import.meta as any).env.REACT_APP_SENTRY_DSN
+    dsn: import.meta.env.VITE_SENTRY_DSN
   })
 
   // Create React root

@@ -30,8 +30,7 @@ export interface DialogueFoundryConfig {
 export const defaultConfig: DialogueFoundryConfig = {
   chatConfig: {
     apiBaseUrl:
-      (import.meta.env as { VITE_API_BASE_URL?: string }).VITE_API_BASE_URL ||
-      'http://localhost:3000/api',
+      import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
     companyId: 'west-hills-vineyards'
   },
 
@@ -39,15 +38,15 @@ export const defaultConfig: DialogueFoundryConfig = {
   logoUrl:
     'https://gtlandscapesolutions.com/wp-content/uploads/logo_gt_landcape_solutions_centered.png',
 
-  "title": "GT landscape solutions",
-  "personaOptions": {
-    "assistant": {
-      "name": "GT Landscape Expert",
-      "tagline": "Ask me anything about GT",
-      "avatar": ''
+  title: 'GT landscape solutions',
+  personaOptions: {
+    assistant: {
+      name: 'GT Landscape Expert',
+      tagline: 'Ask me anything about GT',
+      avatar: ''
     }
   },
-  "popupMessage": "Have questions? Click here for help!"
+  popupMessage: 'Have questions? Click here for help!'
 }
 
 // Create the context with default values
@@ -63,18 +62,16 @@ interface ConfigProviderProps {
 
 // Define the ConfigProvider as a named function component rather than an arrow function
 // This helps Fast Refresh identify the component correctly
-export function ConfigProvider({
-  children,
-}: ConfigProviderProps) {
-  const [config, setConfigState] = useState<DialogueFoundryConfig | undefined>(undefined)
+export function ConfigProvider({ children }: ConfigProviderProps) {
+  const [config, setConfigState] = useState<DialogueFoundryConfig | undefined>(
+    undefined
+  )
   const [configLoaded, setConfigLoaded] = useState(false)
 
   useEffect(() => {
     // Function to load config from an external JSON file
     const loadExternalConfig = async () => {
-      if (
-        (import.meta.env as { VITE_ENV?: string }).VITE_ENV === 'development'
-      ) {
+      if (import.meta.env.DEV) {
         console.log('Loading development config')
         setConfigState(defaultConfig)
         setConfigLoaded(true)
@@ -110,7 +107,6 @@ export function ConfigProvider({
                   : `${window.location.origin}/api`
             }
 
-            console.log('Found config in script tag', parsedConfig)
             setConfigState(parsedConfig)
             setConfigLoaded(true)
             return
