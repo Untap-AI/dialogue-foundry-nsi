@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.17
+
+### Patch Changes
+
+- break word
+
 ## 0.2.16
 
 ### Patch Changes

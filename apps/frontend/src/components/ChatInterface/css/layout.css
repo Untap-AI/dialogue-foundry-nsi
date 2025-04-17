@@ -57,16 +57,6 @@
     --nlux-ChatItem-Message-BubbleLayout--PaddingTopBottom: 10px;
     --nlux-ChatItem-Message-BubbleLayout--PaddingLeftRight: 15px;
 
-    /** Chat item message in list display layout */
-    --nlux-ChatItem-Message-ListLayout--BorderWidth: 0px;
-    --nlux-ChatItem-Message-ListLayout--BorderRadius: var(--df-border-radius);
-    --nlux-ChatItem-Message-ListLayout--PaddingTopBottom: 5px;
-    --nlux-ChatItem-Message-ListLayout--PaddingLeftRight: 10px;
-    --nlux-ChatItem-Message-ListLayout--MarginTop: -10px;
-    --nlux-ChatItem-Message-ListLayout--MarginBottom: 0px;
-    --nlux-ChatItem-Message-ListLayout--MarginLeft: 32px;
-    --nlux-ChatItem-Message-ListLayout--MarginRight: 0px;
-
     /** Composer */
     --nlux-Composer--Gap: 5px;
 
@@ -114,4 +104,8 @@
 
 .nlux-comp-chatItem.nlux-comp-chatItem--bubblesLayout.nlux-comp-chatItem--sent {
     flex-direction: column;
+}
+
+.nlux-markdownStream-root {
+    word-break: break-word;
 }
