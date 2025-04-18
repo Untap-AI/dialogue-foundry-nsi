@@ -156,7 +156,6 @@ export class ChatStreamingService {
     if (!chatId || !token) {
       try {
         if (!this.isReconnecting) {
-          ('Missing chat ID or token, initializing new chat')
           await this.initializeNewChat()
           chatId = this.storage.getItem(this.chatIdStorageKey)
           token = this.storage.getItem(this.tokenStorageKey)
@@ -190,8 +189,6 @@ export class ChatStreamingService {
 
     // Check token validity before proceeding
     try {
-      logger.debug('Checking token validity', { chatId })
-
       const testResponse = await fetch(`${this.apiBaseUrl}/chats/${chatId}`, {
         headers: {
           Authorization: `Bearer ${token}`
@@ -546,8 +543,6 @@ export class ChatStreamingService {
       // Calculate backoff time for exponential retry
       const backoffTime = this.getBackoffTime()
 
-      logger.debug(`Waiting for backoff time before retry: ${backoffTime}ms`)
-
       // Wait for backoff time before retrying
       await new Promise(resolve => setTimeout(resolve, backoffTime))
 
@@ -643,8 +638,6 @@ export class ChatStreamingService {
       // Calculate backoff time for exponential retry
       const backoffTime = this.getBackoffTime()
 
-      logger.debug(`Waiting for backoff time before retry: ${backoffTime}ms`)
-
       // Wait for backoff time before retrying
       await new Promise(resolve => setTimeout(resolve, backoffTime))
 
@@ -684,8 +677,6 @@ export class ChatStreamingService {
    */
   private closeEventSource(): void {
     if (this.eventSource) {
-      logger.debug('Closing EventSource connection')
-
       // Set flag before any operations that might trigger events
       this.isClosingConnection = true
 
@@ -730,7 +721,6 @@ export class ChatStreamingService {
    * Call this when the component unmounts or the user navigates away
    */
   cleanup(): void {
-    logger.debug('Cleaning up streaming service');
     this.isClosingConnection = true;
     this.closeEventSource();
     this.reconnectAttempts = 0;

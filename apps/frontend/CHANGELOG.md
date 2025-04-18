@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.21
+
+### Patch Changes
+
+- Test cloudfront invalidation
+
 ## 0.2.20
 
 ### Patch Changes
