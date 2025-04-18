@@ -19,6 +19,30 @@ const port = parseInt(process.env.PORT || '3000', 10)
 // Parse JSON bodies
 app.use(express.json())
 
+// Health check endpoint - placed at the top to ensure it's always accessible
+app.get('/health', (_, res) => {
+  res.json({ status: 'ok', timestamp: new Date().toISOString() })
+})
+
+// Configure rate limiting
+const globalRateLimit = rateLimit({
+  windowMs: 5 * 60 * 1000, // 5 minutes
+  limit: 100, // 100 requests per window per IP
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+  message: { error: 'Too many requests, please try again later.' },
+  // Trust the X-Forwarded-For header from Render's proxy
+  skipSuccessfulRequests: false, // Don't skip successful requests
+  skip: (req) => {
+    // Skip rate limiting for health check
+    return req.path === '/health'
+  }
+})
+
+// Apply global rate limit to all requests BEFORE CORS
+// This ensures any rate limit error responses will have CORS headers
+app.use(globalRateLimit)
+
 // Configure CORS
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
   'http://localhost:3000'
@@ -77,21 +101,7 @@ app.use((req, res, next) => {
   next()
 })
 
-// Configure rate limiting
-// const globalRateLimit = rateLimit({
-//   windowMs: 15 * 60 * 1000, // 15 minutes
-//   limit: 100, // 100 requests per window per IP
-//   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-//   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-//   message: { error: 'Too many requests, please try again later.' },
-//   // Trust the X-Forwarded-For header from Render's proxy
-//   skipSuccessfulRequests: false // Don't skip successful requests
-// })
-
-// // Apply global rate limit to all requests
-// app.use(globalRateLimit)
-
-// // More strict rate limit for chat streaming endpoint
+// More strict rate limit for chat streaming endpoint
 // const chatStreamRateLimit = rateLimit({
 //   windowMs: 5 * 60 * 1000, // 5 minutes
 //   limit: 20, // 20 requests per 5 minutes
@@ -102,13 +112,12 @@ app.use((req, res, next) => {
 //   keyGenerator: req => {
 //     // Use user ID from authentication if available, otherwise IP
 //     return (req as any).user?.userId || req.ip
+//   },
+//   skip: (req) => {
+//     // Skip rate limiting for health check
+//     return req.path === '/health'
 //   }
 // })
-
-// Health check endpoint
-app.get('/health', (_, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() })
-})
 
 // API routes
 app.use('/api/chats', chatRoutes)
