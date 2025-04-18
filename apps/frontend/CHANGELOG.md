@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.18
+
+### Patch Changes
+
+- timeout
+
 ## 0.2.17
 
 ### Patch Changes

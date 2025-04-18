@@ -10,7 +10,7 @@ interface SSEMessageEvent extends MessageEvent {
 }
 
 interface SSEEventData {
-  type: 'connected' | 'chunk' | 'done' | 'error' | 'err'
+  type: 'connected' | 'chunk' | 'done' | 'error'
   content?: string
   fullContent?: string
   error?: string
@@ -293,33 +293,43 @@ export class ChatStreamingService {
               }
               break
 
-            case 'done':
+            case 'done': {
               // Mark that we're intentionally closing before invoking callbacks or cleanup
               this.isClosingConnection = true
 
-              // Process the completion
-              onComplete(
+              // Ensure we have the complete response by preferring the fullContent
+              // provided by the server, which is guaranteed to be complete
+              const completeResponse =
                 typeof data.fullContent === 'string'
                   ? data.fullContent
                   : fullText
-              )
 
-              // Close the connection now that we're done
-              this.closeEventSource()
+              // Add a small delay before completing to ensure any pending chunks are processed
+              setTimeout(() => {
+                // Process the completion
+                onComplete(completeResponse)
 
-              // Reset reconnect attempts on successful completion
-              this.reconnectAttempts = 0
+                // Close the connection now that we're done
+                this.closeEventSource()
+
+                // Reset reconnect attempts on successful completion
+                this.reconnectAttempts = 0
+              }, 100)
               break
+            }
           }
-        } catch (parseError) {
-          const error = new StreamingError(ErrorCodes.PARSE_ERROR, true)
+        } catch (error) {
+          const streamError =
+            error instanceof StreamingError
+              ? error
+              : new StreamingError(ErrorCodes.CONNECTION_ERROR, true)
 
-          logger.captureException(error, {
-            originalError: parseError,
-            rawData: event.data
+          logger.captureException(streamError, {
+            originalError: error,
+            chatId
           })
 
-          onError(error)
+          onError(streamError)
           this.closeEventSource()
         }
       }
