@@ -1,7 +1,7 @@
 import './ChatHeader.css'
 import { useState, useCallback, useEffect, useRef } from 'react'
-import { useConfig } from '../../contexts/ConfigContext'
 import { useResizeObserver } from '../../hooks/useResizeObserver'
+import { useConfig } from '../../contexts/ConfigContext'
 import { Portal } from '../Portal/Portal'
 
 interface ChatHeaderProps {
@@ -59,7 +59,6 @@ export const ChatHeader = ({ onClose, onNewChat }: ChatHeaderProps) => {
 
   const { width } = useResizeObserver(100)
 
-  // TODO: Need a global breakpoint for mobile
   const isMobile = width < 768
 
   return (
@@ -80,16 +79,16 @@ export const ChatHeader = ({ onClose, onNewChat }: ChatHeaderProps) => {
           onClick={toggleMenu}
           data-chat-button
         >
-          ⋮
+          +
         </span>
         <span className="chat-header-button" onClick={onClose} data-chat-button>
-          {isMobile ? 'Close' : '—'}
+          Close
         </span>
       </div>
 
       {/* Menu dropdown */}
       {isMenuOpen && (
-        <Portal>
+        <Portal containerSelector={isMobile ? '.mobile-chat-modal' : undefined}>
           <div
             ref={menuRef}
             className="chat-header-menu"
