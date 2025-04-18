@@ -115,8 +115,14 @@ export class ChatApiService {
           // Create friendly messages for common HTTP status codes
           switch (responseStatus) {
             case 401:
-              errorCode = ServiceErrorCodes.AUTH_EXPIRED
-              break
+              // Check if this is specifically a token expiration
+              if (data && data.code === ServiceErrorCodes.TOKEN_EXPIRED) {
+                errorCode = ServiceErrorCodes.TOKEN_EXPIRED;
+              } else {
+                // Other authentication errors like invalid tokens
+                errorCode = ServiceErrorCodes.TOKEN_INVALID;
+              }
+              break;
             case 403:
               errorCode = ServiceErrorCodes.AUTH_FORBIDDEN
               break
@@ -137,15 +143,17 @@ export class ChatApiService {
           // Create the API error
           const apiError = new ApiError(errorCode, false)
 
-          // Log the error to Sentry with additional context
-          logger.captureException(apiError, {
-            originalError: error,
-            httpStatus: responseStatus,
-            endpoint: error.config?.url,
-            method: error.config?.method?.toUpperCase(),
-            requestData: error.config?.data,
-            responseData: data
-          })
+          // Only log to Sentry for non-expiration errors
+          if (errorCode !== ServiceErrorCodes.TOKEN_EXPIRED) {
+            logger.captureException(apiError, {
+              originalError: error,
+              httpStatus: responseStatus,
+              endpoint: error.config?.url,
+              method: error.config?.method?.toUpperCase(),
+              requestData: error.config?.data,
+              responseData: data
+            })
+          }
 
           return Promise.reject(apiError)
         } else if (error.request) {
@@ -200,10 +208,15 @@ export class ChatApiService {
           messages: this.mapMessagesToNluxFormat(response.data.messages || [])
         }
       } catch (error) {
-        logger.error('Error loading existing chat', {
-          chatId: storedChatId,
-          error
-        })
+        // Check if this is a token expiration
+        if (error instanceof ApiError && error.code === ServiceErrorCodes.TOKEN_EXPIRED) {
+          logger.debug('Token expired during initialization, creating new chat')
+        } else {
+          logger.error('Error loading existing chat', {
+            chatId: storedChatId,
+            error
+          })
+        }
 
         // If there's an error (e.g., token expired), clear storage and create a new chat
         this.storage.removeItem(this.tokenStorageKey)

@@ -10,6 +10,16 @@ import { ErrorCategory, categorizeError } from '../../services/errors'
 import type { ServiceError } from '../../services/errors'
 import type { ChatItem, ErrorEventDetails } from '@nlux/react'
 
+// Add the icon based on error category
+const ERROR_ICON_MAP: Record<ErrorCategory, string> = {
+  [ErrorCategory.AUTHENTICATION]: '🔒',
+  [ErrorCategory.CONNECTION]: '🔌',
+  [ErrorCategory.SERVER]: '🖥️',
+  [ErrorCategory.RATE_LIMIT]: '⏱️',
+  [ErrorCategory.TIMEOUT]: '⌛',
+  [ErrorCategory.UNKNOWN]: '⚠️'
+}
+
 type ChatStatus = 'loading' | 'initialized' | 'error'
 
 export interface ChatInterfaceProps {
@@ -99,19 +109,9 @@ export const ChatInterface = ({ className, isOpen }: ChatInterfaceProps) => {
       const errorBanner = document.createElement('div')
       errorBanner.className = `df-error-banner df-error-${category}`
 
-      // Add the icon based on error category
-      const iconMap: Record<ErrorCategory, string> = {
-        [ErrorCategory.AUTHENTICATION]: '🔒',
-        [ErrorCategory.CONNECTION]: '🔌',
-        [ErrorCategory.SERVER]: '🖥️',
-        [ErrorCategory.RATE_LIMIT]: '⏱️',
-        [ErrorCategory.TIMEOUT]: '⌛',
-        [ErrorCategory.UNKNOWN]: '⚠️'
-      }
-
       // Build the error banner content
       errorBanner.innerHTML = `
-        <div class="df-error-icon">${iconMap[category] || '⚠️'}</div>
+        <div class="df-error-icon">${ERROR_ICON_MAP[category] || '⚠️'}</div>
         <div class="df-error-content">
           <div class="df-error-message">${message}</div>
         </div>

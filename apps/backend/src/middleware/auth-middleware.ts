@@ -65,19 +65,30 @@ export const authenticateChatAccess = (
     }
 
     // Verify token
-    const payload = verifyToken(token)
-    if (!payload) {
-      logger.warn(`Authentication failed: Invalid/expired token`, {
+    const verifyResult = verifyToken(token)
+    if (!verifyResult) {
+      // Generic verification failure - could be invalid format, signature, etc.
+      logger.warn(`Authentication failed: Invalid token format or signature`, {
         tokenSource,
         path: req.originalUrl,
         method: req.method
       })
       return res.status(401).json({
-        error:
-          'Invalid or expired token. Please reinitialize your chat session.',
+        error: 'Invalid token. Please reinitialize your chat session.',
         code: 'TOKEN_INVALID'
       })
     }
+    
+    // Check for token expiration specifically
+    if (verifyResult.expired) {
+      // Token is structurally valid but expired - don't log this as a warning
+      return res.status(401).json({
+        error: 'Your session has expired. Starting a new chat session.',
+        code: 'TOKEN_EXPIRED'
+      })
+    }
+    
+    const payload = verifyResult.payload
 
     // Check if the requested chat ID matches the token's chat ID
     const { chatId } = req.params
@@ -131,15 +142,29 @@ export const authenticateUser = (
     const token = extractTokenFromHeader(authHeader)
     if (!token) {
       return res.status(401).json({
-        error: 'Authentication required. Provide a valid Bearer token.'
+        error: 'Authentication required. Provide a valid Bearer token.',
+        code: 'TOKEN_MISSING'
       })
     }
 
     // Verify token
-    const payload = verifyToken(token)
-    if (!payload) {
-      return res.status(401).json({ error: 'Invalid or expired token' })
+    const verifyResult = verifyToken(token)
+    if (!verifyResult) {
+      return res.status(401).json({ 
+        error: 'Invalid token. Please reinitialize your session.',
+        code: 'TOKEN_INVALID'
+      })
     }
+    
+    // Check for token expiration specifically
+    if (verifyResult.expired) {
+      return res.status(401).json({
+        error: 'Your session has expired. Starting a new session.',
+        code: 'TOKEN_EXPIRED'
+      })
+    }
+    
+    const payload = verifyResult.payload
 
     // Add user info to request for future middleware/handlers using Object.assign
     Object.assign(req, {
@@ -156,7 +181,10 @@ export const authenticateUser = (
       path: req.originalUrl,
       method: req.method
     })
-    return res.status(500).json({ error: 'Authentication failed' })
+    return res.status(500).json({ 
+      error: 'Authentication failed',
+      code: 'AUTH_FAILED'
+    })
   }
 }
 
@@ -192,18 +220,30 @@ export const authenticateAdmin = (
     if (!token) {
       return res.status(401).json({
         error:
-          'Admin authentication required. Provide a valid Bearer token or admin key.'
+          'Admin authentication required. Provide a valid Bearer token or admin key.',
+        code: 'TOKEN_MISSING'
       })
     }
 
     // Verify admin token
-    const payload = verifyAdminToken(token)
-    if (!payload) {
+    const verifyResult = verifyAdminToken(token)
+    if (!verifyResult) {
       return res.status(403).json({
         error:
-          'Admin privileges required. Regular user tokens are not accepted for this operation.'
+          'Admin privileges required. Regular user tokens are not accepted for this operation.',
+        code: 'TOKEN_INVALID'
       })
     }
+    
+    // Check for token expiration specifically
+    if (verifyResult.expired) {
+      return res.status(401).json({
+        error: 'Your admin session has expired. Please log in again.',
+        code: 'TOKEN_EXPIRED'
+      })
+    }
+    
+    const payload = verifyResult.payload
 
     // Add admin info to request for future middleware/handlers
     Object.assign(req, {
@@ -220,6 +260,9 @@ export const authenticateAdmin = (
       path: req.originalUrl,
       method: req.method
     })
-    return res.status(500).json({ error: 'Admin authentication failed' })
+    return res.status(500).json({ 
+      error: 'Admin authentication failed',
+      code: 'AUTH_FAILED'
+    })
   }
 }

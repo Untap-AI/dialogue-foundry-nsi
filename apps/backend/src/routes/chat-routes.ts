@@ -476,25 +476,13 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       userId: req.user?.userId
     })
 
-    // Check if this is an authentication error
-    if (
-      error instanceof Error &&
-      error.message &&
-      (error.message.includes('token') ||
-        error.message.includes('authenticate'))
-    ) {
-      sendErrorEvent(
-        'Invalid or expired token. Please reinitialize your chat session.',
-        'TOKEN_INVALID'
-      )
-    } else {
-      // Send appropriate error message based on the error type
-      sendErrorEvent(
-        error instanceof Error
-          ? error.message
-          : 'An error occurred processing your request'
-      )
-    }
+
+    // Send appropriate error message based on the error type
+    sendErrorEvent(
+      error instanceof Error
+        ? error.message
+        : 'An error occurred processing your request'
+    )
 
     return
   }

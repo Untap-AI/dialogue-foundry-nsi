@@ -44,6 +44,7 @@ export const ErrorCodes = {
   
   // Authentication errors
   TOKEN_INVALID: 'TOKEN_INVALID',
+  TOKEN_EXPIRED: 'TOKEN_EXPIRED',
   TOKEN_MISSING: 'TOKEN_MISSING',
   AUTH_EXPIRED: 'AUTH_EXPIRED',
   AUTH_FORBIDDEN: 'AUTH_FORBIDDEN',
@@ -104,6 +105,7 @@ export enum ErrorCategory {
 export function categorizeError(code: ErrorCodeValue | string): ErrorCategory {
     switch (code) {
       case ErrorCodes.TOKEN_INVALID:
+      case ErrorCodes.TOKEN_EXPIRED:
       case ErrorCodes.TOKEN_MISSING:
       case ErrorCodes.AUTH_EXPIRED:
       case ErrorCodes.AUTH_FORBIDDEN:
@@ -132,6 +134,11 @@ export function categorizeError(code: ErrorCodeValue | string): ErrorCategory {
  * @param customMessage Optional custom message to use instead of default
  */
 export function getFriendlyErrorMessage(code: ErrorCodeValue | string): string {
+  // Special case for token expired which should have a specific message
+  if (code === ErrorCodes.TOKEN_EXPIRED) {
+    return 'Your session has expired. Starting a new chat session.';
+  }
+  
   const category = categorizeError(code);
   
   switch (category) {

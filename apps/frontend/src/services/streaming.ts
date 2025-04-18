@@ -197,20 +197,53 @@ export class ChatStreamingService {
 
       if (!testResponse.ok) {
         if (testResponse.status === 401) {
-          logger.warning('Token is invalid, attempting to reconnect', {
-            status: testResponse.status,
-            chatId
-          })
+          // Try to get the error code from the response
+          try {
+            const errorData = await testResponse.json()
+            const errorCode = errorData.code
 
-          // If token is invalid, try to reconnect
-          this.handleTokenError(
-            userQuery,
-            onChunk,
-            onComplete,
-            onError,
-            companyId
-          )
-          return
+            // Handle differently based on error code
+            if (errorCode === ErrorCodes.TOKEN_EXPIRED) {
+              // For expired tokens, silently reconnect without logging
+              this.handleTokenExpired(
+                userQuery,
+                onChunk,
+                onComplete,
+                onError,
+                companyId
+              )
+              return
+            } else {
+              // For other auth errors, use regular token error handling
+              logger.warning('Token is invalid, attempting to reconnect', {
+                status: testResponse.status,
+                chatId,
+                errorCode
+              })
+              this.handleTokenError(
+                userQuery,
+                onChunk,
+                onComplete,
+                onError,
+                companyId
+              )
+              return
+            }
+          } catch (parseError) {
+            // If can't parse JSON, treat as generic token error
+            logger.warning('Token error, attempting to reconnect', {
+              status: testResponse.status,
+              chatId
+            })
+            this.handleTokenError(
+              userQuery,
+              onChunk,
+              onComplete,
+              onError,
+              companyId
+            )
+            return
+          }
         }
       }
     } catch (error) {
@@ -405,16 +438,26 @@ export class ChatStreamingService {
     const errorCode =
       data.code && isErrorCode(data.code) ? data.code : ErrorCodes.UNKNOWN_ERROR
 
-    logger.warning('Handling server error', {
-      errorCode,
-      errorMessage: data.error
-    })
-
     // Handle different error codes
     switch (errorCode) {
-      // Authentication errors - need to renew session
+      // Token expired (handled differently from invalid)
+      case ErrorCodes.TOKEN_EXPIRED:
+        this.handleTokenExpired(
+          userQuery,
+          onChunk,
+          onComplete,
+          onError,
+          companyId
+        )
+        break;
+        
+      // Other authentication errors - need to renew session and log the issue
       case ErrorCodes.TOKEN_INVALID:
       case ErrorCodes.TOKEN_MISSING:
+        logger.warning('Handling server error', {
+          errorCode,
+          errorMessage: data.error
+        })
         this.handleTokenError(
           userQuery,
           onChunk,
@@ -428,6 +471,10 @@ export class ChatStreamingService {
       case ErrorCodes.NOT_FOUND:
       case ErrorCodes.INVALID_CHAT:
       case ErrorCodes.INVALID_COMPANY:
+        logger.warning('Handling server error', {
+          errorCode,
+          errorMessage: data.error
+        })
         this.handleChatError(
           userQuery,
           onChunk,
@@ -474,6 +521,88 @@ export class ChatStreamingService {
    */
   private getBackoffTime(): number {
     return Math.min(1000 * Math.pow(2, this.reconnectAttempts), 10000) // Max 10 seconds
+  }
+
+  /**
+   * Handle token expiration by silently reinitializing the chat and retrying
+   * Similar to handleTokenError but without logging warnings
+   */
+  private async handleTokenExpired(
+    userQuery: string,
+    onChunk: (chunk: string) => void,
+    onComplete: (fullText: string) => void,
+    onError: (error: Error) => void,
+    companyId?: string
+  ): Promise<void> {
+    this.closeEventSource()
+
+    // Track reconnection attempt but do not increment tokenReconnectAttempts
+    // as we treat expiration differently from invalid tokens
+    this.reconnectAttempts++
+    this.lastReconnectTime = Date.now()
+
+    // Check if we've exceeded maximum reconnection attempts
+    if (this.reconnectAttempts > this.MAX_RECONNECT_ATTEMPTS) {
+      const reconnectError = new StreamingError(
+        ErrorCodes.RECONNECT_LIMIT,
+        false
+      )
+
+      logger.captureException(reconnectError, {
+        reconnectAttempts: this.reconnectAttempts,
+        maxReconnectAttempts: this.MAX_RECONNECT_ATTEMPTS
+      })
+
+      onError(reconnectError)
+      this.isReconnecting = false
+      return
+    }
+
+    if (this.isReconnecting) {
+      // Avoid nested reconnection loops
+      const nestingError = new StreamingError(ErrorCodes.TOKEN_EXPIRED, false)
+
+      logger.captureException(nestingError, {
+        message: 'Nested reconnection attempt prevented'
+      })
+
+      onError(nestingError)
+      this.isReconnecting = false
+      return
+    }
+
+    this.isReconnecting = true
+
+    try {
+      // For expired tokens, we don't need to wait for backoff time
+      // as expiration is expected, not an error condition
+
+      // Clear existing token and chat ID
+      this.storage.removeItem(this.tokenStorageKey)
+      this.storage.removeItem(this.chatIdStorageKey)
+
+      // Initialize a new chat
+      await this.initializeNewChat()
+
+      // Retry the streaming request
+      await this.streamMessage(
+        userQuery,
+        onChunk,
+        onComplete,
+        onError,
+        companyId
+      )
+      this.isReconnecting = false
+    } catch (error) {
+      const retryError = new StreamingError(ErrorCodes.TOKEN_EXPIRED, false)
+
+      logger.captureException(retryError, {
+        originalError: error
+      })
+
+      onError(retryError)
+      this.isReconnecting = false
+    }
   }
 
   /**

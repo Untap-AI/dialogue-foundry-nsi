@@ -69,38 +69,6 @@ app.use(
   })
 )
 
-// Request logging middleware
-app.use((req, res, next) => {
-  const start = Date.now()
-
-  if(req.path.includes('health')) {
-    next()
-    return
-  }
-  
-  // Log request details
-  logger.info('Request received', {
-    method: req.method,
-    path: req.path,
-    origin: req.headers.origin || 'no-origin',
-    ip: req.ip || req.headers['x-forwarded-for'] || 'unknown',
-    userAgent: req.headers['user-agent'] || 'unknown'
-  })
-  
-  // Log response time on completion
-  res.on('finish', () => {
-    const duration = Date.now() - start
-    logger.info('Request completed', {
-      method: req.method,
-      path: req.path,
-      statusCode: res.statusCode,
-      duration: `${duration}ms`
-    })
-  })
-  
-  next()
-})
-
 // More strict rate limit for chat streaming endpoint
 // const chatStreamRateLimit = rateLimit({
 //   windowMs: 5 * 60 * 1000, // 5 minutes

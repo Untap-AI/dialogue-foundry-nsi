@@ -33,6 +33,12 @@ interface AdminAccessPayload {
   exp?: number
 }
 
+// Result types for token verification with expiration differentiation
+interface TokenVerificationResult<T> {
+  expired: boolean
+  payload: T
+}
+
 /**
  * Generate a JWT token for chat access
  * @param chatId - The ID of the chat
@@ -72,13 +78,32 @@ export const generateAdminAccessToken = (userId: string): string => {
 /**
  * Verify and decode a JWT token
  * @param token - JWT token to verify
- * @returns The decoded payload or undefined if invalid
+ * @returns The verification result or undefined if invalid
  */
-export const verifyToken = (token: string): ChatAccessPayload | undefined => {
+export const verifyToken = (
+  token: string
+): TokenVerificationResult<ChatAccessPayload> | undefined => {
   try {
-    return jwt.verify(token, JWT_SECRET) as ChatAccessPayload
+    const payload = jwt.verify(token, JWT_SECRET) as ChatAccessPayload
+    return {
+      expired: false,
+      payload
+    }
   } catch (error) {
-    console.error('JWT verification failed:', error)
+    // Check if the error is specifically a token expiration error
+    if (error instanceof jwt.TokenExpiredError) {
+      try {
+        // Decode without verification to get the payload
+        const payload = jwt.decode(token) as ChatAccessPayload
+        return {
+          expired: true,
+          payload
+        }
+      } catch (decodeError) {
+        // If even decoding fails, token is malformed
+        return undefined
+      }
+    }
     return undefined
   }
 }
@@ -86,23 +111,44 @@ export const verifyToken = (token: string): ChatAccessPayload | undefined => {
 /**
  * Verify and decode an admin JWT token
  * @param token - Admin JWT token to verify
- * @returns The decoded admin payload or undefined if invalid
+ * @returns The verification result or undefined if invalid
  */
 export const verifyAdminToken = (
   token: string
-): AdminAccessPayload | undefined => {
+): TokenVerificationResult<AdminAccessPayload> | undefined => {
   try {
     const payload = jwt.verify(token, ADMIN_JWT_SECRET) as AdminAccessPayload
 
     // Additional validation to ensure it's an admin token
     if (!payload.isAdmin) {
-      console.error('Token is not an admin token')
       return undefined
     }
 
-    return payload
+    return {
+      expired: false,
+      payload
+    }
   } catch (error) {
-    console.error('Admin JWT verification failed:', error)
+    // Check if the error is specifically a token expiration error
+    if (error instanceof jwt.TokenExpiredError) {
+      try {
+        // Decode without verification to get the payload
+        const payload = jwt.decode(token) as AdminAccessPayload
+        
+        // Ensure it's an admin token
+        if (!payload.isAdmin) {
+          return undefined
+        }
+        
+        return {
+          expired: true,
+          payload
+        }
+      } catch (decodeError) {
+        // If even decoding fails, token is malformed
+        return undefined
+      }
+    }
     return undefined
   }
 }
