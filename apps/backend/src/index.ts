@@ -29,9 +29,6 @@ app.use(
       // eslint-disable-next-line no-null/no-null
       if (!thisOrigin) return callback(null, true)
 
-      console.log('thisOrigin', thisOrigin)
-      console.log('allowedOrigins', allowedOrigins)
-
       if (allowedOrigins.indexOf(thisOrigin) === -1) {
         const msg = `The CORS policy for this site does not allow access from the specified Origin: ${thisOrigin}`
         return callback(new Error(msg), false)
