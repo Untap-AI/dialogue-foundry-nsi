@@ -48,6 +48,11 @@ app.use(
 // Request logging middleware
 app.use((req, res, next) => {
   const start = Date.now()
+
+  if(req.path.includes('health')) {
+    next()
+    return
+  }
   
   // Log request details
   logger.info('Request received', {
