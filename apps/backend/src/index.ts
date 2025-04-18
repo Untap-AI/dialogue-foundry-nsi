@@ -26,7 +26,6 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
 app.use(
   cors({
     origin: (thisOrigin, callback) => {
-      console.log('thisOrigin', thisOrigin)
       // Allow requests with no origin (like mobile apps or curl requests)
       // eslint-disable-next-line no-null/no-null
       if (!thisOrigin) return callback(null, true)
@@ -39,13 +38,39 @@ app.use(
         return callback(new Error(msg), false)
       }
 
-      console.log('callback')
       // eslint-disable-next-line no-null/no-null
       return callback(null, true)
     },
     credentials: true
   })
 )
+
+// Request logging middleware
+app.use((req, res, next) => {
+  const start = Date.now()
+  
+  // Log request details
+  logger.info('Request received', {
+    method: req.method,
+    path: req.path,
+    origin: req.headers.origin || 'no-origin',
+    ip: req.ip || req.headers['x-forwarded-for'] || 'unknown',
+    userAgent: req.headers['user-agent'] || 'unknown'
+  })
+  
+  // Log response time on completion
+  res.on('finish', () => {
+    const duration = Date.now() - start
+    logger.info('Request completed', {
+      method: req.method,
+      path: req.path,
+      statusCode: res.statusCode,
+      duration: `${duration}ms`
+    })
+  })
+  
+  next()
+})
 
 // Configure rate limiting
 // const globalRateLimit = rateLimit({

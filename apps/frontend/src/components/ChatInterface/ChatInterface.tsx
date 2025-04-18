@@ -52,6 +52,12 @@ export const ChatInterface = ({ className, isOpen }: ChatInterfaceProps) => {
     )
   }, messages)
 
+  useEffect(() => {
+    return () => {
+      streamingServiceRef.current?.cleanup()
+    }
+  }, [chatStatus])
+
   // Setup chat function
   const setupChat = async () => {
     try {

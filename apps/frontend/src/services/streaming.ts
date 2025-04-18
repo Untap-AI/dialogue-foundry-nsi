@@ -724,4 +724,15 @@ export class ChatStreamingService {
     this.lastReconnectTime = 0
     this.isReconnecting = false
   }
+
+  /**
+   * Clean up all connections and prevent reconnects
+   * Call this when the component unmounts or the user navigates away
+   */
+  cleanup(): void {
+    logger.debug('Cleaning up streaming service');
+    this.isClosingConnection = true;
+    this.closeEventSource();
+    this.reconnectAttempts = 0;
+  }
 }
