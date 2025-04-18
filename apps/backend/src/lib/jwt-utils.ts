@@ -9,7 +9,7 @@ const JWT_SECRET =
   'super-secret-jwt-token-with-at-least-32-characters-long'
 const TOKEN_EXPIRY = process.env.JWT_EXPIRY
   ? parseInt(process.env.JWT_EXPIRY)
-  : 86400 // 24 hours in seconds
+  : 86400 * 30 // 30 days in seconds
 
 // Admin-specific JWT settings
 const ADMIN_JWT_SECRET =
@@ -17,7 +17,7 @@ const ADMIN_JWT_SECRET =
   `${JWT_SECRET}-admin-extension-key-do-not-use-in-production`
 const ADMIN_TOKEN_EXPIRY = process.env.ADMIN_JWT_EXPIRY
   ? parseInt(process.env.ADMIN_JWT_EXPIRY)
-  : 43200 // 12 hours in seconds
+  : 86400 * 30 // 30 days in seconds
 
 interface ChatAccessPayload {
   chatId: string

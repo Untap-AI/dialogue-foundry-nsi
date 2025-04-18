@@ -2,7 +2,7 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import rateLimit from 'express-rate-limit'
-import chatRoutes, { applyStreamRateLimit} from './routes/chat-routes'
+import chatRoutes, { applyStreamRateLimit } from './routes/chat-routes'
 import chatConfigRoutes from './routes/chat-config-routes'
 import cacheRoutes from './routes/cache-routes'
 import adminRoutes from './routes/admin-routes'
@@ -25,14 +25,19 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
 app.use(
   cors({
     origin: (thisOrigin, callback) => {
+      console.log('thisOrigin', thisOrigin)
       // Allow requests with no origin (like mobile apps or curl requests)
       // eslint-disable-next-line no-null/no-null
       if (!thisOrigin) return callback(null, true)
+
+      console.log('allowedOrigins', allowedOrigins)
 
       if (allowedOrigins.indexOf(thisOrigin) === -1) {
         const msg = `The CORS policy for this site does not allow access from the specified Origin: ${thisOrigin}`
         return callback(new Error(msg), false)
       }
+
+      console.log('callback')
       // eslint-disable-next-line no-null/no-null
       return callback(null, true)
     },
@@ -62,10 +67,10 @@ const chatStreamRateLimit = rateLimit({
   legacyHeaders: false,
   message: { error: 'Too many chat requests, please try again later.' },
   skipSuccessfulRequests: false,
-  keyGenerator: (req) => {
+  keyGenerator: req => {
     // Use user ID from authentication if available, otherwise IP
-    return (req as any).user?.userId || req.ip;
-  },
+    return (req as any).user?.userId || req.ip
+  }
 })
 
 // Health check endpoint
