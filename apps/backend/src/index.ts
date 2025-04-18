@@ -2,11 +2,12 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import rateLimit from 'express-rate-limit'
-import chatRoutes, { applyStreamRateLimit } from './routes/chat-routes'
+import chatRoutes from './routes/chat-routes'
 import chatConfigRoutes from './routes/chat-config-routes'
 import cacheRoutes from './routes/cache-routes'
 import adminRoutes from './routes/admin-routes'
 import { logger } from './lib/logger'
+import { setupExpressErrorHandler } from '@sentry/node'
 
 // Load environment variables
 dotenv.config()
@@ -25,6 +26,7 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
 app.use(
   cors({
     origin: (thisOrigin, callback) => {
+      console.log('thisOrigin', thisOrigin)
       // Allow requests with no origin (like mobile apps or curl requests)
       // eslint-disable-next-line no-null/no-null
       if (!thisOrigin) return callback(null, true)
@@ -46,32 +48,32 @@ app.use(
 )
 
 // Configure rate limiting
-const globalRateLimit = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  limit: 100, // 100 requests per window per IP
-  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
-  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
-  message: { error: 'Too many requests, please try again later.' },
-  // Trust the X-Forwarded-For header from Render's proxy
-  skipSuccessfulRequests: false // Don't skip successful requests
-})
+// const globalRateLimit = rateLimit({
+//   windowMs: 15 * 60 * 1000, // 15 minutes
+//   limit: 100, // 100 requests per window per IP
+//   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+//   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+//   message: { error: 'Too many requests, please try again later.' },
+//   // Trust the X-Forwarded-For header from Render's proxy
+//   skipSuccessfulRequests: false // Don't skip successful requests
+// })
 
-// Apply global rate limit to all requests
-app.use(globalRateLimit)
+// // Apply global rate limit to all requests
+// app.use(globalRateLimit)
 
-// More strict rate limit for chat streaming endpoint
-const chatStreamRateLimit = rateLimit({
-  windowMs: 5 * 60 * 1000, // 5 minutes
-  limit: 20, // 20 requests per 5 minutes
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many chat requests, please try again later.' },
-  skipSuccessfulRequests: false,
-  keyGenerator: req => {
-    // Use user ID from authentication if available, otherwise IP
-    return (req as any).user?.userId || req.ip
-  }
-})
+// // More strict rate limit for chat streaming endpoint
+// const chatStreamRateLimit = rateLimit({
+//   windowMs: 5 * 60 * 1000, // 5 minutes
+//   limit: 20, // 20 requests per 5 minutes
+//   standardHeaders: true,
+//   legacyHeaders: false,
+//   message: { error: 'Too many chat requests, please try again later.' },
+//   skipSuccessfulRequests: false,
+//   keyGenerator: req => {
+//     // Use user ID from authentication if available, otherwise IP
+//     return (req as any).user?.userId || req.ip
+//   }
+// })
 
 // Health check endpoint
 app.get('/health', (_, res) => {
@@ -84,8 +86,10 @@ app.use('/api/chat-configs', chatConfigRoutes)
 app.use('/api/cache', cacheRoutes)
 app.use('/api/admin', adminRoutes)
 
+setupExpressErrorHandler(app);
+
 // Apply the chat stream rate limiter to the streaming routes
-applyStreamRateLimit(chatStreamRateLimit)
+// applyStreamRateLimit(chatStreamRateLimit)
 
 // 404 handler - must come after routes
 app.use(

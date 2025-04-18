@@ -500,10 +500,8 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
   }
 }
 
-// Expose the function to apply rate limiting from index.ts
-export const applyStreamRateLimit = (limiter: any) => {
-  router.post('/:chatId/stream', limiter, authenticateChatAccess, handleStreamRequest)
-  router.get('/:chatId/stream', limiter, authenticateChatAccess, handleStreamRequest)
-}
+router.post('/:chatId/stream', authenticateChatAccess, handleStreamRequest)
+router.get('/:chatId/stream', authenticateChatAccess, handleStreamRequest)
+
 
 export default router

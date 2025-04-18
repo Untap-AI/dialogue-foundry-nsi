@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.19
+
+### Patch Changes
+
+- Sentry DSN
+
 ## 0.2.18
 
 ### Patch Changes
