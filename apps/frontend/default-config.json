@@ -12,5 +12,6 @@
       "tagline": "Ask me anything about West Hills Vineyard"
     }
   },
-  "popupMessage": "Have questions? Click here for help! 💬"
+  "popupMessage": "Have questions? Click here for help! 💬",
+  "welcomeMessage": "Hi, I'm the Dialogue Foundry. I'm here to help you with your questions."
 } 

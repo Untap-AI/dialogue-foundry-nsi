@@ -24,6 +24,8 @@ export interface DialogueFoundryConfig {
 
   // Welcome popup configuration
   popupMessage?: string
+
+  welcomeMessage?: string
 }
 
 // Default configuration
@@ -34,10 +36,6 @@ export const defaultConfig: DialogueFoundryConfig = {
     companyId: 'west-hills-vineyards'
   },
 
-  // TODO: Check logo
-  logoUrl:
-    'https://gtlandscapesolutions.com/wp-content/uploads/logo_gt_landcape_solutions_centered.png',
-
   title: 'GT landscape solutions',
   personaOptions: {
     assistant: {
@@ -46,7 +44,9 @@ export const defaultConfig: DialogueFoundryConfig = {
       avatar: ''
     }
   },
-  popupMessage: 'Have questions? Click here for help!'
+  popupMessage: 'Have questions? Click here for help!',
+  welcomeMessage:
+    "Hi, I'm the Dialogue Foundry. I'm here to help you with your questions."
 }
 
 // Create the context with default values

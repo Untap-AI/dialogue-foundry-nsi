@@ -2,13 +2,24 @@ import { useRef, useEffect } from 'react'
 import { ChatInterface } from '../ChatInterface/ChatInterface'
 import ChatHeader from '../ChatHeader/ChatHeader'
 import './MobileChatModal.css'
+import type { ChatItem } from '@nlux/react'
+import type { ChatStatus } from '../ChatWidget/ChatWidget'
 
 interface MobileChatModalProps {
   isOpen: boolean
   onClose: () => void
+  onNewChat: () => void
+  chatId: string | undefined
+  initialConversation: ChatItem[] | undefined
+  chatStatus: ChatStatus
 }
 
-export const MobileChatModal = ({ isOpen, onClose }: MobileChatModalProps) => {
+export const MobileChatModal = ({
+  isOpen,
+  onClose,
+  onNewChat,
+  ...propDrop
+}: MobileChatModalProps) => {
   // eslint-disable-next-line no-null/no-null
   const dialogRef = useRef<HTMLDialogElement>(null)
 
@@ -44,8 +55,11 @@ export const MobileChatModal = ({ isOpen, onClose }: MobileChatModalProps) => {
       }}
     >
       <div className="mobile-chat-content">
-        <ChatHeader onClose={onClose} />
-        <ChatInterface className="mobile-chat-interface mobile-chat-bubbles" isOpen={isOpen} />
+        <ChatHeader onClose={onClose} onNewChat={onNewChat} />
+        <ChatInterface
+          className="mobile-chat-interface mobile-chat-bubbles"
+          {...propDrop}
+        />
       </div>
     </dialog>
   )

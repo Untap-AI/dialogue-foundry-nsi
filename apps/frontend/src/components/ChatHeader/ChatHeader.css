@@ -5,6 +5,8 @@
   padding: 15px;
   background-color: var(--df-primary-color);
   color: var(--df-text-contrast);
+  position: relative;
+  z-index: 10000;
 }
 
 .chat-header-branding {
@@ -26,7 +28,7 @@
 
 .chat-header-controls {
   display: flex;
-  gap: 15px;
+  gap: 5px;
 }
 
 .chat-header-button {
@@ -35,6 +37,7 @@
   font-size: 16px;
   line-height: 30px;
   font-weight: 800;
+  width: 30px;
 }
 
 .chat-header-button:hover {
@@ -42,25 +45,23 @@
 }
 
 .chat-header-menu {
-  position: absolute;
-  top: 50px;
-  right: 15px;
-  background-color: #333;
+  position: fixed;
+  background-color: var(--df-primary-color);
   border-radius: 5px;
+  border: 1px solid var(--df-border-color);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  z-index: 10;
 }
 
 .chat-header-menu-item {
   padding: 10px 15px;
-  color: #eee;
+  color: var(--df-text-contrast);
   cursor: pointer;
   font-size: 14px;
   transition: background-color 0.2s;
 }
 
 .chat-header-menu-item:hover {
-  background-color: #444;
+  background-color: var(--df-tertiary-color);
 }
 
 .chat-header-menu-item:first-child {

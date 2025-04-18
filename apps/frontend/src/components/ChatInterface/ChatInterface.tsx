@@ -1,12 +1,12 @@
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useMemo } from 'react'
 import { AiChat, useAsStreamAdapter } from '@nlux/react'
 import { useConfig } from '../../contexts/ConfigContext'
 import '@nlux/themes/unstyled.css'
 import './ChatInterface.css'
 
-import { ChatApiService } from '../../services/api'
 import { ChatStreamingService } from '../../services/streaming'
 import { ErrorCategory, categorizeError } from '../../services/errors'
+import type { ChatStatus } from '../ChatWidget/ChatWidget'
 import type { ServiceError } from '../../services/errors'
 import type { ChatItem, ErrorEventDetails } from '@nlux/react'
 
@@ -20,14 +20,19 @@ const ERROR_ICON_MAP: Record<ErrorCategory, string> = {
   [ErrorCategory.UNKNOWN]: '⚠️'
 }
 
-type ChatStatus = 'loading' | 'initialized' | 'error'
-
 export interface ChatInterfaceProps {
-  className?: string
-  isOpen: boolean
+  className?: string | undefined
+  chatId: string | undefined
+  initialConversation: ChatItem[] | undefined
+  chatStatus: ChatStatus
 }
 
-export const ChatInterface = ({ className, isOpen }: ChatInterfaceProps) => {
+export const ChatInterface = ({
+  className,
+  chatId,
+  initialConversation,
+  chatStatus
+}: ChatInterfaceProps) => {
   // Get config from context
   const {
     conversationStarters,
@@ -36,56 +41,31 @@ export const ChatInterface = ({ className, isOpen }: ChatInterfaceProps) => {
     personaOptions
   } = useConfig()
 
-  const [chatId, setChatId] = useState<string | undefined>(undefined)
-  const [messages, setMessages] = useState<ChatItem[] | undefined>(undefined)
-  const [chatStatus, setChatStatus] = useState<ChatStatus>('loading')
-  // eslint-disable-next-line no-null/no-null
-  const streamingServiceRef = useRef<ChatStreamingService | null>(null)
-
-  const streamingService = useMemo(() => {
-    const service = new ChatStreamingService(chatConfig)
-    streamingServiceRef.current = service
-    return service
-  }, [chatConfig])
+  const streamingService = useMemo(
+    () => new ChatStreamingService(chatConfig),
+    [chatConfig]
+  )
 
   // Create adapter at the top level
-  const adapter = useAsStreamAdapter((userMessage: string, observer) => {
-    // Call the streaming service with the message content
-    streamingService.streamMessage(
-      userMessage,
-      // On each chunk update
-      chunk => observer.next(chunk),
-      // On complete
-      () => observer.complete(),
-      // On error - handle the error and pass to the observer
-      error => {
-        console.log('Error from streaming service:', error)
-        // Pass the error to the observer for NLUX to handle
-        observer.error(error)
-      }
-    )
-  }, messages)
-
-  useEffect(() => {
-    return () => {
-      streamingServiceRef.current?.cleanup()
-    }
-  }, [chatStatus])
-
-  // Setup chat function
-  const setupChat = async () => {
-    try {
-      setChatStatus('loading')
-      // Initialize service
-      const chatInit = await new ChatApiService(chatConfig).initializeChat()
-      setChatId(chatInit.chatId)
-      setMessages(chatInit.messages)
-      setChatStatus('initialized')
-    } catch (error) {
-      setChatStatus('error')
-      console.error('Chat initialization failed:', error)
-    }
-  }
+  const adapter = useAsStreamAdapter(
+    (userMessage: string, observer) => {
+      // Call the streaming service with the message content
+      streamingService.streamMessage(
+        userMessage,
+        // On each chunk update
+        chunk => observer.next(chunk),
+        // On complete
+        () => observer.complete(),
+        // On error - handle the error and pass to the observer
+        error => {
+          // Pass the error to the observer for NLUX to handle
+          observer.error(error)
+        },
+        chatConfig.companyId
+      )
+    },
+    [chatConfig.companyId, streamingService]
+  )
 
   // Create a custom error handler for the NLUX error event
   const handleNluxError = (error: ErrorEventDetails) => {
@@ -181,41 +161,13 @@ export const ChatInterface = ({ className, isOpen }: ChatInterfaceProps) => {
     }
   }
 
-  useEffect(() => {
-    // Initialize chat on component mount
-    setupChat()
-
-    // Cleanup
-    return () => {
-      if (streamingServiceRef.current) {
-        streamingServiceRef.current.cancelStream()
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  // Focus input field when chat is initialized
-  useEffect(() => {
-    if (chatStatus === 'initialized' && isOpen) {
-      // Add a small delay to ensure the composer input is rendered
-      setTimeout(() => {
-        const inputField = document.querySelector(
-          '.nlux-comp-composer > textarea'
-        )
-
-        if (inputField instanceof HTMLElement) {
-          inputField.focus()
-        }
-      }, 300)
-    }
-  }, [chatStatus, isOpen])
-
   // TODO: ConversationStarter UI
   return (
-    <div className={`chat-interface-wrapper ${className || ''}`}>
+    <div className={`chat-interface-wrapper ${className}`}>
       <div className="chat-interface-content">
         {(() => {
           switch (chatStatus) {
+            case 'uninitialized':
             case 'loading':
               return (
                 <div className="chat-loader-container">
@@ -232,7 +184,7 @@ export const ChatInterface = ({ className, isOpen }: ChatInterfaceProps) => {
                     themeId: 'dialogue-foundry',
                     colorScheme: theme
                   }}
-                  initialConversation={messages?.length ? messages : undefined}
+                  initialConversation={initialConversation}
                   conversationOptions={{
                     showWelcomeMessage: true,
                     conversationStarters,
@@ -256,12 +208,6 @@ export const ChatInterface = ({ className, isOpen }: ChatInterfaceProps) => {
                 <div className="chat-error-container">
                   <p className="chat-error-text">Error loading chat.</p>
                   <p className="chat-error-text">Please try again.</p>
-                  {/* <button 
-                    className="chat-reload-button" 
-                    onClick={retryConnection}
-                  >
-                    Reload Chat
-                  </button> */}
                 </div>
               )
           }
