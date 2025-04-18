@@ -25,14 +25,14 @@ const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
 app.use(
   cors({
     origin: (thisOrigin, callback) => {
-      console.log('thisOrigin', thisOrigin)
       // Allow requests with no origin (like mobile apps or curl requests)
       // eslint-disable-next-line no-null/no-null
       if (!thisOrigin) return callback(null, true)
 
-      console.log('allowedOrigins', allowedOrigins)
-
       if (allowedOrigins.indexOf(thisOrigin) === -1) {
+        logger.warn(
+          `CORS policy violation: ${thisOrigin} not in allowedOrigins`
+        )
         const msg = `The CORS policy for this site does not allow access from the specified Origin: ${thisOrigin}`
         return callback(new Error(msg), false)
       }
