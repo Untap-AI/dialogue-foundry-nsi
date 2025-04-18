@@ -19,8 +19,12 @@ export interface ChatInterfaceProps {
 
 export const ChatInterface = ({ className, isOpen }: ChatInterfaceProps) => {
   // Get config from context
-  const { conversationStarters, chatConfig, theme = 'light', personaOptions } =
-    useConfig()
+  const {
+    conversationStarters,
+    chatConfig,
+    theme = 'light',
+    personaOptions
+  } = useConfig()
 
   const [chatId, setChatId] = useState<string | undefined>(undefined)
   const [messages, setMessages] = useState<ChatItem[] | undefined>(undefined)
@@ -195,7 +199,9 @@ export const ChatInterface = ({ className, isOpen }: ChatInterfaceProps) => {
     if (chatStatus === 'initialized' && isOpen) {
       // Add a small delay to ensure the composer input is rendered
       setTimeout(() => {
-        const inputField = document.querySelector('textarea')
+        const inputField = document.querySelector(
+          '.nlux-comp-composer > textarea'
+        )
 
         if (inputField instanceof HTMLElement) {
           inputField.focus()

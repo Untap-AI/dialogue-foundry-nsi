@@ -116,6 +116,6 @@
 }
 
 /* Center the textarea. Needed for safari. */
-textarea {
+.nlux-comp-composer > textarea {
   align-content: center;
 }

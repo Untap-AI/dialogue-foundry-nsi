@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.20
+
+### Patch Changes
+
+- Fix text area focus
+
 ## 0.2.19
 
 ### Patch Changes
