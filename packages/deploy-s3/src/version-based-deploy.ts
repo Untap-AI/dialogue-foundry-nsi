@@ -152,7 +152,6 @@ async function main() {
       
       if (currentS3Version === currentVersion && !options.force) {
         console.log(chalk.green(`✅ Version ${currentVersion} is already deployed. Skipping deployment.`));
-        return;
       }
     } catch (error: any) {
       // If file doesn't exist, that's fine - we'll create it
