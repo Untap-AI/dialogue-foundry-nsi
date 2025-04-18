@@ -10,13 +10,7 @@ module.exports = {
   plugins: ["jsdoc", "no-null", "prettier", "node"],
   rules: {
     "id-denylist": [
-      "error",
-      "left",
-      "paddingLeft",
-      "marginLeft",
-      "right",
-      "paddingRight",
-      "marginRight",
+      "error"
     ],
     "import/order": [
       "error",

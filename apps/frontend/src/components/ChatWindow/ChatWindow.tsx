@@ -1,5 +1,5 @@
 import { forwardRef, useMemo } from 'react'
-import ChatHeader from '../ChatHeader/ChatHeader'
+import { ChatHeader } from '../ChatHeader/ChatHeader'
 import { ChatInterface } from '../ChatInterface/ChatInterface'
 import './ChatWindow.css'
 import type { ChatStatus } from '../ChatWidget/ChatWidget'

@@ -1,6 +1,6 @@
 import { useRef, useEffect } from 'react'
 import { ChatInterface } from '../ChatInterface/ChatInterface'
-import ChatHeader from '../ChatHeader/ChatHeader'
+import { ChatHeader } from '../ChatHeader/ChatHeader'
 import './MobileChatModal.css'
 import type { ChatItem } from '@nlux/react'
 import type { ChatStatus } from '../ChatWidget/ChatWidget'

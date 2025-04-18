@@ -2,17 +2,20 @@ import './ChatHeader.css'
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useConfig } from '../../contexts/ConfigContext'
 import { useResizeObserver } from '../../hooks/useResizeObserver'
-import Portal from '../Portal/Portal'
+import { Portal } from '../Portal/Portal'
 
 interface ChatHeaderProps {
   onClose: () => void
   onNewChat: () => void
 }
 
-const ChatHeader = ({ onClose, onNewChat }: ChatHeaderProps) => {
+export const ChatHeader = ({ onClose, onNewChat }: ChatHeaderProps) => {
   const { title, logoUrl } = useConfig()
+  // eslint-disable-next-line no-null/no-null
   const menuRef = useRef<HTMLDivElement>(null)
+  // eslint-disable-next-line no-null/no-null
   const buttonRef = useRef<HTMLSpanElement>(null)
+  // eslint-disable-next-line no-null/no-null
   const headerRef = useRef<HTMLDivElement>(null)
 
   const [isMenuOpen, setIsMenuOpen] = useState(false)
@@ -39,7 +42,7 @@ const ChatHeader = ({ onClose, onNewChat }: ChatHeaderProps) => {
 
     const handleClickOutside = (event: MouseEvent) => {
       if (
-        menuRef.current && 
+        menuRef.current &&
         !menuRef.current.contains(event.target as Node) &&
         buttonRef.current &&
         !buttonRef.current.contains(event.target as Node)
@@ -71,7 +74,12 @@ const ChatHeader = ({ onClose, onNewChat }: ChatHeaderProps) => {
 
       {/* Controls */}
       <div className="chat-header-controls">
-        <span ref={buttonRef} className="chat-header-button" onClick={toggleMenu} data-chat-button>
+        <span
+          ref={buttonRef}
+          className="chat-header-button"
+          onClick={toggleMenu}
+          data-chat-button
+        >
           ⋮
         </span>
         <span className="chat-header-button" onClick={onClose} data-chat-button>
@@ -82,9 +90,9 @@ const ChatHeader = ({ onClose, onNewChat }: ChatHeaderProps) => {
       {/* Menu dropdown */}
       {isMenuOpen && (
         <Portal>
-          <div 
+          <div
             ref={menuRef}
-            className="chat-header-menu" 
+            className="chat-header-menu"
             onClick={handleMenuClick}
             style={{
               top: `${menuPosition.top}px`,
@@ -92,13 +100,13 @@ const ChatHeader = ({ onClose, onNewChat }: ChatHeaderProps) => {
             }}
             data-chat-button
           >
-            <div 
-              className="chat-header-menu-item" 
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onNewChat();
-                setIsMenuOpen(false);
+            <div
+              className="chat-header-menu-item"
+              onClick={e => {
+                e.preventDefault()
+                e.stopPropagation()
+                onNewChat()
+                setIsMenuOpen(false)
               }}
               data-chat-button
             >
@@ -110,5 +118,3 @@ const ChatHeader = ({ onClose, onNewChat }: ChatHeaderProps) => {
     </div>
   )
 }
-
-export default ChatHeader

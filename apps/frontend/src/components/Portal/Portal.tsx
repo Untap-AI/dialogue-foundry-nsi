@@ -6,20 +6,23 @@ interface PortalProps {
   containerSelector?: string
 }
 
-const Portal = ({ children, containerSelector = 'body' }: PortalProps) => {
+export const Portal = ({
+  children,
+  containerSelector = 'body'
+}: PortalProps) => {
   const [mounted, setMounted] = useState(false)
-  
+
   useEffect(() => {
     setMounted(true)
     return () => setMounted(false)
   }, [])
 
-  return mounted
-    ? createPortal(
-        children,
-        document.querySelector(containerSelector) || document.body
-      )
-    : null
+  return mounted ? (
+    createPortal(
+      children,
+      document.querySelector(containerSelector) || document.body
+    )
+  ) : (
+    <></>
+  )
 }
-
-export default Portal 

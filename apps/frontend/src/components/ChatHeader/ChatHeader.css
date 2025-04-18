@@ -5,8 +5,6 @@
   padding: 15px;
   background-color: var(--df-primary-color);
   color: var(--df-text-contrast);
-  position: relative;
-  z-index: 10000;
 }
 
 .chat-header-branding {
@@ -38,6 +36,10 @@
   line-height: 30px;
   font-weight: 800;
   width: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
 .chat-header-button:hover {
@@ -50,6 +52,7 @@
   border-radius: 5px;
   border: 1px solid var(--df-border-color);
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  z-index: 10000;
 }
 
 .chat-header-menu-item {
