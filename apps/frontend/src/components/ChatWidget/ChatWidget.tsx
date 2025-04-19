@@ -138,7 +138,7 @@ export const ChatWidget = () => {
 
   // Focus input field when chat is initialized
   useEffect(() => {
-    if (chatStatus === 'initialized' && isOpen) {
+    if (chatStatus === 'initialized' && isOpen && !isMobile) {
       // Add a small delay to ensure the composer input is rendered
       setTimeout(() => {
         const inputField = document.querySelector(
