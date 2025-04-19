@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { AiChat, useAsStreamAdapter } from '@nlux/react'
+import { useEffect, useMemo } from 'react'
+import { AiChat, useAiChatApi, useAsStreamAdapter } from '@nlux/react'
 import { useConfig } from '../../contexts/ConfigContext'
 import '@nlux/themes/unstyled.css'
 import './ChatInterface.css'
@@ -8,7 +8,11 @@ import { ChatStreamingService } from '../../services/streaming'
 import { ErrorCategory, categorizeError } from '../../services/errors'
 import type { ChatStatus } from '../ChatWidget/ChatWidget'
 import type { ServiceError } from '../../services/errors'
-import type { ChatItem, ErrorEventDetails } from '@nlux/react'
+import type {
+  ChatItem,
+  ConversationStarter,
+  ErrorEventDetails
+} from '@nlux/react'
 
 // Add the icon based on error category
 const ERROR_ICON_MAP: Record<ErrorCategory, string> = {
@@ -110,6 +114,12 @@ export const ChatInterface = ({
 
   // Handle message sent event - creates ChatGPT-like scrolling
   const handleMessageSent = () => {
+    const startersContainer = document.querySelectorAll(
+      '.nlux-conversationStarters-container'
+    )
+
+    startersContainer.forEach(container => container.remove())
+
     // Find the conversation container
     const conversationContainer = document.querySelector(
       '.nlux-conversation-container'
@@ -161,7 +171,22 @@ export const ChatInterface = ({
     }
   }
 
-  // TODO: ConversationStarter UI
+  const api = useAiChatApi()
+  const send = api.composer.send
+
+  useEffect(() => {
+    if (
+      (!initialConversation || initialConversation.length <= 1) &&
+      conversationStarters?.length &&
+      chatId &&
+      chatStatus === 'initialized'
+    ) {
+      setTimeout(() => {
+        addConversationStarters(conversationStarters, send)
+      }, 100)
+    }
+  }, [initialConversation, chatId, chatStatus, conversationStarters, send])
+
   return (
     <div className={`chat-interface-wrapper ${className}`}>
       <div className="chat-interface-content">
@@ -178,6 +203,7 @@ export const ChatInterface = ({
             case 'initialized':
               return (
                 <AiChat
+                  api={api}
                   adapter={adapter}
                   key={chatId} // Add a key to force re-render when chatId changes
                   displayOptions={{
@@ -187,7 +213,6 @@ export const ChatInterface = ({
                   initialConversation={initialConversation}
                   conversationOptions={{
                     showWelcomeMessage: true,
-                    conversationStarters,
                     autoScroll: false
                   }}
                   personaOptions={{
@@ -215,4 +240,56 @@ export const ChatInterface = ({
       </div>
     </div>
   )
+}
+
+function addConversationStarters(
+  conversationStarters: ConversationStarter[],
+  send: (prompt: string) => void
+) {
+  const conversationContainer = document.querySelector(
+    '.nlux-conversation-container'
+  )
+  // Check if we should insert conversation starters
+  const containerCheck = document.querySelector(
+    '.nlux-comp-conversationStarters'
+  )
+
+  if (!containerCheck && conversationContainer) {
+    // Create a container for our conversation starters
+    const startersContainer = document.createElement('div')
+    startersContainer.className = 'nlux-conversationStarters-container'
+
+    // Create the inner container
+    const innerContainer = document.createElement('div')
+    innerContainer.className = 'nlux-comp-conversationStarters'
+
+    // Add each conversation starter as a button with proper click handler
+    conversationStarters.forEach(({ prompt: promptFromStarter, label }) => {
+      if (promptFromStarter && label) {
+        const button = document.createElement('button')
+        button.className = 'nlux-comp-conversationStarter'
+        button.addEventListener('click', () => {
+          send(promptFromStarter)
+        })
+
+        const span = document.createElement('span')
+        span.className = 'nlux-comp-conversationStarter-prompt'
+        span.textContent = label
+
+        button.appendChild(span)
+        innerContainer.appendChild(button)
+      }
+    })
+
+    // Assemble and append to DOM
+    startersContainer.appendChild(innerContainer)
+    if (conversationContainer.parentNode) {
+      conversationContainer.parentNode.insertBefore(
+        startersContainer,
+        conversationContainer.nextSibling
+      )
+    }
+
+    return
+  }
 }

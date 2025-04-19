@@ -7,8 +7,8 @@ import './ChatWidget.css'
 import { useChatScroll } from '../../hooks/useChatScroll'
 import { useConfig } from '../../contexts/ConfigContext'
 import { ChatApiService } from '../../services/api'
-import type { ChatItem } from '@nlux/react'
 import { run } from '../../utils/run'
+import type { ChatItem } from '@nlux/react'
 
 export type ChatStatus = 'uninitialized' | 'loading' | 'initialized' | 'error'
 
@@ -28,19 +28,21 @@ export const ChatWidget = () => {
   // Determine if mobile based on current width
   const isMobile = width <= 768
 
-  const [isOpen, setIsOpen] = useState(run(() => {
-    switch(openOnLoad) {
-      case 'all':
-        return true
-      case 'desktop-only':
-        return !isMobile
-      case 'mobile-only':
-        return isMobile
-      case 'none':
-      case undefined:
-        return false
-    }
-  }))
+  const [isOpen, setIsOpen] = useState(
+    run(() => {
+      switch (openOnLoad) {
+        case 'all':
+          return true
+        case 'desktop-only':
+          return !isMobile
+        case 'mobile-only':
+          return isMobile
+        case 'none':
+        case undefined:
+          return false
+      }
+    })
+  )
 
   // eslint-disable-next-line no-null/no-null
   const chatWindowRef = useRef<HTMLDivElement | null>(null)
@@ -71,7 +73,7 @@ export const ChatWidget = () => {
       // Check if the click was on an element with data-chat-button attribute
       const target = event.target as HTMLElement
       if (target.closest('[data-chat-button]')) return
-      
+
       if (
         chatWindowRef.current &&
         !chatWindowRef.current.contains(event.target as Node) &&
@@ -125,9 +127,7 @@ export const ChatWidget = () => {
       const chatInit = await chatService.createNewChat()
       setChatId(chatInit.chatId)
       setInitialConversation(
-        chatInit.messages.length > 0
-          ? chatInit.messages
-          : undefined
+        chatInit.messages.length > 0 ? chatInit.messages : undefined
       )
       setChatStatus('initialized')
     } catch (error) {
@@ -191,11 +191,11 @@ export const ChatWidget = () => {
 
 function createWelcomeMessage(welcomeMessage: string | undefined) {
   return welcomeMessage
-    ? ([
+    ? [
         {
           role: 'assistant' as const,
           message: welcomeMessage
         }
-      ])
+      ]
     : undefined
 }

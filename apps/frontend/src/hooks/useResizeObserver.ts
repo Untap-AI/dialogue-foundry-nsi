@@ -15,7 +15,9 @@ export const useResizeObserver = (delay = 10) => {
 
   // Create a debounced update function using lodash debounce
   // We use useCallback to memoize the debounced function
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   const debouncedUpdateDimensions = useCallback(
+    // eslint-disable-next-line react-compiler/react-compiler
     debounce(() => {
       setDimensions({
         width: window.innerWidth,

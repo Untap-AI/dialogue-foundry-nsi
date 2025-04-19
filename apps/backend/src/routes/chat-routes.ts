@@ -455,18 +455,16 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
           error: responseError as Error,
           chatId
         })
-      } finally {
-        // Always close the connection
-        if (!res.writableEnded) {
-          res.end()
-        }
       }
     }
 
     // Handle client disconnect
     return req.on('close', () => {
       if (!res.writableEnded) {
-        res.end()
+        // Ensure full stream
+        setTimeout(() => {
+          res.end()
+        }, 50)
       }
     })
   } catch (error) {

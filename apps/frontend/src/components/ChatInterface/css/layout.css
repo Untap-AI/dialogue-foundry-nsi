@@ -76,12 +76,14 @@
     --nlux-PromptInput-Height: 60px;
 
     /** Conversation starters */
-    --nlux-ConversationStarter--Padding: 0 10px;
-    --nlux-ConversationStarter--BorderRadius: 6px;
+    --nlux-ConversationStarter--Padding: 5px 0px;
+    --nlux-ConversationStarter--BorderRadius: 10px;
     --nlux-ConversationStarter--BorderWidth: 0;
     --nlux-ConversationStarter--Gap: var(--df-flex-gap);
-    --nlux-ConversationStarter--Width: 160px;
-    --nlux-ConversationStarter--Height: 101px;
+    --nlux-ConversationStarter--Width: auto;
+    --nlux-ConversationStarter--Height: auto;
+    --nlux-ConversationStarter--BackgroundColor: var(--df-primary-color);
+
 }
 
 /* Mobile specific styles */
@@ -108,4 +110,37 @@
 
 .nlux-markdownStream-root {
     word-break: break-word;
+}
+
+.nlux-conversationStarters-container {
+    padding: 5px 0 5px 10px;
+    display: flex;
+    flex: unset;
+    justify-content: center;
+}
+
+.nlux-conversationStarters-container>.nlux-comp-conversationStarters {
+    width: 100%;
+    overflow-x: auto;
+    justify-content: unset;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(25%, 1fr));
+    grid-auto-flow: column;
+}
+
+.nlux-conversationStarters-container>.nlux-comp-conversationStarters>.nlux-comp-conversationStarter {
+    padding: 10px;
+    color: var(--df-text-contrast);
+    min-width: fit-content;
+    text-align: center;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    text-wrap: nowrap;
+    opacity: 0.7;
+}
+
+.nlux-conversationStarters-container>.nlux-comp-conversationStarters>.nlux-comp-conversationStarter:hover {
+    background-color: var(--df-tertiary-color);
 }

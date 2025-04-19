@@ -19,22 +19,21 @@ export const ChatButton: React.FC<ChatButtonProps> = ({ onClick, isOpen }) => {
   const { popupMessage } = useConfig()
   const [popupVisible, setPopupVisible] = useState(false)
 
-  const popupEnabled = popupMessage &&
-      popupMessage.length > 0
+  const popupEnabled = useMemo(() => popupMessage &&
+      popupMessage.length > 0 && !localStorage.getItem(DIALOGUE_FOUNDRY_POPUP_KEY), [popupMessage])
+      
 
-  const handleClick = useCallback(() => {
-    if (popupEnabled) {
+  useEffect(() => {
+    if(isOpen && popupEnabled) {
       localStorage.setItem(DIALOGUE_FOUNDRY_POPUP_KEY, 'true')
-      buttonRef.current?.classList.remove()
+      buttonRef.current?.classList.remove(ANIMATION_CLASS)
       setPopupVisible(false)
     }
-
-    onClick()
-  }, [popupEnabled, onClick]) 
+  }, [isOpen, popupEnabled])
 
   // Synchronize animation with popup visibility
   useEffect(() => {
-    if (!buttonRef.current || !popupEnabled || localStorage.getItem(DIALOGUE_FOUNDRY_POPUP_KEY)) return
+    if (!buttonRef.current || !popupEnabled) return
 
     const button = buttonRef.current
 
@@ -66,7 +65,7 @@ export const ChatButton: React.FC<ChatButtonProps> = ({ onClick, isOpen }) => {
         ref={buttonRef}
         data-chat-button
         className="chat-icon-button"
-        onClick={handleClick}
+        onClick={onClick}
         aria-label={isOpen ? 'Close chat' : 'Open chat'}
       >
         {/* Icon */}

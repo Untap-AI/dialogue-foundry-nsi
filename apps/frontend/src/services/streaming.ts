@@ -248,7 +248,7 @@ export class ChatStreamingService {
       }
     } catch (error) {
       // Log the error but continue anyway, as this might just be a network error
-      logger.debug('Error checking token validity, continuing anyway', {
+      logger.info('Error checking token validity, continuing anyway', {
         error
       })
     }
@@ -449,8 +449,8 @@ export class ChatStreamingService {
           onError,
           companyId
         )
-        break;
-        
+        break
+
       // Other authentication errors - need to renew session and log the issue
       case ErrorCodes.TOKEN_INVALID:
       case ErrorCodes.TOKEN_MISSING:
@@ -850,8 +850,8 @@ export class ChatStreamingService {
    * Call this when the component unmounts or the user navigates away
    */
   cleanup(): void {
-    this.isClosingConnection = true;
-    this.closeEventSource();
-    this.reconnectAttempts = 0;
+    this.isClosingConnection = true
+    this.closeEventSource()
+    this.reconnectAttempts = 0
   }
 }

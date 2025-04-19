@@ -49,7 +49,34 @@ export const defaultConfig: DialogueFoundryConfig = {
   popupMessage: 'Have questions? Click here for help!',
   welcomeMessage:
     "Hi, I'm the Dialogue Foundry. I'm here to help you with your questions.",
-  openOnLoad: 'all'
+  openOnLoad: 'all',
+  conversationStarters: [
+    {
+      label: "Wines",
+      prompt: "I'm interested in learning more about your wines. Can you tell me more about them?"
+    },
+    {
+      label: "Events",
+      prompt: "I'm interested in learning more about your events. Can you tell me more about them?"
+    },
+    {
+      label: "Weddings",
+      prompt: "I'm interested in learning more about your weddings. Can you tell me more about them?"
+    },
+    {
+      label: "Catering",
+      prompt: "I'm interested in learning more about your catering. Can you tell me more about them?"
+    },
+    {
+      label: "Wine Tasting",
+      prompt: "I'm interested in learning more about your wine tasting. Can you tell me more about them?"
+    },
+    {
+      label: "Wine Tasting",
+      prompt: "I'm interested in learning more about your wine tasting. Can you tell me more about them?"
+    }
+    
+  ]
 }
 
 // Create the context with default values

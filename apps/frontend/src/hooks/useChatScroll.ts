@@ -35,7 +35,6 @@ export const useChatScroll = ({ isOpen }: UseChatScrollOptions) => {
   useEffect(() => {
     // Handler function for all interaction events
     const handleInteraction = () => setTimeout(scrollToBottomSmooth, 100)
-    
 
     // Set up event listeners for the input area
     const setupInteractionListeners = () => {
@@ -43,24 +42,22 @@ export const useChatScroll = ({ isOpen }: UseChatScrollOptions) => {
       const composerContainer = document.querySelector(
         '.nlux-composer-container'
       )
-      
+
       // Composer input - the actual input element where users type
-      const composerInput = document.querySelector(
-        '.nlux-composer-input'
-      )
-      
+      const composerInput = document.querySelector('.nlux-composer-input')
+
       if (composerContainer) {
         // Touch events (for mobile)
         composerContainer.addEventListener('touchstart', handleInteraction, {
           passive: true
         })
-        
+
         // Click events (for desktop)
         composerContainer.addEventListener('click', handleInteraction, {
           passive: true
         })
       }
-      
+
       if (composerInput) {
         // Focus events (when input gets focus)
         composerInput.addEventListener('focus', handleInteraction, {
@@ -93,16 +90,14 @@ export const useChatScroll = ({ isOpen }: UseChatScrollOptions) => {
       const composerContainer = document.querySelector(
         '.nlux-composer-container'
       )
-      
-      const composerInput = document.querySelector(
-        '.nlux-composer-input'
-      )
-      
+
+      const composerInput = document.querySelector('.nlux-composer-input')
+
       if (composerContainer) {
         composerContainer.removeEventListener('touchstart', handleInteraction)
         composerContainer.removeEventListener('click', handleInteraction)
       }
-      
+
       if (composerInput) {
         composerInput.removeEventListener('focus', handleInteraction)
       }
