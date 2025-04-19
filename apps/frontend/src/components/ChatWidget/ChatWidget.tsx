@@ -150,7 +150,7 @@ export const ChatWidget = () => {
         }
       }, 300)
     }
-  }, [chatStatus, isOpen])
+  }, [chatStatus, isOpen, isMobile])
 
   useEffect(() => {
     if (isOpen && chatStatus === 'uninitialized' && chatConfig) {
