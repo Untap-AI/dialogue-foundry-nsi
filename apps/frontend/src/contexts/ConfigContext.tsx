@@ -26,6 +26,8 @@ export interface DialogueFoundryConfig {
   popupMessage?: string
 
   welcomeMessage?: string
+
+  openOnLoad?: 'all' | 'mobile-only' | 'desktop-only' | 'none'
 }
 
 // Default configuration
@@ -46,7 +48,8 @@ export const defaultConfig: DialogueFoundryConfig = {
   },
   popupMessage: 'Have questions? Click here for help!',
   welcomeMessage:
-    "Hi, I'm the Dialogue Foundry. I'm here to help you with your questions."
+    "Hi, I'm the Dialogue Foundry. I'm here to help you with your questions.",
+  openOnLoad: 'all'
 }
 
 // Create the context with default values

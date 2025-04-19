@@ -8,11 +8,11 @@ import { useChatScroll } from '../../hooks/useChatScroll'
 import { useConfig } from '../../contexts/ConfigContext'
 import { ChatApiService } from '../../services/api'
 import type { ChatItem } from '@nlux/react'
+import { run } from '../../utils/run'
 
 export type ChatStatus = 'uninitialized' | 'loading' | 'initialized' | 'error'
 
 export const ChatWidget = () => {
-  const [isOpen, setIsOpen] = useState(false)
   const [isClosing, setIsClosing] = useState(false)
   const [chatId, setChatId] = useState<string | undefined>(undefined)
   const [initialConversation, setInitialConversation] = useState<
@@ -20,13 +20,27 @@ export const ChatWidget = () => {
   >(undefined)
   const [chatStatus, setChatStatus] = useState<ChatStatus>('uninitialized')
 
-  const { chatConfig, welcomeMessage } = useConfig()
+  const { chatConfig, welcomeMessage, openOnLoad } = useConfig()
 
   // Use the resize observer hook with a 150ms debounce delay
   // Fast enough to feel responsive, but not too frequent to cause performance issues
   const { width } = useResizeObserver()
   // Determine if mobile based on current width
   const isMobile = width <= 768
+
+  const [isOpen, setIsOpen] = useState(run(() => {
+    switch(openOnLoad) {
+      case 'all':
+        return true
+      case 'desktop-only':
+        return !isMobile
+      case 'mobile-only':
+        return isMobile
+      case 'none':
+      case undefined:
+        return false
+    }
+  }))
 
   // eslint-disable-next-line no-null/no-null
   const chatWindowRef = useRef<HTMLDivElement | null>(null)

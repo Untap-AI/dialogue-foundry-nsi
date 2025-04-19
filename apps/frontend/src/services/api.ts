@@ -117,12 +117,12 @@ export class ChatApiService {
             case 401:
               // Check if this is specifically a token expiration
               if (data && data.code === ServiceErrorCodes.TOKEN_EXPIRED) {
-                errorCode = ServiceErrorCodes.TOKEN_EXPIRED;
+                errorCode = ServiceErrorCodes.TOKEN_EXPIRED
               } else {
                 // Other authentication errors like invalid tokens
-                errorCode = ServiceErrorCodes.TOKEN_INVALID;
+                errorCode = ServiceErrorCodes.TOKEN_INVALID
               }
-              break;
+              break
             case 403:
               errorCode = ServiceErrorCodes.AUTH_FORBIDDEN
               break
@@ -209,7 +209,10 @@ export class ChatApiService {
         }
       } catch (error) {
         // Check if this is a token expiration
-        if (error instanceof ApiError && error.code === ServiceErrorCodes.TOKEN_EXPIRED) {
+        if (
+          error instanceof ApiError &&
+          error.code === ServiceErrorCodes.TOKEN_EXPIRED
+        ) {
           logger.debug('Token expired during initialization, creating new chat')
         } else {
           logger.error('Error loading existing chat', {
