@@ -43,7 +43,13 @@
 }
 
 .chat-header-button:hover {
-  color: white;
+  filter: brightness(0.8);
+}
+
+.new-chat-button {
+  font-size: 20px;
+  line-height: 30px;
+  font-weight: 600;
 }
 
 .chat-header-menu {
@@ -51,7 +57,10 @@
   background-color: var(--df-primary-color);
   border-radius: 5px;
   border: 1px solid var(--df-border-color);
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  /* TODO: Create box shadow variable */
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  transform: scale(1);
+  transition: all 300ms ease-out 50ms;
   z-index: 10000000;
 }
 
@@ -60,7 +69,6 @@
   color: var(--df-text-contrast);
   cursor: pointer;
   font-size: 14px;
-  transition: background-color 0.2s;
   z-index: 10000000;
 }
 

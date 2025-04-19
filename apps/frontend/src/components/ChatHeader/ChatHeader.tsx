@@ -75,7 +75,7 @@ export const ChatHeader = ({ onClose, onNewChat }: ChatHeaderProps) => {
       <div className="chat-header-controls">
         <span
           ref={buttonRef}
-          className="chat-header-button"
+          className="chat-header-button new-chat-button"
           onClick={toggleMenu}
           data-chat-button
         >
