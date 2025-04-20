@@ -75,7 +75,6 @@ export const defaultConfig: DialogueFoundryConfig = {
       label: "Wine Tasting",
       prompt: "I'm interested in learning more about your wine tasting. Can you tell me more about them?"
     }
-    
   ]
 }
 
