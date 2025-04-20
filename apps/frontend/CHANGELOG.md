@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.22
+
+### Patch Changes
+
+- Various UI enhancements: conversation starters, new chat, etc.
+
 ## 0.2.21
 
 ### Patch Changes
