@@ -115,6 +115,10 @@ export const ChatInterface = ({
   // Track if we've sent a message
   const messageSent = useRef(false)
 
+  useEffect(() => {
+    messageSent.current = false
+  }, [chatId])
+
   // Handle message sent event - creates ChatGPT-like scrolling
   const handleMessageSent = () => {
     messageSent.current = true
