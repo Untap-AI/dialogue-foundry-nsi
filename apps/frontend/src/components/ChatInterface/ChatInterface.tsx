@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { AiChat, useAiChatApi, useAsStreamAdapter } from '@nlux/react'
 import { useConfig } from '../../contexts/ConfigContext'
 import '@nlux/themes/unstyled.css'
@@ -112,12 +112,16 @@ export const ChatInterface = ({
     console.error('NLUX chat error:', error)
   }
 
+  // Track if we've sent a message
+  const messageSent = useRef(false)
+
   // Handle message sent event - creates ChatGPT-like scrolling
   const handleMessageSent = () => {
+    messageSent.current = true
+    // Remove the conversation starters container
     const startersContainer = document.querySelectorAll(
       '.nlux-conversationStarters-container'
     )
-
     startersContainer.forEach(container => container.remove())
 
     // Find the conversation container
@@ -179,10 +183,13 @@ export const ChatInterface = ({
       (!initialConversation || initialConversation.length <= 1) &&
       conversationStarters?.length &&
       chatId &&
-      chatStatus === 'initialized'
+      chatStatus === 'initialized' &&
+      !messageSent.current
     ) {
       setTimeout(() => {
-        addConversationStarters(conversationStarters, send)
+        if (!messageSent.current) {
+          addConversationStarters(conversationStarters, send)
+        }
       }, 100)
     }
   }, [initialConversation, chatId, chatStatus, conversationStarters, send])
