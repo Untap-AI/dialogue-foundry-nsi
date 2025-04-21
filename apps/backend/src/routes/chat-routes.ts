@@ -98,9 +98,14 @@ router.get('/:chatId', authenticateChatAccess, async (req, res) => {
 // Create a new chat and return access token
 router.post('/', async (req, res) => {
   try {
-    const { userId: userIdParam, name, companyId } = req.body
+    const {
+      userId: userIdParam,
+      name: chatName,
+      companyId,
+      welcomeMessage
+    } = req.body
 
-    if (!name) {
+    if (!chatName) {
       logger.error('Chat name is required', {
         userId: req.body.userId
       })
@@ -131,10 +136,27 @@ router.post('/', async (req, res) => {
     const userId = userIdParam || uuidv4()
 
     const chat = await createChatAdmin({
-      name,
+      name: chatName,
       user_id: userId,
       company_id: companyId
     })
+
+    if (welcomeMessage) {
+      try {
+        await createMessageAdmin({
+          chat_id: chat.id,
+          user_id: userId,
+          content: welcomeMessage,
+          role: 'assistant',
+          sequence_number: 1
+        })
+      } catch (error) {
+        logger.error('Error creating welcome message', {
+          error: error as Error,
+          chatId: chat.id
+        })
+      }
+    }
 
     // Generate a JWT token for chat access
     const accessToken = generateChatAccessToken(chat.id, userId)
@@ -474,7 +496,6 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       userId: req.user?.userId
     })
 
-
     // Send appropriate error message based on the error type
     sendErrorEvent(
       error instanceof Error
@@ -488,6 +509,5 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
 
 router.post('/:chatId/stream', authenticateChatAccess, handleStreamRequest)
 router.get('/:chatId/stream', authenticateChatAccess, handleStreamRequest)
-
 
 export default router

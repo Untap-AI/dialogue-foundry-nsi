@@ -194,7 +194,7 @@ export class ChatApiService {
    * - If not found, creates a new chat
    * - Returns the chat data and conversation history
    */
-  async initializeChat(): Promise<ChatInit> {
+  async initializeChat(welcomeMessage: string | undefined): Promise<ChatInit> {
     const storedToken = this.storage.getItem(this.tokenStorageKey)
     const storedChatId = this.storage.getItem(this.chatIdStorageKey)
 
@@ -228,17 +228,18 @@ export class ChatApiService {
     }
 
     // Create a new chat
-    return this.createNewChat()
+    return this.createNewChat(welcomeMessage)
   }
 
   /**
    * Create a new chat session
    */
-  async createNewChat(): Promise<ChatInit> {
+  async createNewChat(welcomeMessage?: string): Promise<ChatInit> {
     try {
       const response = await this.api.post('/chats', {
         name: 'New Conversation',
-        companyId: this.companyId
+        companyId: this.companyId,
+        welcomeMessage
       })
 
       // Store token and chat ID

@@ -105,7 +105,7 @@ export const ChatWidget = () => {
 
     try {
       // Initialize service
-      const chatInit = await chatService.initializeChat()
+      const chatInit = await chatService.initializeChat(welcomeMessage)
       setChatId(chatInit.chatId)
 
       setInitialConversation(
