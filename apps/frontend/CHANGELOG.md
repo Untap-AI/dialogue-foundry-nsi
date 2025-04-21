@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.23
+
+### Patch Changes
+
+- Fix starter spacing
+
 ## 0.2.22
 
 ### Patch Changes

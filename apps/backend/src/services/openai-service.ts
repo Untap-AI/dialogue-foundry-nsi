@@ -237,15 +237,18 @@ export const generateStreamingChatCompletion = async (
       MAX_MESSAGES_PER_CHAT
     )
 
-    const systemPromptWithCurrentDate = `${settings.systemPrompt}\n\nThe current date and time is ${new Date().toLocaleString('en-US', {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: 'numeric',
-      timeZone: settings.timezone || 'UTC'
-    })}.`
+    const systemPromptWithCurrentDate = `${settings.systemPrompt}\n\nThe current date and time is ${new Date().toLocaleString(
+      'en-US',
+      {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        timeZone: settings.timezone || 'UTC'
+      }
+    )}.`
 
     // Configure request options with tools if email function is enabled
     const requestOptions = {
@@ -285,7 +288,7 @@ export const generateStreamingChatCompletion = async (
           functionCalls.push(chunk.item)
           // We'll handle function calls after streaming completes
         }
-        
+
         if (text.length > 0) {
           // Add to full text and send immediately
           fullText += text
