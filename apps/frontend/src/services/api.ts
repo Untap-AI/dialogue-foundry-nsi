@@ -9,6 +9,51 @@ import type { ChatItem } from '@nlux/react'
 export const DEFAULT_TOKEN_STORAGE_KEY = 'dialogue_foundry_token'
 export const DEFAULT_CHAT_ID_STORAGE_KEY = 'dialogue_foundry_chat_id'
 
+// In-memory storage fallback when localStorage is unavailable
+class MemoryStorage implements Storage {
+  private items: Record<string, string> = {};
+  length = 0;
+
+  clear(): void {
+    this.items = {};
+    this.length = 0;
+  }
+
+  getItem(key: string): string | null {
+    return key in this.items ? this.items[key] : null;
+  }
+
+  key(index: number): string | null {
+    return Object.keys(this.items)[index] || null;
+  }
+
+  removeItem(key: string): void {
+    if (key in this.items) {
+      delete this.items[key];
+      this.length = Object.keys(this.items).length;
+    }
+  }
+
+  setItem(key: string, value: string): void {
+    this.items[key] = value;
+    this.length = Object.keys(this.items).length;
+  }
+}
+
+// Check if localStorage is available
+const getStorage = (): Storage => {
+  try {
+    // Test localStorage access
+    const testKey = '_test_storage_access_';
+    localStorage.setItem(testKey, 'test');
+    localStorage.removeItem(testKey);
+    return localStorage;
+  } catch (e) {
+    logger.warning('localStorage not available, falling back to memory storage', { error: e });
+    return new MemoryStorage();
+  }
+};
+
 // Custom error class for API errors
 export class ChatApiError extends Error {
   statusCode?: number
@@ -65,7 +110,7 @@ export class ChatApiService {
     this.tokenStorageKey = config.tokenStorageKey || DEFAULT_TOKEN_STORAGE_KEY
     this.chatIdStorageKey =
       config.chatIdStorageKey || DEFAULT_CHAT_ID_STORAGE_KEY
-    this.storage = localStorage
+    this.storage = getStorage()
 
     // Create axios instance
     this.api = axios.create({
