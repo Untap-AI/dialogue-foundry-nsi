@@ -124,7 +124,6 @@
     overflow-x: auto;
     justify-content: unset;
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(25%, 1fr));
     grid-auto-flow: column;
     gap: 0;
 }
