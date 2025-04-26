@@ -44,15 +44,13 @@ const globalRateLimit = rateLimit({
 app.use(globalRateLimit)
 
 // Configure CORS
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',') || [
-  'http://localhost:3000'
-]
+const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',')
 app.use(
   cors({
     origin: (thisOrigin, callback) => {
       // Allow requests with no origin (like mobile apps or curl requests)
       // eslint-disable-next-line no-null/no-null
-      if (!thisOrigin) return callback(null, true)
+      if (!thisOrigin || !allowedOrigins) return callback(null, true)
 
       if (allowedOrigins.indexOf(thisOrigin) === -1) {
         logger.warn(
