@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.26
+
+### Patch Changes
+
+- scrollbar styling
+
 ## 0.2.25
 
 ### Patch Changes
