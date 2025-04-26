@@ -28,6 +28,7 @@
   justify-content: center;
   height: 100%;
   padding: 2rem;
+  background-color: var(--df-bg-primary);
 }
 
 .chat-spinner {
@@ -56,6 +57,7 @@
   height: 100%;
   padding: 2rem;
   text-align: center;
+  background-color: var(--df-bg-primary);
 }
 
 .chat-error-text {

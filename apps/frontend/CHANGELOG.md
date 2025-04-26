@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.25
+
+### Patch Changes
+
+- Loading container backgrounds
+
 ## 0.2.24
 
 ### Patch Changes
