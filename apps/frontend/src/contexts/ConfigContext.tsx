@@ -15,7 +15,6 @@ export interface DialogueFoundryConfig {
   conversationStarters?: ConversationStarter[]
 
   // Chat Config
-  // TODO: Look into fixing this
   chatConfig: ChatConfig
 
   // Widget customization
@@ -33,9 +32,8 @@ export interface DialogueFoundryConfig {
 // Default configuration
 export const defaultConfig: DialogueFoundryConfig = {
   chatConfig: {
-    apiBaseUrl:
-      import.meta.env.VITE_API_BASE_URL || 'http://localhost:3000/api',
-    companyId: 'west-hills-vineyards'
+    apiBaseUrl: 'https://dialogue-foundry-backend-smokebox-swjv.onrender.com/api',
+    companyId: 'gt-landscape-solutions'
   },
 
   title: 'GT landscape solutions',
@@ -47,8 +45,6 @@ export const defaultConfig: DialogueFoundryConfig = {
     }
   },
   popupMessage: 'Have questions? Click here for help!',
-  welcomeMessage:
-    "Hi, I'm the Dialogue Foundry. I'm here to help you with your questions.",
   openOnLoad: 'all',
   conversationStarters: [
     {

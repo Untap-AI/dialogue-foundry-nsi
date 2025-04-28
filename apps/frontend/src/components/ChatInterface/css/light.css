@@ -70,3 +70,31 @@
     --nlux-ConversationStarter--BorderColor: var(--df-border-color);
     --nlux-ConversationStarter--TextColor: var(--nlux-AiMessage--TextColor);
 }
+
+.nlux-comp-composer>button:disabled>.nlux-comp-sendIcon>.nlux-comp-sendIcon-container {
+  color: var(--df-disabled);
+}
+
+.nlux-comp-composer>button>.nlux-comp-sendIcon>.nlux-comp-sendIcon-container {
+  color: var(--df-primary-color);
+}
+
+.nlux-comp-composer>button>.nlux-comp-sendIcon>.nlux-comp-sendIcon-container:hover {
+  color: var(--df-tertiary-color);
+}
+
+.nlux-comp-cancelIcon-container {
+  color: var(--df-primary-color);
+}
+
+a {
+    text-decoration: underline;
+}
+
+.nlux_msg_received a {
+    color: var(--df-primary-color);
+}
+
+.nlux_msg_sent a {
+    color: var(--df-text-contrast);
+}
