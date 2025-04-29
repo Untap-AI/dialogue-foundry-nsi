@@ -75,14 +75,18 @@ export const ChatHeader = ({ onClose, onNewChat }: ChatHeaderProps) => {
       <div className="chat-header-controls">
         <span
           ref={buttonRef}
-          className="chat-header-button new-chat-button"
+          className="chat-header-button icon-button"
           onClick={toggleMenu}
           data-chat-button
         >
-          +
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14 8H8V14H6V8H0V6H6V0H8V6H14V8Z" />
+          </svg>
         </span>
-        <span className="chat-header-button" onClick={onClose} data-chat-button>
-          Close
+        <span className="chat-header-button icon-button" onClick={onClose} data-chat-button>
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+            <path d="M14 1.41L12.59 0L7 5.59L1.41 0L0 1.41L5.59 7L0 12.59L1.41 14L7 8.41L12.59 14L14 12.59L8.41 7L14 1.41Z" />
+          </svg>
         </span>
       </div>
 

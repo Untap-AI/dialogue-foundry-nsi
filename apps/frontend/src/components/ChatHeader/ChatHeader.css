@@ -27,15 +27,12 @@
 
 .chat-header-controls {
   display: flex;
-  gap: 15px;
+  gap: 10px;
 }
 
 .chat-header-button {
   cursor: pointer;
   color: var(--df-text-contrast);
-  font-size: 16px;
-  line-height: 30px;
-  font-weight: 800;
   width: 30px;
   display: flex;
   align-items: center;
@@ -43,14 +40,22 @@
   text-align: center;
 }
 
-.chat-header-button:hover {
-  filter: brightness(0.8);
+.chat-header-button svg {
+  width: 14px;
+  height: 14px;
+  fill: var(--df-text-contrast);
 }
 
-.new-chat-button {
-  font-size: 20px;
-  line-height: 30px;
-  font-weight: 600;
+.chat-header-button.icon-button {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  width: 28px;
+  height: 28px;
+  transition: background-color 0.2s ease;
+}
+
+.chat-header-button.icon-button:hover {
+  background-color: var(--df-tertiary-color);
 }
 
 .chat-header-menu {

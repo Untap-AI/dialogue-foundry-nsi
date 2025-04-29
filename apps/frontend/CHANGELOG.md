@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.29
+
+### Patch Changes
+
+- Fix header buttons
+
 ## 0.2.28
 
 ### Patch Changes
