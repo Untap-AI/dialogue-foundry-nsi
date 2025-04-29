@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.30
+
+### Patch Changes
+
+- Quick text decoration fix
+
 ## 0.2.29
 
 ### Patch Changes
