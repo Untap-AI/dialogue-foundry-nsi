@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.31
+
+### Patch Changes
+
+- Reduce padding
+
 ## 0.2.30
 
 ### Patch Changes

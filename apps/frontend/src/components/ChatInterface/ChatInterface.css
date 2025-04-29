@@ -126,7 +126,7 @@
   text-align: center;
   font-size: 11px;
   color: var(--df-text-contrast);
-  padding: 3px 0px;
+  padding: 2px 0px;
   font-family: var(--df-font-family);
   background-color: var(--df-primary-color);
 }
