@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.28
+
+### Patch Changes
+
+- 80caedb: pnpm changeset:version
+
 ## 0.2.27
 
 ### Patch Changes
