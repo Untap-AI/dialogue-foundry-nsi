@@ -121,3 +121,16 @@
 .nlux-comp-composer > textarea {
   align-content: center;
 }
+
+.df-powered-by {
+  text-align: center;
+  font-size: 11px;
+  color: var(--df-text-contrast);
+  padding: 3px 0px;
+  font-family: var(--df-font-family);
+  background-color: var(--df-primary-color);
+}
+
+.df-powered-by a {
+  color: inherit;
+}

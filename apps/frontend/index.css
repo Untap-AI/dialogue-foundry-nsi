@@ -12,7 +12,7 @@
   
   /* Text colors */
   --df-text-primary: rgba(31, 41, 55, 0.8);
-  --df-text-secondary: oklch(0.746477 0.0216 264.436);
+  --df-text-secondary: rgb(102, 102, 102);
   --df-text-contrast: white;
   
   /* Alert/Exception colors */

@@ -249,6 +249,9 @@ export const ChatInterface = ({
           }
         })()}
       </div>
+      <div className="df-powered-by">
+        Powered by <a href="https://untap-ai.com" target="_blank" rel="noopener noreferrer">Untap AI</a>
+      </div>
     </div>
   )
 }
