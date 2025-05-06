@@ -457,6 +457,10 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       sequence_number: nextSequenceNumber + 1
     })
 
+    // Add a small delay to ensure all streaming chunks are processed
+    // before sending the completion message
+    await new Promise(resolve => setTimeout(resolve, 300));
+
     // Send a completion message
     if (!res.writableEnded) {
       try {

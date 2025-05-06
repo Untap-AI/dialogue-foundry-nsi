@@ -319,6 +319,11 @@ export class ChatStreamingService {
                 // eslint-disable-next-line @typescript-eslint/no-shadow
                 const content = data.content as string
                 fullText += content
+
+                if (this.eventSource?.readyState === 2) {
+                  logger.warning('SSE connection closed before message was processed')
+                }
+
                 onChunk(content)
               }
               break
@@ -334,8 +339,14 @@ export class ChatStreamingService {
                   ? data.fullContent
                   : fullText
 
-              // Add a small delay before completing to ensure any pending chunks are processed
+              // Add a longer delay before completing to ensure any pending chunks are processed
+              // Increased from 100ms to 1000ms (1 second) for more reliable completion
               setTimeout(() => {
+                if (!this.isClosingConnection) {
+                  // If connection was manually closed during this timeout, don't proceed
+                  return;
+                }
+
                 // Process the completion
                 onComplete(completeResponse)
 
@@ -344,7 +355,7 @@ export class ChatStreamingService {
 
                 // Reset reconnect attempts on successful completion
                 this.reconnectAttempts = 0
-              }, 100)
+              }, 1000)
               break
             }
           }

@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.34
+
+### Patch Changes
+
+- Additional streaming enhancements
+
 ## 0.2.33
 
 ### Patch Changes
