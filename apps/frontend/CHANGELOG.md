@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.35
+
+### Patch Changes
+
+- Dont check for token before streaming
+
 ## 0.2.34
 
 ### Patch Changes

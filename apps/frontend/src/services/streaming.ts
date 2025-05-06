@@ -187,72 +187,6 @@ export class ChatStreamingService {
       }
     }
 
-    // Check token validity before proceeding
-    try {
-      const testResponse = await fetch(`${this.apiBaseUrl}/chats/${chatId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      })
-
-      if (!testResponse.ok) {
-        if (testResponse.status === 401) {
-          // Try to get the error code from the response
-          try {
-            const errorData = await testResponse.json()
-            const errorCode = errorData.code
-
-            // Handle differently based on error code
-            if (errorCode === ErrorCodes.TOKEN_EXPIRED) {
-              // For expired tokens, silently reconnect without logging
-              this.handleTokenExpired(
-                userQuery,
-                onChunk,
-                onComplete,
-                onError,
-                companyId
-              )
-              return
-            } else {
-              // For other auth errors, use regular token error handling
-              logger.warning('Token is invalid, attempting to reconnect', {
-                status: testResponse.status,
-                chatId,
-                errorCode
-              })
-              this.handleTokenError(
-                userQuery,
-                onChunk,
-                onComplete,
-                onError,
-                companyId
-              )
-              return
-            }
-          } catch (parseError) {
-            // If can't parse JSON, treat as generic token error
-            logger.warning('Token error, attempting to reconnect', {
-              status: testResponse.status,
-              chatId
-            })
-            this.handleTokenError(
-              userQuery,
-              onChunk,
-              onComplete,
-              onError,
-              companyId
-            )
-            return
-          }
-        }
-      }
-    } catch (error) {
-      // Log the error but continue anyway, as this might just be a network error
-      logger.info('Error checking token validity, continuing anyway', {
-        error
-      })
-    }
-
     // Close any existing EventSource
     this.cancelStream()
 
@@ -320,7 +254,7 @@ export class ChatStreamingService {
                 const content = data.content as string
                 fullText += content
 
-                if (this.eventSource?.readyState === 2) {
+                if (this.isClosingConnection) {
                   logger.warning('SSE connection closed before message was processed')
                 }
 
@@ -339,8 +273,6 @@ export class ChatStreamingService {
                   ? data.fullContent
                   : fullText
 
-              // Add a longer delay before completing to ensure any pending chunks are processed
-              // Increased from 100ms to 1000ms (1 second) for more reliable completion
               setTimeout(() => {
                 if (!this.isClosingConnection) {
                   // If connection was manually closed during this timeout, don't proceed
@@ -404,7 +336,8 @@ export class ChatStreamingService {
         }
 
         // Only notify user after multiple consecutive errors (actual connection problems)
-        if (errorCount > 5) {
+        // Reduced from 5 to 3 errors to fail faster
+        if (errorCount > 3) {
           const connectionError = new StreamingError(
             ErrorCodes.CONNECTION_ERROR,
             true
@@ -416,6 +349,7 @@ export class ChatStreamingService {
           })
 
           onError(connectionError)
+          this.closeEventSource()
         }
       }
     } catch (error) {
@@ -832,6 +766,8 @@ export class ChatStreamingService {
       this.eventSource.close()
       this.eventSource = undefined
     }
+
+    this.isClosingConnection = false
   }
 
   /**
