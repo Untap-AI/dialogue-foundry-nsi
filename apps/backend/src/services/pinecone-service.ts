@@ -91,7 +91,7 @@ export const formatDocumentsAsContext = (documents: RetrievedDocument[]) => {
     ${doc.text}`
   })
 
-  return `Relevant information from the knowledge base:
+  return `Relevant information from the knowledge base. Use the following information only to answer the user's question::
   
   ${contextParts.join('\n\n')}`
 }

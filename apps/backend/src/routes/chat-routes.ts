@@ -405,7 +405,8 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
 
     // If we retrieved context, add it as a system message
     if (contextFromDocs) {
-      openaiMessages.push({
+      // Change this to make first message a system message
+      openaiMessages.unshift({
         role: 'system',
         content: contextFromDocs
       })

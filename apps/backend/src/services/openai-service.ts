@@ -37,7 +37,7 @@ export type ChatSettings = {
 
 // Default settings to use if none are provided
 export const DEFAULT_SETTINGS: Pick<ChatSettings, 'model' | 'temperature'> = {
-  model: 'gpt-4o',
+  model: 'gpt-4.1-mini',
   temperature: 0.5
 }
 
@@ -228,7 +228,6 @@ export const generateStreamingChatCompletion = async (
   onChunk: (chunk: string) => void
 ) => {
   // TODO: Implement token checking and context cutoff
-  // TODO: Implement rate limiting
   try {
     // Limit the number of messages to avoid exceeding token limits
     const limitedMessages = limitMessagesContext(
@@ -236,7 +235,7 @@ export const generateStreamingChatCompletion = async (
       MAX_MESSAGES_PER_CHAT
     )
 
-    const systemPromptWithCurrentDate = `${settings.systemPrompt}\n\nThe current date and time is ${new Date().toLocaleString(
+    const systemPromptWithCurrentDate = `Respond using Markdown formatting for headings, lists, and emphasis for all answers.\n\n${settings.systemPrompt}\n\nThe current date and time is ${new Date().toLocaleString(
       'en-US',
       {
         weekday: 'long',
