@@ -37,7 +37,7 @@ export type ChatSettings = {
 
 // Default settings to use if none are provided
 export const DEFAULT_SETTINGS: Pick<ChatSettings, 'model' | 'temperature'> = {
-  model: 'gpt-4.1-mini',
+  model: 'gpt-4o',
   temperature: 0.5
 }
 
