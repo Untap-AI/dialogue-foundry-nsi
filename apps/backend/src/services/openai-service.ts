@@ -37,9 +37,8 @@ export type ChatSettings = {
 
 // Default settings to use if none are provided
 export const DEFAULT_SETTINGS: Pick<ChatSettings, 'model' | 'temperature'> = {
-  // TODO: Assess model performance
-  model: 'gpt-4o-mini',
-  temperature: 0.7
+  model: 'gpt-4o',
+  temperature: 0.5
 }
 
 // Define the email tool for OpenAI function calling
