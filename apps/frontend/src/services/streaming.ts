@@ -121,7 +121,7 @@ export class ChatStreamingService {
   async streamMessage(
     userQuery: string,
     onChunk: (chunk: string) => void,
-    onComplete: (fullText: string) => void,
+    onComplete: () => void,
     onError: (error: Error) => void,
     companyId?: string
   ): Promise<void> {
@@ -263,6 +263,8 @@ export class ChatStreamingService {
                   ? data.fullContent
                   : fullText
 
+              console.log('completeResponse', completeResponse)
+
               setTimeout(() => {
                 if (!this.isClosingConnection) {
                   // If connection was manually closed during this timeout, don't proceed
@@ -270,7 +272,7 @@ export class ChatStreamingService {
                 }
 
                 // Process the completion
-                onComplete(completeResponse)
+                onComplete()
 
                 // Close the connection now that we're done
                 this.closeEventSource()
@@ -365,7 +367,7 @@ export class ChatStreamingService {
     userQuery: string,
     data: SSEEventData,
     onChunk: (chunk: string) => void,
-    onComplete: (fullText: string) => void,
+    onComplete: () => void,
     onError: (error: Error) => void,
     companyId?: string
   ): void {
@@ -465,7 +467,7 @@ export class ChatStreamingService {
   private async handleTokenExpired(
     userQuery: string,
     onChunk: (chunk: string) => void,
-    onComplete: (fullText: string) => void,
+    onComplete: () => void,
     onError: (error: Error) => void,
     companyId?: string
   ): Promise<void> {
@@ -546,7 +548,7 @@ export class ChatStreamingService {
   private async handleTokenError(
     userQuery: string,
     onChunk: (chunk: string) => void,
-    onComplete: (fullText: string) => void,
+    onComplete: () => void,
     onError: (error: Error) => void,
     companyId?: string
   ): Promise<void> {
@@ -645,7 +647,7 @@ export class ChatStreamingService {
   private async handleChatError(
     userQuery: string,
     onChunk: (chunk: string) => void,
-    onComplete: (fullText: string) => void,
+    onComplete: () => void,
     onError: (error: Error) => void,
     companyId?: string,
     errorCode: ErrorCodeValue = ErrorCodes.CONFIGURATION_ERROR
