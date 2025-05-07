@@ -10,7 +10,13 @@ import type { ChatConfig } from '../services/api'
 // Define the Config type that extends ChatConfig and includes any other app-wide settings
 export interface DialogueFoundryConfig {
   // Chat interface customization
-  personaOptions?: PersonaOptions
+  personaOptions?: {
+    assistant: {
+      name: string
+      tagline: string
+      avatar?: string
+    }
+  }
   theme?: DisplayOptions['colorScheme']
   conversationStarters?: ConversationStarter[]
 
@@ -33,43 +39,39 @@ export interface DialogueFoundryConfig {
 export const defaultConfig: DialogueFoundryConfig = {
   chatConfig: {
     apiBaseUrl: 'https://dialogue-foundry-backend-smokebox-swjv.onrender.com/api',
-    companyId: 'gt-landscape-solutions'
+    companyId: 'omega-gymnastics'
   },
 
-  title: 'GT landscape solutions',
+  title: 'Omega Gymnastics Assistant',
   personaOptions: {
     assistant: {
-      name: 'GT Landscape Expert',
-      tagline: 'Ask me anything about GT',
-      avatar: ''
+      name: 'Omega Gymnastics Assistant',
+      tagline: 'Ask me anything about Omega Gymnastics',
     }
   },
   popupMessage: 'Have questions? Click here for help!',
   openOnLoad: 'all',
+  welcomeMessage: 'Welcome to Omega Gymnastics!\n\nHave a question about our classes, camps, or how to get your child started? Just type it here and I\'ll help out!\n\nNot sure what to ask? Click one of the quick topics below to get started.',
   conversationStarters: [
     {
-      label: "Wines",
-      prompt: "I'm interested in learning more about your wines. Can you tell me more about them?"
+      label: "Classes",
+      prompt: "What gymnastics classes do you offer and how do I sign up?"
     },
     {
-      label: "Events",
-      prompt: "I'm interested in learning more about your events. Can you tell me more about them?"
+      label: "Birthday Parties",
+      prompt: "Tell me about birthday party options and how to book them."
     },
     {
-      label: "Weddings",
-      prompt: "I'm interested in learning more about your weddings. Can you tell me more about them?"
+      label: "Camps",
+      prompt: "What camps do you offer throughout the year and how do I sign up?"
     },
     {
-      label: "Catering",
-      prompt: "I'm interested in learning more about your catering. Can you tell me more about them?"
+      label: "Special Events",
+      prompt: "What special events does Omega Gymnastics host and how do I sign up?"
     },
     {
-      label: "Wine Tasting",
-      prompt: "I'm interested in learning more about your wine tasting. Can you tell me more about them?"
-    },
-    {
-      label: "Wine Tasting",
-      prompt: "I'm interested in learning more about your wine tasting. Can you tell me more about them?"
+      label: "Competitive Team",
+      prompt: "How do I sign up for the competitive team?"
     }
   ]
 }

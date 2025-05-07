@@ -107,8 +107,6 @@ export class ChatStreamingService {
     if (now - this.lastReconnectTime > this.RECONNECT_RESET_TIME) {
       this.reconnectAttempts = 0
       this.tokenReconnectAttempts = 0 // Also reset token reconnect attempts
-
-      logger.debug('Reset reconnection counters due to elapsed time')
     }
   }
 
@@ -200,8 +198,6 @@ export class ChatStreamingService {
     }
 
     try {
-      logger.debug('Establishing SSE connection', { chatId })
-
       // Create a new EventSource connection
       this.eventSource = new EventSource(url.toString())
 
@@ -212,7 +208,6 @@ export class ChatStreamingService {
       // Reset error count when connection successfully opens
       this.eventSource.onopen = () => {
         errorCount = 0
-        logger.debug('SSE connection opened successfully')
       }
 
       // Handle incoming messages
@@ -244,7 +239,6 @@ export class ChatStreamingService {
           // If not an error, process normal message types
           switch (data.type) {
             case 'connected':
-              logger.debug('SSE connected message received')
               break
 
             case 'chunk':
@@ -253,10 +247,6 @@ export class ChatStreamingService {
                 // eslint-disable-next-line @typescript-eslint/no-shadow
                 const content = data.content as string
                 fullText += content
-
-                if (this.isClosingConnection) {
-                  logger.warning('SSE connection closed before message was processed')
-                }
 
                 onChunk(content)
               }
@@ -774,7 +764,6 @@ export class ChatStreamingService {
    * Cancel ongoing stream if one exists
    */
   cancelStream(): void {
-    logger.debug('Cancelling active stream')
     this.isClosingConnection = true
     this.closeEventSource()
   }
@@ -784,8 +773,6 @@ export class ChatStreamingService {
    * Call this when the user manually reloads or takes action to resolve issues
    */
   resetReconnectionState(): void {
-    ('Resetting reconnection state')
-
     this.reconnectAttempts = 0
     this.tokenReconnectAttempts = 0 // Also reset token reconnect attempts
     this.lastReconnectTime = 0

@@ -2,23 +2,23 @@
 
 :root {
   /* Core colors that can be customized by customers */
-  --df-primary-color: #047A29;
-  --df-secondary-color: #f5f5f5;
-  --df-tertiary-color: rgb(58 80 62);
+  --df-primary-color: #FFE282;
+  --df-secondary-color: #FFFFFF;
+  --df-tertiary-color: #FCCF44;
   
   /* Background colors */
   --df-bg-primary: white;
-  --df-bg-secondary: #d9d9d9;
+  --df-bg-secondary: #2D2D2D;
   
   /* Text colors */
-  --df-text-primary: rgba(31, 41, 55, 0.8);
-  --df-text-secondary: rgb(102, 102, 102);
-  --df-text-contrast: white;
+  --df-text-primary: rgb(210, 209, 208);
+  --df-text-secondary: rgb(123, 123, 123);
+  --df-text-contrast: black;
   
   /* Alert/Exception colors */
-  --df-alert-bg: #ffcccc;
-  --df-alert-border: darkred;
-  --df-alert-text: black;
+  --df-alert-bg: #FE4550;
+  --df-alert-border: #FE4550;
+  --df-alert-text: #FFFFFF;
   
   /* Border and outline */
   --df-border-color: rgba(31, 41, 55, 0.2);
@@ -27,9 +27,9 @@
   /* Common transparency */
   --df-transparent: transparent;
   /* Need slightly darker gray for disabled text */
-  --df-disabled: rgb(119, 157, 127, 0.5);
+  --df-disabled: rgba(255, 226, 130, 0.5);
 
-  --df-font-family: Montserrat, Helvetica, Arial, Verdana, sans-serif;
+  --df-font-family: chalkboard, sans-serif;
   /* --df-mono-font-family: monospace; */
   --df-font-size-base: 16px;
 
@@ -38,3 +38,12 @@
   --df-line-height: 1.5;
   --df-flex-gap: 12px;
 }
+
+.nlux-comp-composer>textarea:placeholder {
+  color: var(--df-disabled) !important;
+}
+
+.nlux-comp-composer>textarea{
+  color: var(--df-text-contrast) !important;
+}
+

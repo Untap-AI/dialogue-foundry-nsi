@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.36
+
+### Patch Changes
+
+- Fix sentry overboard
+
 ## 0.2.35
 
 ### Patch Changes

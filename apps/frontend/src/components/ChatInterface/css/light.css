@@ -79,7 +79,7 @@
   color: var(--df-primary-color);
 }
 
-.nlux-comp-composer>button>.nlux-comp-sendIcon>.nlux-comp-sendIcon-container:hover {
+.nlux-comp-composer>button:not(:disabled)>.nlux-comp-sendIcon>.nlux-comp-sendIcon-container:hover {
   color: var(--df-tertiary-color);
 }
 

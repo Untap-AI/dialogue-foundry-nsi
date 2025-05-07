@@ -183,10 +183,7 @@ export class Logger {
       Sentry.setTag('environment', this.config.environment || 'development')
 
       this.initialized = true
-      this.debug('Sentry initialized successfully', {
-        environment: this.config.environment
-      })
-
+      
       // Set a global error handler for uncaught exceptions
       if (typeof window !== 'undefined') {
         window.onerror = (message, _source, _lineno, _colno, error) => {
