@@ -9,6 +9,7 @@ import { ErrorCategory, categorizeError } from '../../services/errors'
 import type { ChatStatus } from '../ChatWidget/ChatWidget'
 import type { ServiceError } from '../../services/errors'
 import type {
+  AssistantPersona,
   ChatItem,
   ConversationStarter,
   ErrorEventDetails
@@ -227,7 +228,7 @@ export const ChatInterface = ({
                     autoScroll: false
                   }}
                   personaOptions={{
-                    assistant: personaOptions?.assistant
+                    assistant: personaOptions?.assistant as AssistantPersona
                   }}
                   composerOptions={{
                     placeholder: 'Ask me anything...',
