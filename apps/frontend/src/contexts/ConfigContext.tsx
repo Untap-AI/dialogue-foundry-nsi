@@ -38,8 +38,8 @@ export interface DialogueFoundryConfig {
 // Default configuration
 export const defaultConfig: DialogueFoundryConfig = {
   chatConfig: {
-    apiBaseUrl: 'https://dialogue-foundry-backend-smokebox-swjv.onrender.com/api',
-    companyId: 'omega-gymnastics'
+    apiBaseUrl: 'http://localhost:3000/api',
+    companyId: 'west-hills-vineyards'
   },
 
   title: 'Omega Gymnastics Assistant',

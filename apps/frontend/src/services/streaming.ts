@@ -242,6 +242,14 @@ export class ChatStreamingService {
               break
 
             case 'chunk':
+
+              if(this.isClosingConnection) {
+                logger.error("Received chunk after connection was closed", {
+                  chatId
+                })
+                return
+              }
+
               // Handle the content - we've verified it's a string
               if (typeof data.content === 'string') {
                 // eslint-disable-next-line @typescript-eslint/no-shadow
@@ -255,15 +263,6 @@ export class ChatStreamingService {
             case 'done': {
               // Mark that we're intentionally closing before invoking callbacks or cleanup
               this.isClosingConnection = true
-
-              // Ensure we have the complete response by preferring the fullContent
-              // provided by the server, which is guaranteed to be complete
-              const completeResponse =
-                typeof data.fullContent === 'string'
-                  ? data.fullContent
-                  : fullText
-
-              console.log('completeResponse', completeResponse)
 
               setTimeout(() => {
                 if (!this.isClosingConnection) {
