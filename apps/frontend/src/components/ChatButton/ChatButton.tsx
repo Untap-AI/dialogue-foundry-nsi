@@ -8,6 +8,31 @@ const POPUP_DURATION = 10000
 const DIALOGUE_FOUNDRY_POPUP_KEY = 'dialogue_foundry_popup'
 const ANIMATION_CLASS = `chat-button-animation-twist`
 
+// Helper to safely access localStorage
+const isLocalStorageAvailable = () => {
+  try {
+    const testKey = '__test__';
+    localStorage.setItem(testKey, testKey);
+    localStorage.removeItem(testKey);
+    return true;
+  } catch (e) {
+    return false;
+  }
+};
+
+const getLocalStorageItem = (key: string) => {
+  if (isLocalStorageAvailable()) {
+    return localStorage.getItem(key);
+  }
+  return null;
+};
+
+const setLocalStorageItem = (key: string, value: string) => {
+  if (isLocalStorageAvailable()) {
+    localStorage.setItem(key, value);
+  }
+};
+
 interface ChatButtonProps {
   onClick: () => void
   isOpen: boolean
@@ -20,12 +45,12 @@ export const ChatButton: React.FC<ChatButtonProps> = ({ onClick, isOpen }) => {
   const [popupVisible, setPopupVisible] = useState(false)
 
   const popupEnabled = useMemo(() => popupMessage &&
-      popupMessage.length > 0 && !localStorage.getItem(DIALOGUE_FOUNDRY_POPUP_KEY), [popupMessage])
+      popupMessage.length > 0 && !getLocalStorageItem(DIALOGUE_FOUNDRY_POPUP_KEY), [popupMessage])
       
 
   useEffect(() => {
     if(isOpen && popupEnabled) {
-      localStorage.setItem(DIALOGUE_FOUNDRY_POPUP_KEY, 'true')
+      setLocalStorageItem(DIALOGUE_FOUNDRY_POPUP_KEY, 'true')
       buttonRef.current?.classList.remove(ANIMATION_CLASS)
       setPopupVisible(false)
     }
@@ -39,9 +64,9 @@ export const ChatButton: React.FC<ChatButtonProps> = ({ onClick, isOpen }) => {
 
     // Add animation class after popup delay (when popup appears)
     const startAnimationTimer = setTimeout(() => {
-      if (localStorage.getItem(DIALOGUE_FOUNDRY_POPUP_KEY)) return
+      if (getLocalStorageItem(DIALOGUE_FOUNDRY_POPUP_KEY)) return
 
-      localStorage.setItem(DIALOGUE_FOUNDRY_POPUP_KEY, 'true')
+      setLocalStorageItem(DIALOGUE_FOUNDRY_POPUP_KEY, 'true')
       button.classList.add(ANIMATION_CLASS)
       setPopupVisible(true)
     }, POPUP_DELAY)
