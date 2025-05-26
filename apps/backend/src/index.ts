@@ -64,7 +64,18 @@ app.use(
       // eslint-disable-next-line no-null/no-null
       return callback(null, true)
     },
-    credentials: true
+    credentials: true,
+    // Add specific headers needed for sendBeacon
+    allowedHeaders: [
+      'Content-Type',
+      'Authorization',
+      'X-Requested-With',
+      'Accept',
+      'Origin'
+    ],
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    // Expose headers that might be needed
+    exposedHeaders: ['Content-Length', 'X-Foo', 'X-Bar']
   })
 )
 

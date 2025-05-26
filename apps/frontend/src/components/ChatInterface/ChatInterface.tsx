@@ -86,89 +86,24 @@ export const ChatInterface = ({
       const link = target.closest('a')
       
       if (link && link.href) {
-        // Check if this is an external link or if it has target="_blank"
-        const isExternalLink = link.hostname !== window.location.hostname
-        const opensInNewTab = link.target === '_blank'
+        // Find the message container that contains this link
+        const messageContainer = link.closest('.nlux-comp-message')
+        let messageId: string | undefined
         
-        // If it's an external link that doesn't open in a new tab, we need to handle navigation
-        if (isExternalLink && !opensInNewTab) {
-          // Prevent the default navigation
-          event.preventDefault()
-          
-          // Find the message container that contains this link
-          const messageContainer = link.closest('.nlux-comp-message')
-          let messageId: string | undefined
-          
-          if (messageContainer) {
-            // Try to extract message ID from the container's attributes or data
-            messageId = messageContainer.getAttribute('data-message-id') || 
-                      messageContainer.id || 
-                      undefined
-          }
-
-          // Record the link click and then navigate
-          analyticsService.recordLinkClick(
-            link.href,
-            link.textContent || link.innerText || undefined,
-            messageId
-          ).then(() => {
-            // Navigate after analytics is recorded
-            window.location.href = link.href
-          }).catch((error) => {
-            // If analytics fails, still navigate
-            console.warn('Analytics recording failed, but navigating anyway:', error)
-            window.location.href = link.href
-          })
-        } else {
-          // For links that open in new tabs or internal links, record analytics without preventing navigation
-          const messageContainer = link.closest('.nlux-comp-message')
-          let messageId: string | undefined
-          
-          if (messageContainer) {
-            messageId = messageContainer.getAttribute('data-message-id') || 
-                      messageContainer.id || 
-                      undefined
-          }
-
-          // Use sendBeacon API for more reliable analytics when page might unload
-          // This is non-blocking and doesn't prevent navigation
-          if (navigator.sendBeacon) {
-            const analyticsData = {
-              chat_id: analyticsService.getCurrentChatId(),
-              message_id: messageId,
-              user_id: analyticsService.getCurrentUserId(),
-              company_id: analyticsService.getCompanyId(),
-              event_type: 'link_click',
-              event_data: {
-                url: link.href,
-                link_text: link.textContent || link.innerText || undefined
-              },
-              user_agent: navigator.userAgent,
-              referrer: document.referrer
-            }
-            
-            try {
-              const blob = new Blob([JSON.stringify(analyticsData)], {
-                type: 'application/json'
-              })
-              navigator.sendBeacon(`${analyticsService.getApiBaseUrl()}/analytics/events`, blob)
-            } catch (error) {
-              // Fallback to regular analytics call
-              analyticsService.recordLinkClick(
-                link.href,
-                link.textContent || link.innerText || undefined,
-                messageId
-              )
-            }
-          } else {
-            // Fallback for browsers that don't support sendBeacon
-            analyticsService.recordLinkClick(
-              link.href,
-              link.textContent || link.innerText || undefined,
-              messageId
-            )
-          }
+        if (messageContainer) {
+          messageId = messageContainer.getAttribute('data-message-id') || 
+                    messageContainer.id || 
+                    undefined
         }
+
+        // Record analytics for all link clicks (no navigation prevention)
+        analyticsService.recordLinkClick(
+          link.href,
+          link.textContent || link.innerText || undefined,
+          messageId
+        ).catch(error => {
+          console.warn('Analytics recording failed:', error)
+        })
       }
     }
 

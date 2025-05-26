@@ -385,26 +385,50 @@ export class ChatApiService {
   }
 
   /**
-   * Record an analytics event
+   * Record an analytics event - tries sendBeacon first, falls back to regular POST
    */
   async recordAnalyticsEvent(eventType: string, eventData: Record<string, any> = {}): Promise<void> {
-    try {
-      const chatId = this.storage.getItem(this.chatIdStorageKey)
-      const userId = this.storage.getItem(this.userIdStorageKey)
+    const chatId = this.storage.getItem(this.chatIdStorageKey)
+    const userId = this.storage.getItem(this.userIdStorageKey)
 
-      await this.api.post('/analytics/events', {
-        chat_id: chatId,
-        message_id: eventData.messageId,
-        user_id: userId,
-        company_id: this.companyId,
-        event_type: eventType,
-        event_data: {
-          url: eventData.url,
-          link_text: eventData.linkText
-        },
-        user_agent: navigator.userAgent,
-        referrer: document.referrer
-      })
+    const analyticsPayload = {
+      chat_id: chatId,
+      message_id: eventData.messageId,
+      user_id: userId,
+      company_id: this.companyId,
+      event_type: eventType,
+      event_data: {
+        url: eventData.url,
+        link_text: eventData.linkText
+      },
+      user_agent: navigator.userAgent,
+      referrer: document.referrer
+    }
+
+    // Try sendBeacon first if available (for better reliability during page unload)
+    if (typeof navigator.sendBeacon === 'function') {
+      try {
+        const blob = new Blob([JSON.stringify(analyticsPayload)], {
+          type: 'application/json'
+        })
+
+        const beaconSuccess = navigator.sendBeacon(`${this.apiBaseUrl}/analytics/events`, blob)
+        
+        if (beaconSuccess) {
+          console.log('Analytics event sent via sendBeacon:', analyticsPayload)
+          return // Success, no need to fall back
+        } else {
+          console.warn('sendBeacon failed to queue request, falling back to regular POST')
+        }
+      } catch (error) {
+        console.warn('sendBeacon threw an error, falling back to regular POST:', error)
+      }
+    }
+
+    // Fallback to regular authenticated POST request
+    try {
+      await this.api.post('/analytics/events', analyticsPayload)
+      console.log('Analytics event sent via regular POST:', analyticsPayload)
     } catch (error) {
       // Don't throw analytics errors - just log them
       logger.error('Error recording analytics event', { 
