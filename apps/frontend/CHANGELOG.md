@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.39
+
+### Patch Changes
+
+- Beacon fix
+
 ## 0.2.38
 
 ### Patch Changes
