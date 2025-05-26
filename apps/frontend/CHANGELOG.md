@@ -1,5 +1,12 @@
 # @dialogue-foundry/frontend
 
+## 0.2.37
+
+### Patch Changes
+
+- Save user with new chat
+- d211fcc: More logging for ending chunk early
+
 ## 0.2.36
 
 ### Patch Changes

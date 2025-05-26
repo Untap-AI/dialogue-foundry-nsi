@@ -133,7 +133,7 @@ router.post('/', async (req, res) => {
       }
     }
 
-    const userId = userIdParam || uuidv4()
+    const userId = userIdParam === 'undefined' || userIdParam === undefined ? uuidv4() : userIdParam
 
     const chat = await createChatAdmin({
       name: chatName,

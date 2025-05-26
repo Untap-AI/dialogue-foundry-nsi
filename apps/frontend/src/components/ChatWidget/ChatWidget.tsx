@@ -124,7 +124,9 @@ export const ChatWidget = () => {
     setChatStatus('loading')
 
     try {
-      const chatInit = await chatService.createNewChat()
+      const chatInit = await chatService.createNewChat({
+        sameUser: true
+      })
       setChatId(chatInit.chatId)
       setInitialConversation(
         chatInit.messages.length > 0 ? chatInit.messages : undefined

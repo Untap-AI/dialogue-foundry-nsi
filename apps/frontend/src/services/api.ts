@@ -8,6 +8,7 @@ import type { ChatItem } from '@nlux/react'
 // Default config values (can be overridden)
 export const DEFAULT_TOKEN_STORAGE_KEY = 'dialogue_foundry_token'
 export const DEFAULT_CHAT_ID_STORAGE_KEY = 'dialogue_foundry_chat_id'
+export const DEFAULT_USER_ID_STORAGE_KEY = 'dialogue_foundry_user_id'
 
 // In-memory storage fallback when localStorage is unavailable
 class MemoryStorage implements Storage {
@@ -72,6 +73,7 @@ export interface ChatConfig {
   companyId: string
   tokenStorageKey?: string
   chatIdStorageKey?: string
+  userIdStorageKey?: string
 }
 
 export interface Message {
@@ -101,6 +103,7 @@ export class ChatApiService {
   private companyId: string
   private tokenStorageKey: string
   private chatIdStorageKey: string
+  private userIdStorageKey: string
   private storage: Storage
   private api: ReturnType<typeof axios.create>
 
@@ -110,6 +113,7 @@ export class ChatApiService {
     this.tokenStorageKey = config.tokenStorageKey || DEFAULT_TOKEN_STORAGE_KEY
     this.chatIdStorageKey =
       config.chatIdStorageKey || DEFAULT_CHAT_ID_STORAGE_KEY
+    this.userIdStorageKey = config.userIdStorageKey || DEFAULT_USER_ID_STORAGE_KEY
     this.storage = getStorage()
 
     // Create axios instance
@@ -273,23 +277,29 @@ export class ChatApiService {
     }
 
     // Create a new chat
-    return this.createNewChat(welcomeMessage)
+    return this.createNewChat({welcomeMessage})
   }
 
   /**
    * Create a new chat session
    */
-  async createNewChat(welcomeMessage?: string): Promise<ChatInit> {
+  async createNewChat({welcomeMessage, sameUser}: {welcomeMessage?: string, sameUser?: boolean} = {}): Promise<ChatInit> {
     try {
+      const userId = sameUser ? this.storage.getItem(this.userIdStorageKey) : undefined
+
       const response = await this.api.post('/chats', {
         name: 'New Conversation',
         companyId: this.companyId,
-        welcomeMessage
+        welcomeMessage,
+        ...(userId ? {
+          userId
+        } : {})
       })
 
       // Store token and chat ID
       this.storage.setItem(this.tokenStorageKey, response.data.accessToken)
       this.storage.setItem(this.chatIdStorageKey, response.data.chat.id)
+      this.storage.setItem(this.userIdStorageKey, response.data.chat.user_id)
 
       return {
         chatId: response.data.chat.id,
