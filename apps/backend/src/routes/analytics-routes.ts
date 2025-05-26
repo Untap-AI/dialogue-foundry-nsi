@@ -2,10 +2,6 @@ import express from 'express'
 import { z } from 'zod'
 import { 
   createAnalyticsEventAdmin, 
-  getAnalyticsEventsByChatId, 
-  getAnalyticsEventsByCompanyId,
-  getAnalyticsSummary,
-  getUserJourney,
   type EventType,
 } from '../db/analytics'
 
@@ -23,7 +19,7 @@ const analyticsEventSchema = z.object({
   chat_id: z.string().uuid(),
   message_id: z.string().uuid().optional(),
   user_id: z.string().uuid(),
-  company_id: z.string().uuid().optional(),
+  company_id: z.string(),
   event_type: z.enum([
     'link_click',
   ]),
@@ -71,7 +67,7 @@ router.post('/events', async (req, res) => {
       ip_address: ipAddress
     })
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: analyticsEvent
     })
@@ -86,124 +82,9 @@ router.post('/events', async (req, res) => {
       })
     }
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to create analytics event'
-    })
-  }
-})
-
-/**
- * GET /analytics/events/chat/:chatId
- * Get analytics events for a specific chat
- */
-router.get('/events/chat/:chatId', async (req, res) => {
-  try {
-    const { chatId } = req.params
-    const { event_type, limit } = req.query
-
-    const events = await getAnalyticsEventsByChatId(
-      chatId,
-      event_type as EventType,
-      limit ? parseInt(limit as string) : undefined
-    )
-
-    res.json({
-      success: true,
-      data: events
-    })
-  } catch (error) {
-    console.error('Error getting chat analytics events:', error)
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get analytics events'
-    })
-  }
-})
-
-/**
- * GET /analytics/events/company/:companyId
- * Get analytics events for a specific company
- */
-router.get('/events/company/:companyId', async (req, res) => {
-  try {
-    const { companyId } = req.params
-    const { event_type, limit, start_date, end_date } = req.query
-
-    const startDate = start_date ? new Date(start_date as string) : undefined
-    const endDate = end_date ? new Date(end_date as string) : undefined
-
-    const events = await getAnalyticsEventsByCompanyId(
-      companyId,
-      event_type as EventType,
-      limit ? parseInt(limit as string) : undefined,
-      startDate,
-      endDate
-    )
-
-    res.json({
-      success: true,
-      data: events
-    })
-  } catch (error) {
-    console.error('Error getting company analytics events:', error)
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get analytics events'
-    })
-  }
-})
-
-/**
- * GET /analytics/summary/:companyId
- * Get analytics summary for a company
- */
-router.get('/summary/:companyId', async (req, res) => {
-  try {
-    const { companyId } = req.params
-    const { days } = req.query
-
-    const summary = await getAnalyticsSummary(
-      companyId,
-      days ? parseInt(days as string) : 30
-    )
-
-    res.json({
-      success: true,
-      data: summary
-    })
-  } catch (error) {
-    console.error('Error getting analytics summary:', error)
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get analytics summary'
-    })
-  }
-})
-
-/**
- * GET /analytics/journey/:sessionId
- * Get user journey analytics for a session
- */
-router.get('/journey/:sessionId', async (req, res) => {
-  try {
-    const { sessionId } = req.params
-    const { chat_id } = req.query
-
-    const journey = await getUserJourney(
-      sessionId,
-      chat_id as string
-    )
-
-    res.json({
-      success: true,
-      data: journey
-    })
-  } catch (error) {
-    console.error('Error getting user journey:', error)
-    res.status(500).json({
-      success: false,
-      error: 'Failed to get user journey'
     })
   }
 })
