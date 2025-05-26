@@ -1,6 +1,7 @@
 import { Pinecone } from '@pinecone-database/pinecone'
 import dotenv from 'dotenv'
 import { cacheService } from './cache-service'
+import { logger } from '../lib/logger'
 
 dotenv.config()
 
@@ -70,7 +71,7 @@ export const retrieveDocuments = async (
 
     return documents
   } catch (error) {
-    console.error('Error retrieving documents from Pinecone:', error)
+    logger.error('Error retrieving documents from Pinecone:', error)
     return []
   }
 }
