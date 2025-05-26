@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.38
+
+### Patch Changes
+
+- Events analytics
+
 ## 0.2.37
 
 ### Patch Changes

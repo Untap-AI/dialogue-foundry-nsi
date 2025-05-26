@@ -2,7 +2,6 @@ import { createContext, useContext, useState, useEffect } from 'react'
 import type {
   ConversationStarter,
   DisplayOptions,
-  PersonaOptions
 } from '@nlux/react'
 import type { ReactNode } from 'react'
 import type { ChatConfig } from '../services/api'

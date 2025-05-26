@@ -351,6 +351,27 @@ export class ChatApiService {
   }
 
   /**
+   * Get the current user ID
+   */
+  getCurrentUserId(): string | null {
+    return this.storage.getItem(this.userIdStorageKey)
+  }
+
+  /**
+   * Get the company ID
+   */
+  getCompanyId(): string {
+    return this.companyId
+  }
+
+  /**
+   * Get the API base URL
+   */
+  getApiBaseUrl(): string {
+    return this.apiBaseUrl
+  }
+
+  /**
    * Map backend message format to NLUX format
    * @param messages - Backend messages
    */
@@ -361,5 +382,47 @@ export class ChatApiService {
       role: message.role === 'user' ? 'user' : 'assistant',
       timestamp: new Date(message.created_at).getTime()
     }))
+  }
+
+  /**
+   * Record an analytics event
+   */
+  async recordAnalyticsEvent(eventType: string, eventData: Record<string, any> = {}): Promise<void> {
+    try {
+      const chatId = this.storage.getItem(this.chatIdStorageKey)
+      const userId = this.storage.getItem(this.userIdStorageKey)
+
+      await this.api.post('/analytics/events', {
+        chat_id: chatId,
+        message_id: eventData.messageId,
+        user_id: userId,
+        company_id: this.companyId,
+        event_type: eventType,
+        event_data: {
+          url: eventData.url,
+          link_text: eventData.linkText
+        },
+        user_agent: navigator.userAgent,
+        referrer: document.referrer
+      })
+    } catch (error) {
+      // Don't throw analytics errors - just log them
+      logger.error('Error recording analytics event', { 
+        eventType, 
+        eventData, 
+        error 
+      })
+    }
+  }
+
+  /**
+   * Record a link click event
+   */
+  async recordLinkClick(url: string, linkText?: string, messageId?: string): Promise<void> {
+    await this.recordAnalyticsEvent('link_click', {
+      url,
+      linkText,
+      messageId
+    })
   }
 }

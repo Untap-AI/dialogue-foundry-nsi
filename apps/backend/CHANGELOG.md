@@ -1,5 +1,11 @@
 # @dialogue-foundry/backend
 
+## 1.1.3
+
+### Patch Changes
+
+- Events analytics
+
 ## 1.1.2
 
 ### Patch Changes

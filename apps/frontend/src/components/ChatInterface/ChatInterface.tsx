@@ -5,6 +5,7 @@ import '@nlux/themes/unstyled.css'
 import './ChatInterface.css'
 
 import { ChatStreamingService } from '../../services/streaming'
+import { ChatApiService } from '../../services/api'
 import { ErrorCategory, categorizeError } from '../../services/errors'
 import type { ChatStatus } from '../ChatWidget/ChatWidget'
 import type { ServiceError } from '../../services/errors'
@@ -51,6 +52,12 @@ export const ChatInterface = ({
     [chatConfig]
   )
 
+  // Create analytics service for tracking events
+  const analyticsService = useMemo(
+    () => new ChatApiService(chatConfig),
+    [chatConfig]
+  )
+
   // Create adapter at the top level
   const adapter = useAsStreamAdapter(
     (userMessage: string, observer) => {
@@ -71,6 +78,108 @@ export const ChatInterface = ({
     },
     [chatConfig.companyId, streamingService]
   )
+
+  // Set up link click tracking
+  useEffect(() => {
+    const handleLinkClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      const link = target.closest('a')
+      
+      if (link && link.href) {
+        // Check if this is an external link or if it has target="_blank"
+        const isExternalLink = link.hostname !== window.location.hostname
+        const opensInNewTab = link.target === '_blank'
+        
+        // If it's an external link that doesn't open in a new tab, we need to handle navigation
+        if (isExternalLink && !opensInNewTab) {
+          // Prevent the default navigation
+          event.preventDefault()
+          
+          // Find the message container that contains this link
+          const messageContainer = link.closest('.nlux-comp-message')
+          let messageId: string | undefined
+          
+          if (messageContainer) {
+            // Try to extract message ID from the container's attributes or data
+            messageId = messageContainer.getAttribute('data-message-id') || 
+                      messageContainer.id || 
+                      undefined
+          }
+
+          // Record the link click and then navigate
+          analyticsService.recordLinkClick(
+            link.href,
+            link.textContent || link.innerText || undefined,
+            messageId
+          ).then(() => {
+            // Navigate after analytics is recorded
+            window.location.href = link.href
+          }).catch((error) => {
+            // If analytics fails, still navigate
+            console.warn('Analytics recording failed, but navigating anyway:', error)
+            window.location.href = link.href
+          })
+        } else {
+          // For links that open in new tabs or internal links, record analytics without preventing navigation
+          const messageContainer = link.closest('.nlux-comp-message')
+          let messageId: string | undefined
+          
+          if (messageContainer) {
+            messageId = messageContainer.getAttribute('data-message-id') || 
+                      messageContainer.id || 
+                      undefined
+          }
+
+          // Use sendBeacon API for more reliable analytics when page might unload
+          // This is non-blocking and doesn't prevent navigation
+          if (navigator.sendBeacon) {
+            const analyticsData = {
+              chat_id: analyticsService.getCurrentChatId(),
+              message_id: messageId,
+              user_id: analyticsService.getCurrentUserId(),
+              company_id: analyticsService.getCompanyId(),
+              event_type: 'link_click',
+              event_data: {
+                url: link.href,
+                link_text: link.textContent || link.innerText || undefined
+              },
+              user_agent: navigator.userAgent,
+              referrer: document.referrer
+            }
+            
+            try {
+              const blob = new Blob([JSON.stringify(analyticsData)], {
+                type: 'application/json'
+              })
+              navigator.sendBeacon(`${analyticsService.getApiBaseUrl()}/analytics/events`, blob)
+            } catch (error) {
+              // Fallback to regular analytics call
+              analyticsService.recordLinkClick(
+                link.href,
+                link.textContent || link.innerText || undefined,
+                messageId
+              )
+            }
+          } else {
+            // Fallback for browsers that don't support sendBeacon
+            analyticsService.recordLinkClick(
+              link.href,
+              link.textContent || link.innerText || undefined,
+              messageId
+            )
+          }
+        }
+      }
+    }
+
+    // Add event listener to the document to capture all link clicks
+    document.addEventListener('click', handleLinkClick)
+
+    // Cleanup
+    return () => {
+      document.removeEventListener('click', handleLinkClick)
+    }
+  }, [analyticsService])
 
   // Create a custom error handler for the NLUX error event
   const handleNluxError = (error: ErrorEventDetails) => {
@@ -225,7 +334,11 @@ export const ChatInterface = ({
                   initialConversation={initialConversation}
                   conversationOptions={{
                     showWelcomeMessage: true,
-                    autoScroll: false
+                    autoScroll: false,
+                  }}
+                  messageOptions={{
+                    markdownLinkTarget: 'self',
+                    waitTimeBeforeStreamCompletion: 10000
                   }}
                   personaOptions={{
                     assistant: personaOptions?.assistant as AssistantPersona
