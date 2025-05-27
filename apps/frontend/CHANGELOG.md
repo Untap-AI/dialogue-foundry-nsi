@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.42
+
+### Patch Changes
+
+- is prod log for logger
+
 ## 0.2.41
 
 ### Patch Changes

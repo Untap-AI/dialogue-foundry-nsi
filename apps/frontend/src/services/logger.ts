@@ -5,6 +5,8 @@ import type { ErrorCodeValue } from './errors'
 // Environment type for better type safety
 export type Environment = 'development' | 'production' | string
 
+console.log('isProd', import.meta.env.PROD)
+
 // Default configuration with sensible values
 const DEFAULT_CONFIG = {
   dsn: '', // Empty string as default DSN
@@ -14,7 +16,7 @@ const DEFAULT_CONFIG = {
   // Only enable in production environments
   enabled: import.meta.env.PROD,
   // In production, show only errors
-  consoleLevel: import.meta.env.PROD ? 'error' : ('debug' as LogLevel)
+  consoleLevel: import.meta.env.PROD ? 'error' : ('info' as LogLevel)
 }
 
 // Supported log levels
