@@ -32,6 +32,7 @@ export class ChatStreamingService {
   private readonly MAX_TOKEN_RECONNECT_ATTEMPTS: number = 1 // Limit token reconnection to 1 attempt
   private readonly RECONNECT_RESET_TIME: number = 10 * 60 * 1000 // 10 minutes in ms
   private isClosingConnection: boolean = false
+  private completionTimeout: NodeJS.Timeout | undefined = undefined // Track completion timeout
 
   constructor(config: ChatConfig) {
     this.apiBaseUrl = config.apiBaseUrl
@@ -188,6 +189,9 @@ export class ChatStreamingService {
     // Close any existing EventSource
     this.cancelStream()
 
+    // Initialize timeout state
+    this.clearCompletionTimeout()
+
     // Create the URL with query parameters for token and content
     const url = new URL(`${this.apiBaseUrl}/chats/${chatId}/stream`)
     url.searchParams.append('content', userQuery)
@@ -257,30 +261,11 @@ export class ChatStreamingService {
                 fullText += content
 
                 onChunk(content)
+
+                // Start or restart the completion timeout after each chunk
+                this.startCompletionTimeout(onComplete)
               }
               break
-
-            case 'done': {
-              // Mark that we're intentionally closing before invoking callbacks or cleanup
-              this.isClosingConnection = true
-
-              setTimeout(() => {
-                if (!this.isClosingConnection) {
-                  // If connection was manually closed during this timeout, don't proceed
-                  return;
-                }
-
-                // Process the completion
-                onComplete()
-
-                // Close the connection now that we're done
-                this.closeEventSource()
-
-                // Reset reconnect attempts on successful completion
-                this.reconnectAttempts = 0
-              }, 1000)
-              break
-            }
           }
         } catch (error) {
           const streamError =
@@ -745,6 +730,9 @@ export class ChatStreamingService {
       // Set flag before any operations that might trigger events
       this.isClosingConnection = true
 
+      // Clear any pending completion timeout
+      this.clearCompletionTimeout()
+
       // Remove all event listeners before closing
       // eslint-disable-next-line no-null/no-null
       this.eventSource.onmessage = null
@@ -788,5 +776,33 @@ export class ChatStreamingService {
     this.isClosingConnection = true
     this.closeEventSource()
     this.reconnectAttempts = 0
+  }
+
+  private clearCompletionTimeout(): void {
+    if (this.completionTimeout) {
+      clearTimeout(this.completionTimeout)
+      this.completionTimeout = undefined
+    }
+  }
+
+  /**
+   * Start or restart the completion timeout
+   */
+  private startCompletionTimeout(onComplete: () => void): void {
+    // Clear any existing timeout
+    this.clearCompletionTimeout()
+
+    // Start timeout after each chunk
+    this.completionTimeout = setTimeout(() => {
+      if (!this.isClosingConnection) {
+        // Mark that we're intentionally closing before invoking callbacks
+        this.isClosingConnection = true
+
+        this.closeEventSource()
+        
+        // Process the completion
+        onComplete()
+      }
+    }, 2000)
   }
 }

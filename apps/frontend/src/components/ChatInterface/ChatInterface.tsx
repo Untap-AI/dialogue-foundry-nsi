@@ -273,8 +273,7 @@ export const ChatInterface = ({
                     autoScroll: false,
                   }}
                   messageOptions={{
-                    markdownLinkTarget: 'self',
-                    waitTimeBeforeStreamCompletion: 10000
+                    markdownLinkTarget: 'self'
                   }}
                   personaOptions={{
                     assistant: personaOptions?.assistant as AssistantPersona
@@ -347,7 +346,7 @@ function addConversationStarters(
 
     // Assemble and append to DOM
     startersContainer.appendChild(innerContainer)
-    if (conversationContainer.parentNode) {
+    if (conversationContainer.parentNode && conversationContainer.nextSibling && typeof conversationContainer.parentNode.insertBefore === 'function') {
       conversationContainer.parentNode.insertBefore(
         startersContainer,
         conversationContainer.nextSibling
