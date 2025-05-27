@@ -23,7 +23,7 @@ export interface DialogueFoundryConfig {
   chatConfig: ChatConfig
 
   // Widget customization
-  title: string
+  title?: string
   logoUrl?: string
 
   // Welcome popup configuration
