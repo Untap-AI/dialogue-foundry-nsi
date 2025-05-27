@@ -260,10 +260,12 @@ export class ChatStreamingService {
                 const content = data.content as string
                 fullText += content
 
+                console.log('onChunk', content)
+
                 onChunk(content)
 
                 // Start or restart the completion timeout after each chunk
-                this.startCompletionTimeout(onComplete)
+                this.startCompletionTimeout(onComplete, fullText)
               }
               break
           }
@@ -788,7 +790,7 @@ export class ChatStreamingService {
   /**
    * Start or restart the completion timeout
    */
-  private startCompletionTimeout(onComplete: () => void): void {
+  private startCompletionTimeout(onComplete: () => void, fullText: string): void {
     // Clear any existing timeout
     this.clearCompletionTimeout()
 
@@ -799,9 +801,13 @@ export class ChatStreamingService {
         this.isClosingConnection = true
 
         this.closeEventSource()
+
+        console.log('fullText', fullText)
         
         // Process the completion
         onComplete()
+
+        console.log('onComplete called')
       }
     }, 2000)
   }

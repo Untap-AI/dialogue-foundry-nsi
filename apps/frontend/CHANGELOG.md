@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.41
+
+### Patch Changes
+
+- Robust chunk logging
+
 ## 0.2.40
 
 ### Patch Changes
