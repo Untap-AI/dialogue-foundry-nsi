@@ -385,15 +385,54 @@ export class ChatApiService {
   }
 
   /**
+   * Check if the chat session is properly initialized
+   */
+  isChatInitialized(): boolean {
+    const chatId = this.storage.getItem(this.chatIdStorageKey)
+    const userId = this.storage.getItem(this.userIdStorageKey)
+    const token = this.storage.getItem(this.tokenStorageKey)
+    
+    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+    
+    return !!(
+      chatId && 
+      userId && 
+      token && 
+      uuidRegex.test(chatId) && 
+      uuidRegex.test(userId)
+    )
+  }
+
+  /**
    * Record an analytics event - tries sendBeacon first, falls back to regular POST
    */
   async recordAnalyticsEvent(eventType: string, eventData: Record<string, any> = {}): Promise<void> {
+    // Capture all required values immediately to avoid issues during page unload
     const chatId = this.storage.getItem(this.chatIdStorageKey)
     const userId = this.storage.getItem(this.userIdStorageKey)
 
+    console.log('Analytics event attempt:', {
+      eventType,
+      chatId: chatId ? `${chatId.substring(0, 8)}...` : null,
+      userId: userId ? `${userId.substring(0, 8)}...` : null,
+      storageType: this.storage.constructor.name
+    })
+
+    // Check if chat is properly initialized
+    if (!chatId || !userId) {
+      console.warn('Skipping analytics event - missing required identifiers:', {
+        eventType,
+        hasChatId: !!chatId,
+        hasUserId: !!userId,
+        chatIdValue: chatId,
+        userIdValue: userId
+      })
+      return
+    }
+
     const analyticsPayload = {
       chat_id: chatId,
-      message_id: eventData.messageId,
+      message_id: eventData.messageId || undefined,
       user_id: userId,
       company_id: this.companyId,
       event_type: eventType,
@@ -405,6 +444,12 @@ export class ChatApiService {
       referrer: document.referrer
     }
 
+    console.log('Sending analytics event:', {
+      eventType,
+      url: eventData.url,
+      method: 'attempting sendBeacon first'
+    })
+
     // Try sendBeacon first if available (for better reliability during page unload)
     if (typeof navigator.sendBeacon === 'function') {
       try {
@@ -415,7 +460,11 @@ export class ChatApiService {
         const beaconSuccess = navigator.sendBeacon(`${this.apiBaseUrl}/analytics/events`, blob)
         
         if (beaconSuccess) {
-          console.log('Analytics event sent via sendBeacon:', analyticsPayload)
+          console.log('Analytics event sent via sendBeacon:', {
+            eventType,
+            url: eventData.url,
+            success: true
+          })
           return // Success, no need to fall back
         } else {
           console.warn('sendBeacon failed to queue request, falling back to regular POST')
@@ -428,12 +477,17 @@ export class ChatApiService {
     // Fallback to regular authenticated POST request
     try {
       await this.api.post('/analytics/events', analyticsPayload)
-      console.log('Analytics event sent via regular POST:', analyticsPayload)
+      console.log('Analytics event sent via regular POST:', {
+        eventType,
+        url: eventData.url,
+        success: true
+      })
     } catch (error) {
       // Don't throw analytics errors - just log them
       logger.error('Error recording analytics event', { 
         eventType, 
         eventData, 
+        analyticsPayload,
         error 
       })
     }

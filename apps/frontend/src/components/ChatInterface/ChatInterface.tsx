@@ -96,12 +96,13 @@ export const ChatInterface = ({
                     undefined
         }
 
-        // Record analytics for all link clicks (no navigation prevention)
-        analyticsService.recordLinkClick(
-          link.href,
-          link.textContent || link.innerText || undefined,
+        // Record analytics immediately without waiting - if the user is clicking links,
+        // the chat should already be initialized
+        analyticsService.recordAnalyticsEvent('link_click', {
+          url: link.href,
+          linkText: link.textContent || link.innerText || undefined,
           messageId
-        ).catch(error => {
+        }).catch(error => {
           console.warn('Analytics recording failed:', error)
         })
       }
