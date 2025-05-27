@@ -37,40 +37,35 @@ export interface DialogueFoundryConfig {
 // Default configuration
 export const defaultConfig: DialogueFoundryConfig = {
   chatConfig: {
-    apiBaseUrl: 'http://localhost:3000/api',
-    companyId: 'west-hills-vineyards'
+    apiBaseUrl: "http://localhost:3000/api",
+    companyId: "west-hills-vineyards"
   },
-
-  title: 'Omega Gymnastics Assistant',
   personaOptions: {
     assistant: {
-      name: 'Omega Gymnastics Assistant',
-      tagline: 'Ask me anything about Omega Gymnastics',
+      name: "Keystone Coachworks Assistant",
+      tagline: "Ask me anything about Keystone Coachworks"
     }
   },
-  popupMessage: 'Have questions? Click here for help!',
-  openOnLoad: 'all',
-  welcomeMessage: 'Welcome to Omega Gymnastics!\n\nHave a question about our classes, camps, or how to get your child started? Just type it here and I\'ll help out!\n\nNot sure what to ask? Click one of the quick topics below to get started.',
+  logoUrl: "https://keystonecoachworks.net/wp-content/uploads//2017/06/Keystone-logo-wht-grey-no-outline-header.png",
+  popupMessage: "Have questions? Click here for help!",
+  openOnLoad: "all",
+  welcomeMessage: "Welcome to Keystone Coach Works!\n\nReady to hit the road in style? Whether you're looking to rent, buy, or customize a luxury camper van, I'm here to help.\n\nHave a question? Just ask, or click one of the quick topics below to get started on your next adventure!",
   conversationStarters: [
     {
-      label: "Classes",
-      prompt: "What gymnastics classes do you offer and how do I sign up?"
+      label: "Customization",
+      prompt: "What customization options are available for camper vans at Keystone Coach Works?"
     },
     {
-      label: "Birthday Parties",
-      prompt: "Tell me about birthday party options and how to book them."
+      label: "Rent",
+      prompt: "How can I rent a camper van and what are the rental rates?"
     },
     {
-      label: "Camps",
-      prompt: "What camps do you offer throughout the year and how do I sign up?"
+      label: "Buy",
+      prompt: "Do you have any camper vans available for sale, and what models do you offer?"
     },
     {
-      label: "Special Events",
-      prompt: "What special events does Omega Gymnastics host and how do I sign up?"
-    },
-    {
-      label: "Competitive Team",
-      prompt: "How do I sign up for the competitive team?"
+      label: "Contact",
+      prompt: "How can I contact Keystone Coachworks?"
     }
   ]
 }

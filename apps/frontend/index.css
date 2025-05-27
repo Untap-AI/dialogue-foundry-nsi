@@ -2,18 +2,18 @@
 
 :root {
   /* Core colors that can be customized by customers */
-  --df-primary-color: #FFE282;
-  --df-secondary-color: #FFFFFF;
-  --df-tertiary-color: #FCCF44;
+  --df-primary-color: rgb(19, 42, 72);
+  --df-secondary-color: rgb(32, 70, 121);
+  --df-tertiary-color: rgb(28, 46, 55);
   
   /* Background colors */
   --df-bg-primary: white;
-  --df-bg-secondary: #2D2D2D;
+  --df-bg-secondary: rgb(32, 70, 121);
   
   /* Text colors */
-  --df-text-primary: rgb(210, 209, 208);
-  --df-text-secondary: rgb(123, 123, 123);
-  --df-text-contrast: black;
+  --df-text-primary: white;
+  --df-text-secondary: rgb(170, 170, 170);
+  --df-text-contrast: white;
   
   /* Alert/Exception colors */
   --df-alert-bg: #FE4550;
@@ -27,9 +27,9 @@
   /* Common transparency */
   --df-transparent: transparent;
   /* Need slightly darker gray for disabled text */
-  --df-disabled: rgba(255, 226, 130, 0.5);
+  --df-disabled: rgba(19, 42, 72, 0.5);
 
-  --df-font-family: chalkboard, sans-serif;
+  --df-font-family: "Open Sans", "Helvetica Neue", Helvetica;
   /* --df-mono-font-family: monospace; */
   --df-font-size-base: 16px;
 
@@ -44,6 +44,6 @@
 }
 
 .nlux-comp-composer>textarea{
-  color: var(--df-text-contrast) !important;
+  color: black !important;
 }
 
