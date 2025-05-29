@@ -89,4 +89,52 @@ router.post('/events', async (req, res) => {
   }
 })
 
+/**
+ * POST /
+ * Create a new analytics event (base route)
+ */
+router.post('/', async (req, res) => {
+  try {
+    // Parse and validate the base event structure
+    const eventData = analyticsEventSchema.parse(req.body)
+    
+    // Validate the event_data based on event_type
+    const validatedEventData = validateEventData(eventData.event_type, eventData.event_data)
+    
+    // Extract IP address from request if not provided
+    const ipAddress = eventData.ip_address || 
+      req.ip || 
+      req.connection.remoteAddress || 
+      req.socket.remoteAddress ||
+      (req.connection as any)?.socket?.remoteAddress
+
+    // Create the analytics event
+    const analyticsEvent = await createAnalyticsEventAdmin({
+      ...eventData,
+      event_data: validatedEventData,
+      ip_address: ipAddress
+    })
+
+    return res.status(201).json({
+      success: true,
+      data: analyticsEvent
+    })
+  } catch (error) {
+    console.error('Error creating analytics event:', error)
+    
+    if (error instanceof z.ZodError) {
+      return res.status(400).json({
+        success: false,
+        error: 'Validation error',
+        details: error.errors
+      })
+    }
+
+    return res.status(500).json({
+      success: false,
+      error: 'Failed to create analytics event'
+    })
+  }
+})
+
 export default router 

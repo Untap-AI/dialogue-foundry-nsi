@@ -1,5 +1,23 @@
 # @dialogue-foundry/frontend
 
+## 0.2.45
+
+### Patch Changes
+
+- Change routes to events
+
+## 0.2.44
+
+### Patch Changes
+
+- Robust local storage handling
+
+## 0.2.43
+
+### Patch Changes
+
+- link recording bug
+
 ## 0.2.42
 
 ### Patch Changes

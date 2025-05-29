@@ -454,11 +454,8 @@ export class ChatApiService {
           type: 'application/json'
         })
 
-        const beaconSuccess = navigator.sendBeacon(
-          `${this.apiBaseUrl}/analytics/events`,
-          blob
-        )
-
+        const beaconSuccess = navigator.sendBeacon(`${this.apiBaseUrl}/events`, blob)
+        
         if (beaconSuccess) {
           console.log('Analytics event sent via sendBeacon:', {
             eventType,
