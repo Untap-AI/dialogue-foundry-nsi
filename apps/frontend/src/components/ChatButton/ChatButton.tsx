@@ -2,7 +2,7 @@ import React, { useRef, useEffect, useState, useMemo } from 'react'
 import './ChatButton.css'
 import { useConfig } from '../../contexts/ConfigContext'
 import { PopupMessage } from './PopupMessage'
-import { logger } from 'src/services/logger'
+import { logger } from '../../services/logger'
 
 const POPUP_DELAY = 3000
 const POPUP_DURATION = 10000
