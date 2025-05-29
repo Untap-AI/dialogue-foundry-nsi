@@ -47,6 +47,9 @@ export const ChatInterface = ({
     personaOptions
   } = useConfig()
 
+  // Add ref for the chat interface container
+  const chatInterfaceRef = useRef<HTMLDivElement>(null)
+
   const streamingService = useMemo(
     () => new ChatStreamingService(chatConfig),
     [chatConfig]
@@ -79,7 +82,7 @@ export const ChatInterface = ({
     [chatConfig.companyId, streamingService]
   )
 
-  // Set up link click tracking
+  // Set up link click tracking - only within the chat interface
   useEffect(() => {
     const handleLinkClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement
@@ -108,12 +111,17 @@ export const ChatInterface = ({
       }
     }
 
-    // Add event listener to the document to capture all link clicks
-    document.addEventListener('click', handleLinkClick)
+    // Add event listener only to the chat interface container
+    const chatContainer = chatInterfaceRef.current
+    if (chatContainer) {
+      chatContainer.addEventListener('click', handleLinkClick)
+    }
 
     // Cleanup
     return () => {
-      document.removeEventListener('click', handleLinkClick)
+      if (chatContainer) {
+        chatContainer.removeEventListener('click', handleLinkClick)
+      }
     }
   }, [analyticsService])
 
@@ -245,7 +253,7 @@ export const ChatInterface = ({
   }, [initialConversation, chatId, chatStatus, conversationStarters, send])
 
   return (
-    <div className={`chat-interface-wrapper ${className}`}>
+    <div ref={chatInterfaceRef} className={`chat-interface-wrapper ${className}`}>
       <div className="chat-interface-content">
         {(() => {
           switch (chatStatus) {

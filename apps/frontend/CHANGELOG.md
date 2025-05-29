@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.43
+
+### Patch Changes
+
+- link recording bug
+
 ## 0.2.42
 
 ### Patch Changes
