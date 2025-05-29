@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { AiChat, useAiChatApi, useAsStreamAdapter } from '@nlux/react'
+import { AiChat, useAiChatApi, useAsStreamAdapter } from '../../nlux/core/src'
 import { useConfig } from '../../contexts/ConfigContext'
 import '@nlux/themes/unstyled.css'
 import './ChatInterface.css'
@@ -14,7 +14,7 @@ import type {
   ChatItem,
   ConversationStarter,
   ErrorEventDetails
-} from '@nlux/react'
+} from '../../nlux'
 
 // Add the icon based on error category
 const ERROR_ICON_MAP: Record<ErrorCategory, string> = {
@@ -84,27 +84,30 @@ export const ChatInterface = ({
     const handleLinkClick = (event: MouseEvent) => {
       const target = event.target as HTMLElement
       const link = target.closest('a')
-      
+
       if (link && link.href) {
         // Find the message container that contains this link
         const messageContainer = link.closest('.nlux-comp-message')
         let messageId: string | undefined
-        
+
         if (messageContainer) {
-          messageId = messageContainer.getAttribute('data-message-id') || 
-                    messageContainer.id || 
-                    undefined
+          messageId =
+            messageContainer.getAttribute('data-message-id') ||
+            messageContainer.id ||
+            undefined
         }
 
         // Record analytics immediately without waiting - if the user is clicking links,
         // the chat should already be initialized
-        analyticsService.recordAnalyticsEvent('link_click', {
-          url: link.href,
-          linkText: link.textContent || link.innerText || undefined,
-          messageId
-        }).catch(error => {
-          console.warn('Analytics recording failed:', error)
-        })
+        analyticsService
+          .recordAnalyticsEvent('link_click', {
+            url: link.href,
+            linkText: link.textContent || link.innerText || undefined,
+            messageId
+          })
+          .catch(error => {
+            console.warn('Analytics recording failed:', error)
+          })
       }
     }
 
@@ -270,7 +273,7 @@ export const ChatInterface = ({
                   initialConversation={initialConversation}
                   conversationOptions={{
                     showWelcomeMessage: true,
-                    autoScroll: false,
+                    autoScroll: false
                   }}
                   messageOptions={{
                     markdownLinkTarget: 'self'
@@ -299,7 +302,14 @@ export const ChatInterface = ({
         })()}
       </div>
       <div className="df-powered-by">
-        Powered by <a href="https://untap-ai.com" target="_blank" rel="noopener noreferrer">Untap AI</a>
+        Powered by{' '}
+        <a
+          href="https://untap-ai.com"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Untap AI
+        </a>
       </div>
     </div>
   )
@@ -346,7 +356,11 @@ function addConversationStarters(
 
     // Assemble and append to DOM
     startersContainer.appendChild(innerContainer)
-    if (conversationContainer.parentNode && conversationContainer.nextSibling && typeof conversationContainer.parentNode.insertBefore === 'function') {
+    if (
+      conversationContainer.parentNode &&
+      conversationContainer.nextSibling &&
+      typeof conversationContainer.parentNode.insertBefore === 'function'
+    ) {
       conversationContainer.parentNode.insertBefore(
         startersContainer,
         conversationContainer.nextSibling

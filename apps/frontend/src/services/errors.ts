@@ -81,7 +81,7 @@ export const ErrorCodes = {
 } as const
 
 // Type definitions for error codes
-export type ErrorCode = keyof typeof ErrorCodes
+type ErrorCode = keyof typeof ErrorCodes
 export type ErrorCodeValue = (typeof ErrorCodes)[ErrorCode]
 
 /**
@@ -137,7 +137,7 @@ export function categorizeError(code: ErrorCodeValue | string): ErrorCategory {
  * @param category Error category
  * @param customMessage Optional custom message to use instead of default
  */
-export function getFriendlyErrorMessage(code: ErrorCodeValue | string): string {
+function getFriendlyErrorMessage(code: ErrorCodeValue | string): string {
   // Special case for token expired which should have a specific message
   if (code === ErrorCodes.TOKEN_EXPIRED) {
     return 'Your session has expired. Starting a new chat session.'
