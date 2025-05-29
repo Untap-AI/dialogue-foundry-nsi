@@ -1,7 +1,8 @@
-import React, { useRef, useEffect, useState, useMemo, useCallback } from 'react'
+import React, { useRef, useEffect, useState, useMemo } from 'react'
 import './ChatButton.css'
 import { useConfig } from '../../contexts/ConfigContext'
 import { PopupMessage } from './PopupMessage'
+import { logger } from 'src/services/logger'
 
 const POPUP_DELAY = 3000
 const POPUP_DURATION = 10000
@@ -44,15 +45,27 @@ export const ChatButton: React.FC<ChatButtonProps> = ({ onClick, isOpen }) => {
   const { popupMessage } = useConfig()
   const [popupVisible, setPopupVisible] = useState(false)
 
-  const popupEnabled = useMemo(() => popupMessage &&
-      popupMessage.length > 0 && !getLocalStorageItem(DIALOGUE_FOUNDRY_POPUP_KEY), [popupMessage])
+  const popupEnabled = useMemo(() => {
+    try {
+      return popupMessage &&
+        popupMessage.length > 0 && !getLocalStorageItem(DIALOGUE_FOUNDRY_POPUP_KEY)
+    } catch (error) {
+      // Handle SecurityError or other localStorage access errors
+      logger.warning('localStorage access denied, disabling popup:', error)
+      return false
+    }
+  }, [popupMessage])
       
 
   useEffect(() => {
     if(isOpen && popupEnabled) {
-      setLocalStorageItem(DIALOGUE_FOUNDRY_POPUP_KEY, 'true')
-      buttonRef.current?.classList.remove(ANIMATION_CLASS)
-      setPopupVisible(false)
+      try {
+        setLocalStorageItem(DIALOGUE_FOUNDRY_POPUP_KEY, 'true')
+        buttonRef.current?.classList.remove(ANIMATION_CLASS)
+        setPopupVisible(false)
+      } catch (error) {
+        console.warn('localStorage access denied:', error)
+      }
     }
   }, [isOpen, popupEnabled])
 
@@ -64,11 +77,15 @@ export const ChatButton: React.FC<ChatButtonProps> = ({ onClick, isOpen }) => {
 
     // Add animation class after popup delay (when popup appears)
     const startAnimationTimer = setTimeout(() => {
-      if (getLocalStorageItem(DIALOGUE_FOUNDRY_POPUP_KEY)) return
+      try {
+        if (getLocalStorageItem(DIALOGUE_FOUNDRY_POPUP_KEY)) return
 
-      setLocalStorageItem(DIALOGUE_FOUNDRY_POPUP_KEY, 'true')
-      button.classList.add(ANIMATION_CLASS)
-      setPopupVisible(true)
+        setLocalStorageItem(DIALOGUE_FOUNDRY_POPUP_KEY, 'true')
+        button.classList.add(ANIMATION_CLASS)
+        setPopupVisible(true)
+      } catch (error) {
+        console.warn('localStorage access denied:', error)
+      }
     }, POPUP_DELAY)
 
     // Remove animation class when popup disappears
