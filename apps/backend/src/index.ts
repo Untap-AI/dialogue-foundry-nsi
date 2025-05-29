@@ -103,6 +103,7 @@ app.use('/api/chat-configs', chatConfigRoutes)
 app.use('/api/cache', cacheRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/analytics', analyticsRoutes)
+app.use('/api/events', analyticsRoutes)
 
 setupExpressErrorHandler(app);
 
