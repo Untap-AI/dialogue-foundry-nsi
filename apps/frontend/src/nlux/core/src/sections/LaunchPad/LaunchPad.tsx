@@ -1,10 +1,8 @@
 import { useEffect, useMemo } from 'react'
 import { warnOnce } from '../../../../shared/utils/warn'
 import { ConversationStarters } from '../../components/ConversationStarters/ConversationStarters'
-import { DefaultGreetingComp } from '../../components/DefaultGreeting/DefaultGreetingComp'
 import {
-  GreetingComp,
-  GreetingContainer
+  GreetingComponent,
 } from '../../components/Greeting/GreetingComp'
 import type { LaunchPadProps } from './props'
 
@@ -12,22 +10,11 @@ export function LaunchPad<AiMsg>(props: LaunchPadProps<AiMsg>) {
   const { segments, personaOptions, conversationOptions, userDefinedGreeting } =
     props
 
+    console.log(props)
+
   const hasMessages = useMemo(
     () => segments.some(segment => segment.items.length > 0),
     [segments]
-  )
-  const showDefaultGreeting = useMemo(
-    () =>
-      !userDefinedGreeting && // Only show the default greeting if the user has not provided a custom greeting
-      !hasMessages &&
-      personaOptions?.assistant === undefined &&
-      conversationOptions?.showWelcomeMessage !== false,
-    [
-      hasMessages,
-      personaOptions?.assistant,
-      conversationOptions?.showWelcomeMessage,
-      userDefinedGreeting
-    ]
   )
 
   const showGreetingFromPersonaOptions =
@@ -36,19 +23,19 @@ export function LaunchPad<AiMsg>(props: LaunchPadProps<AiMsg>) {
     personaOptions?.assistant !== undefined &&
     conversationOptions?.showWelcomeMessage !== false
 
-  const showConversationStarters = useMemo(
+  const customWelcomeMessageVisible = useMemo(
     () =>
-      !hasMessages &&
-      conversationOptions?.conversationStarters &&
-      conversationOptions?.conversationStarters.length > 0,
-    [hasMessages, conversationOptions?.conversationStarters]
+      segments.length === 1 &&
+      segments[0].items.length === 1 &&
+      segments[0].items[0].participantRole === 'assistant',
+    [segments]
   )
 
-  const showUserDefinedGreeting = useMemo(
+  const showConversationStarters = useMemo(
     () =>
-      userDefinedGreeting !== undefined &&
-      conversationOptions?.showWelcomeMessage !== false,
-    [userDefinedGreeting, conversationOptions?.showWelcomeMessage]
+      ((!hasMessages || customWelcomeMessageVisible) &&
+        (conversationOptions?.conversationStarters?.length ?? 0) > 0),
+    [hasMessages, conversationOptions?.conversationStarters, customWelcomeMessageVisible]
   )
 
   useEffect(() => {
@@ -63,26 +50,14 @@ export function LaunchPad<AiMsg>(props: LaunchPadProps<AiMsg>) {
     }
   }, [conversationOptions?.showWelcomeMessage, userDefinedGreeting])
 
-  const showEmptyGreeting =
-    !showDefaultGreeting &&
-    !showGreetingFromPersonaOptions &&
-    !showUserDefinedGreeting &&
-    !hasMessages
-
   return (
     <>
-      {showDefaultGreeting && <DefaultGreetingComp />}
-      {showGreetingFromPersonaOptions && (
-        <GreetingComp
+    {showGreetingFromPersonaOptions && (
+        <GreetingComponent
           name={personaOptions?.assistant?.name}
-          avatar={personaOptions?.assistant?.avatar}
           message={personaOptions?.assistant?.tagline}
         />
       )}
-      {showUserDefinedGreeting && (
-        <GreetingContainer>{userDefinedGreeting}</GreetingContainer>
-      )}
-      {showEmptyGreeting && <GreetingContainer>{undefined}</GreetingContainer>}
       <div className="nlux-conversationStarters-container">
         {showConversationStarters && (
           <ConversationStarters

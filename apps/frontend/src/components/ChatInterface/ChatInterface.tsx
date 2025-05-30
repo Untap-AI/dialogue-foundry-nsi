@@ -236,25 +236,6 @@ export const ChatInterface = ({
     }
   }
 
-  const api = useAiChatApi()
-  const send = api.composer.send
-
-  useEffect(() => {
-    if (
-      (!initialConversation || initialConversation.length <= 1) &&
-      conversationStarters?.length &&
-      chatId &&
-      chatStatus === 'initialized' &&
-      !messageSent.current
-    ) {
-      setTimeout(() => {
-        if (!messageSent.current) {
-          addConversationStarters(conversationStarters, send)
-        }
-      }, 100)
-    }
-  }, [initialConversation, chatId, chatStatus, conversationStarters, send])
-
   return (
     <div ref={chatInterfaceRef} className={`chat-interface-wrapper ${className}`}>
       <div className="chat-interface-content">
@@ -271,7 +252,6 @@ export const ChatInterface = ({
             case 'initialized':
               return (
                 <AiChat
-                  api={api}
                   adapter={adapter}
                   key={chatId} // Add a key to force re-render when chatId changes
                   displayOptions={{
@@ -281,7 +261,8 @@ export const ChatInterface = ({
                   initialConversation={initialConversation}
                   conversationOptions={{
                     showWelcomeMessage: true,
-                    autoScroll: false
+                    autoScroll: false,
+                    conversationStarters
                   }}
                   messageOptions={{
                     markdownLinkTarget: 'self'
@@ -321,60 +302,4 @@ export const ChatInterface = ({
       </div>
     </div>
   )
-}
-
-function addConversationStarters(
-  conversationStarters: ConversationStarter[],
-  send: (prompt: string) => void
-) {
-  const conversationContainer = document.querySelector(
-    '.nlux-conversation-container'
-  )
-  // Check if we should insert conversation starters
-  const containerCheck = document.querySelector(
-    '.nlux-comp-conversationStarters'
-  )
-
-  if (!containerCheck && conversationContainer) {
-    // Create a container for our conversation starters
-    const startersContainer = document.createElement('div')
-    startersContainer.className = 'nlux-conversationStarters-container'
-
-    // Create the inner container
-    const innerContainer = document.createElement('div')
-    innerContainer.className = 'nlux-comp-conversationStarters'
-
-    // Add each conversation starter as a button with proper click handler
-    conversationStarters.forEach(({ prompt: promptFromStarter, label }) => {
-      if (promptFromStarter && label) {
-        const button = document.createElement('button')
-        button.className = 'nlux-comp-conversationStarter'
-        button.addEventListener('click', () => {
-          send(promptFromStarter)
-        })
-
-        const span = document.createElement('span')
-        span.className = 'nlux-comp-conversationStarter-prompt'
-        span.textContent = label
-
-        button.appendChild(span)
-        innerContainer.appendChild(button)
-      }
-    })
-
-    // Assemble and append to DOM
-    startersContainer.appendChild(innerContainer)
-    if (
-      conversationContainer.parentNode &&
-      conversationContainer.nextSibling &&
-      typeof conversationContainer.parentNode.insertBefore === 'function'
-    ) {
-      conversationContainer.parentNode.insertBefore(
-        startersContainer,
-        conversationContainer.nextSibling
-      )
-    }
-
-    return
-  }
 }

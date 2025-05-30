@@ -289,16 +289,6 @@ export const AiChat: <AiMsg>(props: AiChatProps<AiMsg>) => ReactElement =
           <div
             className={`nlux-chatRoom-container ${compChatRoomStatusClassName}`}
           >
-            <div className="nlux-launchPad-container">
-              <LaunchPad
-                segments={segments}
-                onConversationStarterSelected={
-                  handleConversationStarterSelected
-                }
-                conversationOptions={conversationOptions}
-                personaOptions={props.personaOptions}
-              />
-            </div>
             <div
               className="nlux-conversation-container"
               ref={conversationContainerRef}
@@ -316,6 +306,16 @@ export const AiChat: <AiMsg>(props: AiChatProps<AiMsg>) => ReactElement =
                 submitShortcutKey={props.composerOptions?.submitShortcut}
                 onPromptResubmit={handleResubmitPrompt}
                 onMarkdownStreamRendered={handleMarkdownStreamRendered}
+              />
+            </div>
+            <div className="nlux-launchPad-container">
+              <LaunchPad
+                segments={segments}
+                onConversationStarterSelected={
+                  handleConversationStarterSelected
+                }
+                conversationOptions={conversationOptions}
+                personaOptions={props.personaOptions}
               />
             </div>
             <div className="nlux-composer-container">

@@ -3,24 +3,25 @@ import {
   personaNameClassName as compGreetingPersonaNameClassName
 } from '../../../../shared/components/Greeting/create'
 import { greetingTextClassName as compGreetingTextClassName } from '../../../../shared/components/Greeting/utils/updateGreetingText'
-import { AvatarComp } from '../Avatar/AvatarComp'
-import type { ReactNode } from 'react'
 import type { GreetingProps } from './props'
 
-export const GreetingComp = (props: GreetingProps) => {
+export function GreetingComponent(props: GreetingProps) {
+  // Add safety checks to prevent DOM manipulation errors
+  const hasValidName = props.name !== undefined && props.name !== null && props.name !== ''
+  const hasValidMessage = props.message !== undefined && props.message !== null && props.message !== ''
+
   return (
     <div className={compGreetingClassName}>
-      {props.avatar && <AvatarComp avatar={props.avatar} name={props.name} />}
-      {props.name && (
+      {hasValidName ? (
         <div className={compGreetingPersonaNameClassName}>{props.name}</div>
+      ) : (
+        <></>
       )}
-      {props.message && (
+      {hasValidMessage ? (
         <div className={compGreetingTextClassName}>{props.message}</div>
+      ) : (
+        <></>
       )}
     </div>
   )
-}
-
-export const GreetingContainer = ({ children }: { children: ReactNode }) => {
-  return <div className={compGreetingClassName}>{children}</div>
 }

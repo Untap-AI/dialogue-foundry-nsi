@@ -6,5 +6,5 @@ import { GreetingComp } from '../Greeting/GreetingComp'
 // and when no assistant persona is configured.
 export const DefaultGreetingComp = () => {
   const urlEncodedLogo = useMemo(() => getNluxSmallPngLogo(), [])
-  return <GreetingComp avatar={urlEncodedLogo} name={''} />
+  return <GreetingComp avatar={urlEncodedLogo} />
 }

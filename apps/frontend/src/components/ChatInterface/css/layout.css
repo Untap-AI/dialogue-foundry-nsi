@@ -94,8 +94,20 @@
     }
 }
 
+.nlux-launchPad-container {
+    display: flex !important;
+    flex-grow: 1 !important;
+    height: unset !important;
+}
+
+.nlux-conversation-container:has(.nlux-chatSegments-container .nlux-chatSegment) ~ .nlux-launchPad-container,
+.nlux-conversation-container .nlux-chatSegments-container:has(.nlux-chatSegment) ~ .nlux-launchPad-container {
+    flex-grow: unset !important;
+}
+
 .nlux-conversationStarters-container {
     overflow-y: auto;
+    flex: unset !important;
 }
 
 .nlux-comp-chatItem>.nlux-comp-message {
@@ -110,6 +122,10 @@
 
 .nlux-markdownStream-root {
     word-break: break-word;
+}
+
+.nlux-launchPad-container {
+    height: unset !important;
 }
 
 .nlux-conversationStarters-container {
