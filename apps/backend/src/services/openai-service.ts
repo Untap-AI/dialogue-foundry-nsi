@@ -1,12 +1,11 @@
 import OpenAI from 'openai'
 import dotenv from 'dotenv'
 import { MAX_MESSAGES_PER_CHAT } from '../db/messages'
-import { sendInquiryEmail } from './sendgrid-service'
 import type {
   ResponseCreateParams,
   ResponseFunctionToolCall
 } from 'openai/resources/responses/responses.mjs'
-import type { EmailData } from './sendgrid-service'
+import { randomUUID } from 'crypto'
 
 dotenv.config()
 
@@ -41,30 +40,26 @@ export const DEFAULT_SETTINGS: Pick<ChatSettings, 'model' | 'temperature'> = {
   temperature: 0.5
 }
 
-// Define the email tool for OpenAI function calling
-const emailTool = {
+// New tool: request_user_email
+const requestUserEmailTool = {
   type: 'function',
-  name: 'send_email',
+  name: 'request_user_email',
+  // TODO: Make this description more comprehensive
   description:
-    'Send an email to the company with user contact information and conversation details. This should only be used if the user has explicitly consented to sending an email and provided their email address.',
+    'Request the user to provide their email address. Use this when you need to collect the user\'s email for further assistance or follow-up, but do not send the email yet.',
   parameters: {
     type: 'object',
     properties: {
       subject: {
         type: 'string',
-        description: 'The subject of the email'
-      },
-      userEmail: {
-        type: 'string',
-        description: 'The email address of the user to contact them'
+        description: 'The subject or reason for requesting the email.'
       },
       conversationSummary: {
         type: 'string',
-        description:
-          'A brief summary of what the user is looking for or needs help with'
+        description: 'A brief summary of what the user is looking for or needs help with.'
       }
     },
-    required: ['userEmail', 'conversationSummary', 'subject'],
+    required: ['conversationSummary', 'subject'],
     additionalProperties: false
   },
   strict: true
@@ -97,78 +92,23 @@ const limitMessagesContext = (
 // Function to handle email function calls from OpenAI
 const handleFunctionCall = async (
   functionCall: ResponseFunctionToolCall,
-  messages: Message[],
-  companyId: string
-  // TODO: Remove usage of any
+  onSpecialEvent?: (event: any) => void // Optional callback for special events
 ): Promise<{ success: boolean; details?: any }> => {
-  if (functionCall.name === 'send_email') {
-    try {
-      // Parse arguments with validation
-      if (!functionCall.arguments) {
-        console.error('Function arguments are empty')
-        return {
-          success: false,
-          // TODO: Make error codes type safe
-          details: { error: 'MISSING_ARGUMENTS' }
-        }
-      }
 
+
+  if (functionCall.name === 'request_user_email') {
+    // Instead of sending an email, stream a special event to the frontend
+    if (onSpecialEvent && functionCall.arguments) {
       const args = JSON.parse(functionCall.arguments)
-
-      // Validate required fields
-      if (!args.userEmail) {
-        console.error('User email is required to send an email')
-        return {
-          success: false,
-          details: { error: 'MISSING_EMAIL' }
-        }
-      }
-
-      if (!args.conversationSummary) {
-        console.error('Conversation summary is required to send an email')
-        return {
-          success: false,
-          details: { error: 'MISSING_SUMMARY' }
-        }
-      }
-
-      // Get recent messages for context (limited to last 20 messages)
-      const recentMessages = messages
-        .slice(-20)
-        .filter(msg => msg.role !== 'system')
-
-      // Prepare email data
-      const emailData: EmailData = {
-        userEmail: args.userEmail,
-        subject: args.subject,
-        conversationSummary: args.subject
-          ? `${args.subject}: ${args.conversationSummary}`
-          : args.conversationSummary,
-        recentMessages,
-        companyId: companyId || 'default'
-      }
-
-      // Send the email
-      const emailSent = await sendInquiryEmail(emailData)
-
-      if (emailSent) {
-        return {
-          success: true,
-          details: { userEmail: args.userEmail }
-        }
-      } else {
-        console.error('Failed to send email via SendGrid')
-        return {
-          success: false,
-          details: { error: 'EMAIL_SERVICE_FAILURE' }
-        }
-      }
-    } catch (error) {
-      console.error('Error processing email function call:', error)
-      return {
-        success: false,
-        details: { error: 'PROCESSING_ERROR' }
-      }
+      onSpecialEvent({
+        type: 'request_email',
+        details: args,
+        id: randomUUID()
+      })
+    }
+    return {
+      success: true,
+      details: { requested: true }
     }
   }
 
@@ -181,7 +121,6 @@ const handleFunctionCall = async (
 // Helper function to generate a follow-up response after a function call
 const generateFollowUpResponse = (
   functionName: string,
-  functionCallResult: { success: boolean; details?: any },
   onChunk: (chunk: string) => void,
   updateFullText: (text: string) => void
 ): void => {
@@ -190,11 +129,9 @@ const generateFollowUpResponse = (
 
   // Handle different function types - currently we only have email, but this makes it extensible
   switch (functionName) {
-    case 'send_email':
+    case 'request_user_email':
       // TODO: Make this dynamic with separate requests to the LLM
-      responseText = functionCallResult.success
-        ? `\n\nThank you! Your email has been sent. Someone from the team will get back to you soon. Is there anything else I can help you with in the meantime?`
-        : `\n\nI wasn't able to send your email at this time. You can reach out to the vineyard directly. Is there something else I can help you with today?`
+      responseText = 'Would you like to provide your email address for follow-up?'
   }
 
   // Stream the response back to the client by sending it in small chunks
@@ -225,7 +162,8 @@ const generateFollowUpResponse = (
 export const generateStreamingChatCompletion = async (
   messages: Message[],
   settings: ChatSettings,
-  onChunk: (chunk: string) => void
+  onChunk: (chunk: string) => void,
+  onSpecialEvent?: (event: any) => void // New callback for special events
 ) => {
   // TODO: Implement token checking and context cutoff
   try {
@@ -248,7 +186,6 @@ export const generateStreamingChatCompletion = async (
       }
     )}.`
 
-    // Configure request options with tools if email function is enabled
     const requestOptions = {
       model: settings.model,
       input: limitedMessages,
@@ -260,7 +197,7 @@ export const generateStreamingChatCompletion = async (
           type: 'text'
         }
       },
-      ...(settings.enableEmailFunction ? { tools: [emailTool] } : {})
+      ...(settings.enableEmailFunction ? { tools: [requestUserEmailTool] } : {})
     } as const satisfies ResponseCreateParams
 
     // Create the response with streaming enabled
@@ -299,21 +236,18 @@ export const generateStreamingChatCompletion = async (
         await Promise.all(
           functionCalls.map(async functionCall => {
             // Process the function call
-            const result = await handleFunctionCall(
+            await handleFunctionCall(
               functionCall,
-              messages,
-              settings.companyId
+              onSpecialEvent // Pass the callback
             )
 
-            // Generate and stream a simple follow-up response
-            generateFollowUpResponse(
-              functionCall.name,
-              result,
-              onChunk,
-              text => {
-                fullText += text
-              }
-            )
+              generateFollowUpResponse(
+                functionCall.name,
+                onChunk,
+                text => {
+                  fullText += text
+                }
+              )
           })
         )
       }

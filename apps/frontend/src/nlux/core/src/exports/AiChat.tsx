@@ -278,6 +278,8 @@ export const AiChat: <AiMsg>(props: AiChatProps<AiMsg>) => ReactElement =
       return <></>
     }
 
+    console.log('showEmailInput', props.showEmailInput)
+
     return (
       <PrimitivesContextProvider>
         <div
@@ -306,6 +308,10 @@ export const AiChat: <AiMsg>(props: AiChatProps<AiMsg>) => ReactElement =
                 submitShortcutKey={props.composerOptions?.submitShortcut}
                 onPromptResubmit={handleResubmitPrompt}
                 onMarkdownStreamRendered={handleMarkdownStreamRendered}
+                showEmailInput={props.showEmailInput}
+                onEmailSubmit={props.onEmailSubmit}
+                emailLoading={props.emailLoading}
+                emailError={props.emailError}
               />
             </div>
             <div className="nlux-launchPad-container">

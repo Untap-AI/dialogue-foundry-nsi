@@ -24,6 +24,11 @@ export type ChatSegmentProps<AiMsg> = {
     newPrompt: string
   ) => void
   onMarkdownStreamRendered: (segmentId: string, messageId: string) => void
+
+  // Only for email input chat item
+  onEmailSubmit?: (email: string) => void
+  emailLoading?: boolean
+  emailError?: string | null
 }
 
 export type ChatSegmentImperativeProps<AiMsg> = {

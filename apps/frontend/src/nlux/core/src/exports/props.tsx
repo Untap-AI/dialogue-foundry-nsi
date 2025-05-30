@@ -78,4 +78,12 @@ export type AiChatProps<AiMsg = string> = {
    * Only NLUX UI overrides are accepted at this stage.
    */
   children?: ReactNode | undefined
+
+  /**
+   * Whether to show the email input chat item.
+   */
+  showEmailInput?: boolean
+  onEmailSubmit: (email: string) => void
+  emailLoading: boolean
+  emailError: string | null
 }

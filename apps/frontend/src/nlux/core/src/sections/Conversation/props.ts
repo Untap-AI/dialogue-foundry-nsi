@@ -30,6 +30,11 @@ export type ConversationCompProps<AiMsg> = {
   ) => void
 
   onMarkdownStreamRendered: (segmentId: string, messageId: string) => void
+
+  showEmailInput?: boolean
+  onEmailSubmit: (email: string) => void
+  emailLoading: boolean
+  emailError: string | null
 }
 
 export type ImperativeConversationCompProps<AiMsg> = {

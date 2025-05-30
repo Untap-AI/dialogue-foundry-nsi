@@ -19,6 +19,7 @@ import { useUserMessageRenderer } from './hooks/useUserMessageRenderer'
 import type { StreamContainerImperativeProps } from '../StreamContainer/props'
 import type { ReactElement, ReactNode, Ref } from 'react'
 import type { ChatItemImperativeProps, ChatItemProps } from './props'
+import EmailInputChatItem from '../Conversation/EmailInputChatItem'
 
 export const ChatItemComp: <AiMsg>(
   props: ChatItemProps<AiMsg>,
@@ -88,45 +89,60 @@ export const ChatItemComp: <AiMsg>(
   return (
     <div className={containerClassName}>
       <ParticipantInfo />
-      {isAssistantMessage && isStreamed && !isServerComponent && (
-        <ForwardRefStreamContainerComp
-          key={'do-not-change'}
-          uid={props.uid}
-          status={props.status}
-          ref={streamContainer}
-          direction={props.direction}
-          responseRenderer={props.messageOptions?.responseRenderer}
-          markdownContainersController={props.markdownContainersController}
-          markdownOptions={{
-            syntaxHighlighter: props.messageOptions?.syntaxHighlighter,
-            htmlSanitizer: props.messageOptions?.htmlSanitizer,
-            markdownLinkTarget: props.messageOptions?.markdownLinkTarget,
-            showCodeBlockCopyButton:
-              props.messageOptions?.showCodeBlockCopyButton,
-            skipStreamingAnimation:
-              props.messageOptions?.skipStreamingAnimation,
-            streamingAnimationSpeed:
-              props.messageOptions?.streamingAnimationSpeed,
-            waitTimeBeforeStreamCompletion:
-              props.messageOptions?.waitTimeBeforeStreamCompletion,
-            onStreamComplete: markdownStreamRenderedCallback
-          }}
-        />
-      )}
-      {isAssistantMessage && isStreamed && isServerComponent && (
-        <div className={messageClassName}>
-          {props.fetchedContent as ReactNode}
+      {/* Render email input chat item if role is 'email_input' */}
+      {props.contentType === 'email_input' ? (
+        <div className={messageClassName} style={{ width: '100%' }}>
+          <EmailInputChatItem
+            onSubmit={props.onEmailSubmit ?? (() => {})}
+            loading={props.emailLoading}
+            error={props.emailError}
+            subject=""
+            conversationSummary=""
+          />
         </div>
-      )}
-      {isAssistantMessage && !isStreamed && (
-        <div className={messageClassName}>
-          <AssistantBatchedMessage />
-        </div>
-      )}
-      {isUserMessage && (
-        <div className={messageClassName}>
-          <UserMessage />
-        </div>
+      ) : (
+        <>
+          {isAssistantMessage && isStreamed && !isServerComponent && (
+            <ForwardRefStreamContainerComp
+              key={'do-not-change'}
+              uid={props.uid}
+              status={props.status}
+              ref={streamContainer}
+              direction={props.direction}
+              responseRenderer={props.messageOptions?.responseRenderer}
+              markdownContainersController={props.markdownContainersController}
+              markdownOptions={{
+                syntaxHighlighter: props.messageOptions?.syntaxHighlighter,
+                htmlSanitizer: props.messageOptions?.htmlSanitizer,
+                markdownLinkTarget: props.messageOptions?.markdownLinkTarget,
+                showCodeBlockCopyButton:
+                  props.messageOptions?.showCodeBlockCopyButton,
+                skipStreamingAnimation:
+                  props.messageOptions?.skipStreamingAnimation,
+                streamingAnimationSpeed:
+                  props.messageOptions?.streamingAnimationSpeed,
+                waitTimeBeforeStreamCompletion:
+                  props.messageOptions?.waitTimeBeforeStreamCompletion,
+                onStreamComplete: markdownStreamRenderedCallback
+              }}
+            />
+          )}
+          {isAssistantMessage && isStreamed && isServerComponent && (
+            <div className={messageClassName}>
+              {props.fetchedContent as ReactNode}
+            </div>
+          )}
+          {isAssistantMessage && !isStreamed && (
+            <div className={messageClassName}>
+              <AssistantBatchedMessage />
+            </div>
+          )}
+          {isUserMessage && (
+            <div className={messageClassName}>
+              <UserMessage />
+            </div>
+          )}
+        </>
       )}
     </div>
   )

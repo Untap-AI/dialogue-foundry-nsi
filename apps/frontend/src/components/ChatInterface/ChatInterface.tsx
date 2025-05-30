@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AiChat, useAsStreamAdapter } from '../../nlux'
 import { useConfig } from '../../contexts/ConfigContext'
 import '@nlux/themes/unstyled.css'
@@ -14,6 +14,7 @@ import type {
   ChatItem,
   ErrorEventDetails
 } from '../../nlux'
+import EmailInputChatItem from '../../nlux/core/src/sections/Conversation/EmailInputChatItem'
 
 // Add the icon based on error category
 const ERROR_ICON_MAP: Record<ErrorCategory, string> = {
@@ -60,72 +61,29 @@ export const ChatInterface = ({
     [chatConfig]
   )
 
-  // Create adapter at the top level
+  const [emailLoading, setEmailLoading] = useState(false)
+  const [emailError, setEmailError] = useState<string | null>(null)
+  const [emailInputId, setEmailInputId] = useState<string | null>(null)
+
+  // Adapter with special event support
   const adapter = useAsStreamAdapter(
     (userMessage: string, observer) => {
-      // Call the streaming service with the message content
       streamingService.streamMessage(
         userMessage,
-        // On each chunk update
         chunk => observer.next(chunk),
-        // On complete
         () => observer.complete(),
-        // On error - handle the error and pass to the observer
-        error => {
-          // Pass the error to the observer for NLUX to handle
-          observer.error(error)
-        },
-        chatConfig.companyId
+        error => observer.error(error),
+        chatConfig.companyId,
+        event => {
+          if (event.type === 'request_email') {
+            console.log('request_email', event.id)
+            setEmailInputId(event.id)
+          }
+        }
       )
     },
     [chatConfig.companyId, streamingService]
   )
-
-  // Set up link click tracking - only within the chat interface
-  useEffect(() => {
-    const handleLinkClick = (event: MouseEvent) => {
-      const target = event.target as HTMLElement
-      const link = target.closest('a')
-
-      if (link && link.href) {
-        // Find the message container that contains this link
-        const messageContainer = link.closest('.nlux-comp-message')
-        let messageId: string | undefined
-
-        if (messageContainer) {
-          messageId =
-            messageContainer.getAttribute('data-message-id') ||
-            messageContainer.id ||
-            undefined
-        }
-
-        // Record analytics immediately without waiting - if the user is clicking links,
-        // the chat should already be initialized
-        analyticsService
-          .recordAnalyticsEvent('link_click', {
-            url: link.href,
-            linkText: link.textContent || link.innerText || undefined,
-            messageId
-          })
-          .catch(error => {
-            console.warn('Analytics recording failed:', error)
-          })
-      }
-    }
-
-    // Add event listener only to the chat interface container
-    const chatContainer = chatInterfaceRef.current
-    if (chatContainer) {
-      chatContainer.addEventListener('click', handleLinkClick)
-    }
-
-    // Cleanup
-    return () => {
-      if (chatContainer) {
-        chatContainer.removeEventListener('click', handleLinkClick)
-      }
-    }
-  }, [analyticsService])
 
   // Create a custom error handler for the NLUX error event
   const handleNluxError = (error: ErrorEventDetails) => {
@@ -235,6 +193,105 @@ export const ChatInterface = ({
     }
   }
 
+  // Handler for submitting email
+  const handleEmailSubmit = async (email: string) => {
+    if (!chatId || !emailInputId) return
+    setEmailLoading(true)
+    setEmailError(null)
+    // You can pass subject/conversationSummary as needed
+    const result = await analyticsService.sendEmailRequest(chatId, {
+      userEmail: email,
+      subject: '',
+      conversationSummary: ''
+    })
+    setEmailLoading(false)
+    if (result.success) {
+      setEmailInputId(null)
+    } else {
+      setEmailError(result.error || 'Failed to send email. Please try again.')
+    }
+  }
+
+  // Pass email input handlers and state to AiChat
+  const aiChatProps = {
+    adapter,
+    key: chatId,
+    displayOptions: {
+      themeId: 'dialogue-foundry',
+      colorScheme: theme
+    },
+    initialConversation,
+    conversationOptions: {
+      showWelcomeMessage: true,
+      autoScroll: false,
+      conversationStarters
+    },
+    messageOptions: {
+      markdownLinkTarget: 'self' as 'self'
+    },
+    personaOptions: {
+      assistant: personaOptions?.assistant as AssistantPersona
+    },
+    composerOptions: {
+      placeholder: 'Ask me anything...',
+      autoFocus: true
+    },
+    events: {
+      error: handleNluxError,
+      messageSent: handleMessageSent
+    },
+    // Email input handlers/state for NLUX
+    showEmailInput: !!emailInputId,
+    onEmailSubmit: handleEmailSubmit,
+    emailLoading,
+    emailError
+  }
+  // Set up link click tracking - only within the chat interface
+  useEffect(() => {
+    const handleLinkClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      const link = target.closest('a')
+
+      if (link && link.href) {
+        // Find the message container that contains this link
+        const messageContainer = link.closest('.nlux-comp-message')
+        let messageId: string | undefined
+
+        if (messageContainer) {
+          messageId =
+            messageContainer.getAttribute('data-message-id') ||
+            messageContainer.id ||
+            undefined
+        }
+
+        // Record analytics immediately without waiting - if the user is clicking links,
+        // the chat should already be initialized
+        analyticsService
+          .recordAnalyticsEvent('link_click', {
+            url: link.href,
+            linkText: link.textContent || link.innerText || undefined,
+            messageId
+          })
+          .catch(error => {
+            console.warn('Analytics recording failed:', error)
+          })
+      }
+    }
+
+    // Add event listener only to the chat interface container
+    const chatContainer = chatInterfaceRef.current
+    if (chatContainer) {
+      chatContainer.addEventListener('click', handleLinkClick)
+    }
+
+    // Cleanup
+    return () => {
+      if (chatContainer) {
+        chatContainer.removeEventListener('click', handleLinkClick)
+      }
+    }
+  }, [analyticsService])
+
   return (
     <div ref={chatInterfaceRef} className={`chat-interface-wrapper ${className}`}>
       <div className="chat-interface-content">
@@ -250,34 +307,7 @@ export const ChatInterface = ({
               )
             case 'initialized':
               return (
-                <AiChat
-                  adapter={adapter}
-                  key={chatId} // Add a key to force re-render when chatId changes
-                  displayOptions={{
-                    themeId: 'dialogue-foundry',
-                    colorScheme: theme
-                  }}
-                  initialConversation={initialConversation}
-                  conversationOptions={{
-                    showWelcomeMessage: true,
-                    autoScroll: false,
-                    conversationStarters
-                  }}
-                  messageOptions={{
-                    markdownLinkTarget: 'self'
-                  }}
-                  personaOptions={{
-                    assistant: personaOptions?.assistant as AssistantPersona
-                  }}
-                  composerOptions={{
-                    placeholder: 'Ask me anything...',
-                    autoFocus: true
-                  }}
-                  events={{
-                    error: handleNluxError,
-                    messageSent: handleMessageSent
-                  }}
-                />
+                <AiChat {...aiChatProps} />
               )
             case 'error':
               return (

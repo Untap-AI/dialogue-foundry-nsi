@@ -333,6 +333,30 @@ const chatItemToReactNode = function <AiMsg>(
     )
   }
 
+  // Special handling for email input chat item
+  if ('contentType' in chatItem && chatItem.contentType === 'email_input') {
+    return (
+      <ForwardRefChatItemComp
+        ref={ref}
+        key={chatItem.uid}
+        uid={chatItem.uid}
+        status={'complete'}
+        direction={'received'}
+        contentType={'email_input'}
+        dataTransferMode={'batch'}
+        markdownContainersController={props.markdownContainersController}
+        layout={props.layout}
+        messageOptions={props.messageOptions}
+        isPartOfInitialSegment={isPartOfInitialSegment}
+        name={''}
+        avatar={''}
+        onEmailSubmit={props.onEmailSubmit}
+        emailLoading={props.emailLoading}
+        emailError={props.emailError}
+      />
+    )
+  }
+
   //
   // At this point, we are sure that the chat item is an AI chat item.
   // Below, we handle the assistant messages, that can be in complete or active state.

@@ -8,7 +8,7 @@ export type ChatItemProps<AiMsg> = {
   uid: string
   status: 'streaming' | 'complete'
   direction: MessageDirection
-  contentType: 'text' | 'server-component'
+  contentType: 'text' | 'server-component' | 'email_input'
   dataTransferMode: DataTransferMode
 
   markdownContainersController: MarkdownContainersController
@@ -26,6 +26,11 @@ export type ChatItemProps<AiMsg> = {
   avatar?: string | ReactElement
   submitShortcutKey?: 'Enter' | 'CommandEnter'
   onPromptResubmit?: (newPrompt: string) => void
+
+  // Only for email input chat item
+  onEmailSubmit?: (email: string) => void
+  emailLoading?: boolean
+  emailError?: string | null
 }
 
 export type ChatItemImperativeProps<AiMsg> = {

@@ -16,11 +16,12 @@ export type ChatItem<AiMsg = string> = {
     role: 'assistant';
     message: AiMsg;
     serverResponse?: string | object | undefined;
+    type: 'text' | 'email_input';
 } | {
     role: 'user';
     message: string;
 } | {
     role: 'system';
     message: string;
-};
+}
 

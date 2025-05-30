@@ -31,6 +31,7 @@ import { cacheService } from '../services/cache-service'
 import { logger } from '../lib/logger'
 import type { CustomRequest } from '../middleware/auth-middleware'
 import type { Message, ChatSettings } from '../services/openai-service'
+import { sendInquiryEmail } from '../services/sendgrid-service'
 
 const router = express.Router()
 
@@ -77,9 +78,10 @@ router.get('/:chatId', authenticateChatAccess, async (req, res) => {
     if (!chat) {
       const dbChat = await getChatById(chatId)
       if (dbChat) {
-        // Cache the chat for future requests
         cacheService.setChat(chatId, dbChat)
         chat = dbChat
+      } else {
+        chat = undefined
       }
     }
 
@@ -242,6 +244,60 @@ router.delete('/:chatId', authenticateChatAccess, async (req, res) => {
   }
 })
 
+// Add after other endpoints
+router.post('/:chatId/send-email', authenticateChatAccess, async (req, res) => {
+  try {
+    const { chatId } = req.params
+    const { userEmail, subject, conversationSummary } = req.body
+
+    if (!chatId || !userEmail || !subject || !conversationSummary) {
+      return res.status(400).json({ error: 'Missing required fields' })
+    }
+
+    // Get chat and companyId
+    let chat = cacheService.getChat(chatId)
+    if (!chat) {
+      chat = (await getChatById(chatId)) ?? undefined
+      if (chat) {
+        cacheService.setChat(chatId, chat)
+      }
+    }
+
+    if (!chat) {
+      return res.status(404).json({ error: 'Chat not found' })
+    }
+
+    const companyId = chat.company_id
+    if (!companyId) {
+      return res.status(400).json({ error: 'Chat missing company ID' })
+    }
+
+    // Get recent messages for context (last 20, excluding system)
+    const messages = await getMessagesByChatId(chatId)
+    const recentMessages = messages.slice(-20).filter(msg => msg.role !== 'system')
+
+    const emailSent = await sendInquiryEmail({
+      userEmail,
+      subject,
+      conversationSummary,
+      recentMessages,
+      companyId
+    })
+
+    if (emailSent) {
+      return res.json({ success: true })
+    } else {
+      return res.status(500).json({ error: 'Failed to send email' })
+    }
+  } catch (error) {
+    logger.error('Error sending email from /chats/:chatId/send-email', {
+      error: error as Error,
+      chatId: req.params.chatId
+    })
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
 // Shared handler function for stream requests
 async function handleStreamRequest(req: CustomRequest, res: express.Response) {
   // Set the proper headers for Server-Sent Events (SSE)
@@ -306,8 +362,10 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       const dbChat = await getChatById(chatId)
 
       if (dbChat) {
-        chat = dbChat
         cacheService.setChat(chatId, dbChat)
+        chat = dbChat
+      } else {
+        chat = undefined
       }
     }
 
@@ -439,7 +497,13 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       aiResponseContent = await generateStreamingChatCompletion(
         openaiMessages,
         chatSettings,
-        onChunk
+        onChunk,
+        event => {
+          if (!res.writableEnded) {
+            res.write(`data: ${JSON.stringify(event)}\n\n`)
+            res.flushHeaders()
+          }
+        }
       )
     } catch (streamError) {
       logger.error('Error in streaming chat completion', {

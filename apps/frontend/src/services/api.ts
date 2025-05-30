@@ -509,4 +509,30 @@ export class ChatApiService {
       messageId
     })
   }
+
+  /**
+   * Send an email request (after user provides email)
+   */
+  async sendEmailRequest(
+    chatId: string,
+    {
+      userEmail,
+      subject,
+      conversationSummary
+    }: { userEmail: string; subject: string; conversationSummary: string }
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      const response = await this.api.post(`/chats/${chatId}/send-email`, {
+        userEmail,
+        subject,
+        conversationSummary
+      })
+      return { success: true }
+    } catch (error) {
+      if (error instanceof ApiError) {
+        return { success: false, error: error.message }
+      }
+      return { success: false, error: 'Unknown error' }
+    }
+  }
 }

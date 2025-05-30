@@ -4,5 +4,5 @@ export type ChatSegmentUserMessage = {
     status: 'complete';
     participantRole: 'user';
     content: string;
-    contentType: 'text';
+    contentType: 'text' | 'email_input';
 };

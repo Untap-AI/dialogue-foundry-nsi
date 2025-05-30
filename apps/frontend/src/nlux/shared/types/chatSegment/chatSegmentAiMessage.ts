@@ -16,7 +16,7 @@ export type AiStreamedMessage<AiMsg> = {
       // For strings, this is straightforward. For objects, the adapter must pre-process the final message passed
       // through complete() to match the AiMsg type.
       content: Array<AiMsg>
-      contentType: 'text'
+      contentType: 'text' | 'email_input'
 
       // Chunks streamed from the AI. Only available for standard adapters.
       serverResponse: Array<string | object | undefined> | undefined
@@ -36,7 +36,7 @@ export type AiBatchedMessage<AiMsg> = {
   | {
       status: 'complete'
       content: AiMsg
-      contentType: 'text'
+      contentType: 'text' | 'email_input'
 
       // The raw response from the AI. Only available for standard adapters.
       serverResponse: string | object | undefined
@@ -58,7 +58,7 @@ export type AiStreamedServerComponentMessage = {
 } & (
   | {
       status: 'streaming'
-      contentType: 'server-component'
+      contentType: 'server-component' | 'email_input'
       content: ServerComponentExecutionResult
     }
   | {

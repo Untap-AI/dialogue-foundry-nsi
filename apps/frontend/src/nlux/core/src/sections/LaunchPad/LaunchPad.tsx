@@ -10,8 +10,6 @@ export function LaunchPad<AiMsg>(props: LaunchPadProps<AiMsg>) {
   const { segments, personaOptions, conversationOptions, userDefinedGreeting } =
     props
 
-    console.log(props)
-
   const hasMessages = useMemo(
     () => segments.some(segment => segment.items.length > 0),
     [segments]

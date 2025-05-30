@@ -38,13 +38,24 @@ export const chatItemsToChatSegment = <AiMsg>(
             } satisfies ChatSegmentUserMessage;
         }
 
+        console.log({
+            uid: uid(),
+            time: new Date(),
+            status: 'complete',
+            participantRole: 'assistant',
+            content: message.message,
+            contentType: message.type ?? 'text',
+            serverResponse: message.serverResponse,
+            dataTransferMode: 'batch',
+        })
+
         return {
             uid: uid(),
             time: new Date(),
             status: 'complete',
             participantRole: 'assistant',
             content: message.message,
-            contentType: 'text',
+            contentType: message.type ?? 'text',
             serverResponse: message.serverResponse,
             dataTransferMode: 'batch',
         } satisfies ChatSegmentAiMessage<AiMsg>;
