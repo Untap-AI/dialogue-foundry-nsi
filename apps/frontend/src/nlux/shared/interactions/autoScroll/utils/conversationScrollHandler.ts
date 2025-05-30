@@ -1,9 +1,9 @@
-export type ConversationScrollParams = Readonly<{
+type ConversationScrollParams = Readonly<{
   scrolledToBottom: boolean
   scrollDirection: 'up' | 'down' | undefined
 }>
 
-export type ConversationScrollCallback = (
+type ConversationScrollCallback = (
   params: ConversationScrollParams
 ) => void
 

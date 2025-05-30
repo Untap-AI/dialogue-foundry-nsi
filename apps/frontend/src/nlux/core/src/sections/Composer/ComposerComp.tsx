@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { className as compComposerClassName } from '../../../../shared/components/Composer/create'
 import { statusClassName as compComposerStatusClassName } from '../../../../shared/components/Composer/utils/applyNewStatusClassName'
 import { isSubmitShortcutKey } from '../../../../shared/utils/isSubmitShortcutKey'
 import { CancelIconComp } from '../../components/CancelIcon/CancelIconComp'
@@ -17,7 +16,7 @@ const submittingPromptStatuses: Array<ComposerStatus> = [
 
 export const ComposerComp = (props: ComposerProps) => {
   const compClassNameFromStats = compComposerStatusClassName[props.status] || ''
-  const className = `${compComposerClassName} ${compClassNameFromStats}`
+  const className = `nlux-comp-composer ${compClassNameFromStats}`
 
   const disableTextarea = submittingPromptStatuses.includes(props.status)
   const disableButton =

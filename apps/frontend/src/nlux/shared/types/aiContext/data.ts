@@ -15,11 +15,9 @@ type ContextItem = {
   description: string
 }
 
-export type ContextItems = Record<string, ContextItem>
+type ContextItems = Record<string, ContextItem>
 
 type ContextTask = {
   description: string
   paramDescriptions: string[]
 }
-
-export type ContextTasks = Record<string, ContextTask>

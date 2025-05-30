@@ -1,6 +1,22 @@
 import type { ConversationStarter } from '../../types/conversationStarter'
 import type { ConversationStartersProps } from './props'
 
+const ConversationStarterIcon = ({
+  icon
+}: {
+  icon: ConversationStarter['icon']
+}) => {
+  if (!icon) {
+    return null
+  }
+  if (typeof icon === 'string') {
+    return <img src={icon} width={16} />
+  }
+  return (
+    <div className="nlux-comp-conversationStarter-icon-container">{icon}</div>
+  )
+}
+
 export const ConversationStarters = (props: ConversationStartersProps) => {
   const { onConversationStarterSelected } = props
   return (
@@ -18,21 +34,5 @@ export const ConversationStarters = (props: ConversationStartersProps) => {
         </button>
       ))}
     </div>
-  )
-}
-
-export const ConversationStarterIcon = ({
-  icon
-}: {
-  icon: ConversationStarter['icon']
-}) => {
-  if (!icon) {
-    return null
-  }
-  if (typeof icon === 'string') {
-    return <img src={icon} width={16} />
-  }
-  return (
-    <div className="nlux-comp-conversationStarter-icon-container">{icon}</div>
   )
 }

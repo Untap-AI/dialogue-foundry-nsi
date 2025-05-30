@@ -4,7 +4,7 @@ import type { ReactNode } from 'react'
 import type { ChatConfig } from '../services/api'
 
 // Define the Config type that extends ChatConfig and includes any other app-wide settings
-export interface DialogueFoundryConfig {
+interface DialogueFoundryConfig {
   // Chat interface customization
   personaOptions?: {
     assistant: {
@@ -32,7 +32,7 @@ export interface DialogueFoundryConfig {
 }
 
 // Default configuration
-export const defaultConfig: DialogueFoundryConfig = {
+const defaultConfig: DialogueFoundryConfig = {
   chatConfig: {
     apiBaseUrl: 'http://localhost:3000/api',
     companyId: 'west-hills-vineyards'
@@ -72,7 +72,7 @@ export const defaultConfig: DialogueFoundryConfig = {
 }
 
 // Create the context with default values
-export const ConfigContext = createContext<DialogueFoundryConfig>(defaultConfig)
+const ConfigContext = createContext<DialogueFoundryConfig>(defaultConfig)
 
 // Custom hook to use the config context
 export const useConfig = () => useContext(ConfigContext)

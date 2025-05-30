@@ -5,14 +5,7 @@
  * - complete — A content of the message is fully loaded (either in fetch or stream mode). If present, the message
  * property is used to render the message.
  */
-export type MessageStatus = 'streaming' | 'complete';
+
 
 export type MessageDirection = 'received' | 'sent';
 
-export type MessageProps = {
-    direction: MessageDirection;
-    status: MessageStatus;
-    message?: string;
-    format?: 'text' | 'markdown'; // Default is 'text'
-    htmlSanitizer?: (html: string) => string;
-};

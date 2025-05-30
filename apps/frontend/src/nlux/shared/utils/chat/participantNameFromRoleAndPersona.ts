@@ -1,7 +1,7 @@
 const defaultAiName = 'Assistant'
 const defaultHumanName = 'User'
 
-export type ParticipantRole = 'user' | 'system' | 'assistant'
+type ParticipantRole = 'user' | 'system' | 'assistant'
 
 export const participantNameFromRoleAndPersona = (
   role: ParticipantRole,

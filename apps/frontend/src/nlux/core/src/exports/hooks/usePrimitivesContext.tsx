@@ -2,7 +2,7 @@ import { createContext, useEffect, useMemo, useState } from 'react'
 import type { ReactElement } from 'react'
 import type { PrimitivesContextData } from '../../types/PrimitivesContext'
 
-export const primitivesContext = createContext<PrimitivesContextData<any>>({})
+const primitivesContext = createContext<PrimitivesContextData<any>>({})
 
 export const usePrimitivesContext = function <AiMsg>(
   contextData: PrimitivesContextData<AiMsg>

@@ -6,7 +6,7 @@ export interface AssistantPersona {
   tagline?: string
 }
 
-export interface UserPersona {
+interface UserPersona {
   avatar: string | JSX.Element
   name: string
 }

@@ -5,13 +5,13 @@ import type {_Renderer} from './Renderer';
 import type {_Tokenizer} from './Tokenizer';
 import type {Token, Tokens, TokensList} from './Tokens';
 
-export interface TokenizerThis {
+interface TokenizerThis {
     lexer: _Lexer;
 }
 
-export type TokenizerExtensionFunction = (this: TokenizerThis, src: string, tokens: Token[] | TokensList) => Tokens.Generic | undefined;
+ type TokenizerExtensionFunction = (this: TokenizerThis, src: string, tokens: Token[] | TokensList) => Tokens.Generic | undefined;
 
-export type TokenizerStartFunction = (this: TokenizerThis, src: string) => number | void;
+type TokenizerStartFunction = (this: TokenizerThis, src: string) => number | void;
 
 export interface TokenizerExtension {
     childTokens?: string[] | undefined;
@@ -21,18 +21,18 @@ export interface TokenizerExtension {
     tokenizer: TokenizerExtensionFunction;
 }
 
-export interface RendererThis {
+interface RendererThis {
     parser: _Parser;
 }
 
-export type RendererExtensionFunction = (this: RendererThis, token: Tokens.Generic) => string | false | undefined;
+type RendererExtensionFunction = (this: RendererThis, token: Tokens.Generic) => string | false | undefined;
 
-export interface RendererExtension {
+interface RendererExtension {
     name: string;
     renderer: RendererExtensionFunction;
 }
 
-export type TokenizerAndRendererExtension =
+ type TokenizerAndRendererExtension =
     TokenizerExtension
     | RendererExtension
     | (TokenizerExtension & RendererExtension);

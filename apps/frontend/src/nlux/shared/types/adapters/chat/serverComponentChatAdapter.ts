@@ -8,17 +8,6 @@ export type StreamedServerComponent = {
 }
 
 export type ServerComponentExecutionResult = any
-
-/**
- * The props that are passed to the server component it's used with useAsRscAdapter().
- * - `message`: The message that was sent to the API.
- * - `extras`: The extras object that was passed to the adapter.
- */
-export type StreamedServerComponentProps = {
-  message: string
-  extras: ChatAdapterExtras
-}
-
 /**
  * The function used to send a message to the backend hosting the React Server Component (RSC) and
  * get a React Server Component in return.

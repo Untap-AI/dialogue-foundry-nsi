@@ -81,23 +81,3 @@ marked.lexer = _Lexer.lex
 marked.Tokenizer = _Tokenizer
 marked.Hooks = _Hooks
 marked.parse = marked
-
-export const options = marked.options
-export const setOptions = marked.setOptions
-export const use = marked.use
-export const walkTokens = marked.walkTokens
-export const parseInline = marked.parseInline
-export const parse = marked
-export const parser = _Parser.parse
-export const lexer = _Lexer.lex
-export { _defaults as defaults, _getDefaults as getDefaults } from './defaults'
-export { _Lexer as Lexer } from './Lexer'
-export { _Parser as Parser } from './Parser'
-export { _Tokenizer as Tokenizer } from './Tokenizer'
-export { _Renderer as Renderer } from './Renderer'
-export { _TextRenderer as TextRenderer } from './TextRenderer'
-export { _Hooks as Hooks } from './Hooks'
-export { Marked } from './Instance'
-export type * from './MarkedOptions'
-export type * from './rules'
-export type * from './Tokens'

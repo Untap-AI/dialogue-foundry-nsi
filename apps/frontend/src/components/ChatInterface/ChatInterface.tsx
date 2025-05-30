@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef } from 'react'
-import { AiChat, useAiChatApi, useAsStreamAdapter } from '../../nlux/core/src'
+import { AiChat, useAsStreamAdapter } from '../../nlux'
 import { useConfig } from '../../contexts/ConfigContext'
 import '@nlux/themes/unstyled.css'
 import './ChatInterface.css'
@@ -12,7 +12,6 @@ import type { ServiceError } from '../../services/errors'
 import type {
   AssistantPersona,
   ChatItem,
-  ConversationStarter,
   ErrorEventDetails
 } from '../../nlux'
 
@@ -26,7 +25,7 @@ const ERROR_ICON_MAP: Record<ErrorCategory, string> = {
   [ErrorCategory.UNKNOWN]: '⚠️'
 }
 
-export interface ChatInterfaceProps {
+interface ChatInterfaceProps {
   className?: string | undefined
   chatId: string | undefined
   initialConversation: ChatItem[] | undefined

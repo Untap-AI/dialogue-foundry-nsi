@@ -37,7 +37,7 @@ export type ResponseRendererProps<AiMsg> = {
 
 export type ResponseRenderer<AiMsg> = FC<ResponseRendererProps<AiMsg>>
 
-export type PromptRendererProps = {
+type PromptRendererProps = {
   uid: string
   prompt: string
   onResubmit: (newPrompt: string) => void

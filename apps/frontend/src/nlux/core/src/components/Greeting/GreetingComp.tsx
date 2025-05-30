@@ -1,8 +1,4 @@
-import {
-  className as compGreetingClassName,
-  personaNameClassName as compGreetingPersonaNameClassName
-} from '../../../../shared/components/Greeting/create'
-import { greetingTextClassName as compGreetingTextClassName } from '../../../../shared/components/Greeting/utils/updateGreetingText'
+
 import type { GreetingProps } from './props'
 
 export function GreetingComponent(props: GreetingProps) {
@@ -11,14 +7,14 @@ export function GreetingComponent(props: GreetingProps) {
   const hasValidMessage = props.message !== undefined && props.message !== null && props.message !== ''
 
   return (
-    <div className={compGreetingClassName}>
+    <div className='nlux-comp-welcomeMessage'>
       {hasValidName ? (
-        <div className={compGreetingPersonaNameClassName}>{props.name}</div>
+        <div className='nlux-comp-welcomeMessage-personaName'>{props.name}</div>
       ) : (
         <></>
       )}
       {hasValidMessage ? (
-        <div className={compGreetingTextClassName}>{props.message}</div>
+        <div className='nlux-comp-welcomeMessage-text'>{props.message}</div>
       ) : (
         <></>
       )}

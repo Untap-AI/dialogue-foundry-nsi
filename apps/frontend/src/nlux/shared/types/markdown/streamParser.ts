@@ -9,11 +9,6 @@ interface IObserver<DataType> {
   next(value: DataType): void
 }
 
-export type StreamParser = (
-  root: HTMLElement,
-  syntaxHighlighter?: HighlighterExtension
-) => IObserver<string>
-
 export type StandardStreamParserOutput = {
   next(value: string): void
   complete(): void
