@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.46
+
+### Patch Changes
+
+- Keep widget closed if customer closed it
+
 ## 0.2.45
 
 ### Patch Changes

@@ -12,6 +12,8 @@ import type { ChatItem } from '@nlux/react'
 
 export type ChatStatus = 'uninitialized' | 'loading' | 'initialized' | 'error'
 
+const LOCAL_STORAGE_KEY = 'chatWidgetIsOpen'
+
 export const ChatWidget = () => {
   const [isClosing, setIsClosing] = useState(false)
   const [chatId, setChatId] = useState<string | undefined>(undefined)
@@ -28,21 +30,31 @@ export const ChatWidget = () => {
   // Determine if mobile based on current width
   const isMobile = width <= 768
 
-  const [isOpen, setIsOpen] = useState(
-    run(() => {
-      switch (openOnLoad) {
-        case 'all':
-          return true
-        case 'desktop-only':
-          return !isMobile
-        case 'mobile-only':
-          return isMobile
-        case 'none':
-        case undefined:
-          return false
-      }
-    })
-  )
+  // Determine initial open state based on localStorage and openOnLoad
+  const getInitialOpenState = useCallback(() => {
+    const stored = localStorage.getItem(LOCAL_STORAGE_KEY)
+    if (stored === 'true') return true
+    if (stored === 'false') return false
+    // Otherwise, use openOnLoad logic
+    switch (openOnLoad) {
+      case 'all':
+        return true
+      case 'desktop-only':
+        return !isMobile
+      case 'mobile-only':
+        return isMobile
+      case 'none':
+      case undefined:
+        return false
+    }
+  }, [openOnLoad, isMobile])
+
+  const [isOpen, setIsOpen] = useState(getInitialOpenState)
+
+  // Always update localStorage when isOpen changes
+  useEffect(() => {
+    localStorage.setItem(LOCAL_STORAGE_KEY, isOpen ? 'true' : 'false')
+  }, [isOpen])
 
   // eslint-disable-next-line no-null/no-null
   const chatWindowRef = useRef<HTMLDivElement | null>(null)
@@ -52,14 +64,11 @@ export const ChatWidget = () => {
       // For desktop view, start closing animation
       if (!isMobile) {
         setIsClosing(true)
-
-        // After animation complete, set isOpen to false
         setTimeout(() => {
           setIsOpen(false)
           setIsClosing(false)
         }, 400)
       } else {
-        // For mobile, just close immediately (modal handles animation)
         setIsOpen(false)
       }
     } else {
