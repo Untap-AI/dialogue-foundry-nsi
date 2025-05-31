@@ -1,0 +1,81 @@
+.email-input-chat-item-container {
+  display: flex;
+  width: 100%;
+  justify-content: flex-start;
+  align-items: center;
+  font-family: var(--df-font-family);
+}
+
+.email-input {
+  border-radius: 0.5rem;
+  border: 1px solid var(--df-border-color);
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  outline: none;
+  background: var(--df-bg-primary);
+  color: var(--df-text-primary);
+  margin-right: 0.5rem;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  display: flex;
+  flex-grow: 1;
+}
+
+.email-input:focus {
+  border-color: var(--df-primary-color);
+  box-shadow: 0 0 0 2px black;
+}
+
+.email-send-button {
+  background: var(--df-bg-secondary);
+  color: var(--df-text-contrast);
+  font-size: var(--df-font-size-base);
+  font-weight: 600;
+  border-radius: 50%;
+  fill: var(--df-text-contrast);
+  padding: 0;
+  border: none;
+  cursor: pointer;
+  outline: none;
+  transition: background 0.2s, opacity 0.2s;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.email-send-button:hover:not(:disabled) {
+  background: var(--df-bg-secondary);
+}
+
+.email-send-button:disabled {
+  cursor: not-allowed;
+  background: var(--df-disabled);
+}
+
+.email-send-button .nlux-comp-sendIcon {
+  width: 24px;
+  height: 24px;
+  fill: var(--df-text-contrast);
+  display: inline-block;
+}
+
+.email-send-button .nlux-comp-sendIcon-container {
+  width: 24px;
+  height: 24px;
+  fill: var(--df-text-primary);
+  color: var(--df-text-primary);
+  display: inline-block;
+    width: 100%;
+    background-color: currentColor;
+    background-repeat: no-repeat;
+    background-size: contain;
+    mask: var(--nlux-send-icon);
+    aspect-ratio: 1;
+}
+
+.email-input-submitted {
+  color: var(--df-text-primary);
+  font-size: 0.875rem;
+  font-weight: 600;
+  margin-right: 0.5rem;
+}
