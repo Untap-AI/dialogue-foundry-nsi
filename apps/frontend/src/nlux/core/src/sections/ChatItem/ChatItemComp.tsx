@@ -19,7 +19,7 @@ import { useUserMessageRenderer } from './hooks/useUserMessageRenderer'
 import type { StreamContainerImperativeProps } from '../StreamContainer/props'
 import type { ReactElement, ReactNode, Ref } from 'react'
 import type { ChatItemImperativeProps, ChatItemProps } from './props'
-import EmailInputChatItem from '../Conversation/EmailInputChatItem'
+import { EmailInputChatItem } from '../Conversation/EmailInputChatItem'
 
 export const ChatItemComp: <AiMsg>(
   props: ChatItemProps<AiMsg>,
@@ -86,6 +86,8 @@ export const ChatItemComp: <AiMsg>(
     : compMessageDirectionClassName['received']
   const messageClassName = `${compMessageClassName} ${messageStatusClassName} ${messageDirectionClassName}`
 
+  console.log(props.events)
+
   return (
     <div className={containerClassName}>
       <ParticipantInfo />
@@ -93,11 +95,7 @@ export const ChatItemComp: <AiMsg>(
       {props.contentType === 'email_input' ? (
         <div className={messageClassName} style={{ width: '100%' }}>
           <EmailInputChatItem
-            onSubmit={props.onEmailSubmit ?? (() => {})}
-            loading={props.emailLoading}
-            error={props.emailError}
-            subject=""
-            conversationSummary=""
+            onSubmit={(email: string) => props.events?.emailSubmitted?.(email)}
           />
         </div>
       ) : (

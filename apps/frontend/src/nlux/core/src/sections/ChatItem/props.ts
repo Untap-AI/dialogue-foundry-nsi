@@ -3,6 +3,7 @@ import type { MessageDirection } from '../../../../shared/components/Message/pro
 import type { ReactElement, ReactNode } from 'react'
 import type { MarkdownContainersController } from '../../exports/hooks/usMarkdownContainers'
 import type { MessageOptions } from '../../exports/messageOptions'
+import { AiChatProps } from '../../exports/props'
 
 export type ChatItemProps<AiMsg> = {
   uid: string
@@ -26,12 +27,7 @@ export type ChatItemProps<AiMsg> = {
   avatar?: string | ReactElement
   submitShortcutKey?: 'Enter' | 'CommandEnter'
   onPromptResubmit?: (newPrompt: string) => void
-
-  // Only for email input chat item
-  onEmailSubmit?: (email: string) => void
-  emailLoading?: boolean
-  emailError?: string | null
-}
+} & Pick<AiChatProps<AiMsg>, 'events'>
 
 export type ChatItemImperativeProps<AiMsg> = {
   streamChunk: (chunk: AiMsg) => void

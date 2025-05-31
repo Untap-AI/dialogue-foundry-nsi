@@ -80,4 +80,5 @@ export type ChatSegmentEvent =
     'aiServerComponentStreamStarted' |
     'aiServerComponentStreamed' |
     'complete' |
-    'error';
+    'error' |
+    'emailSubmitted';

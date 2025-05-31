@@ -1,3 +1,4 @@
+import { AiChatProps } from '@nlux/react'
 import type { ChatSegment } from '../../../../shared/types/chatSegment/chatSegment'
 import type { MarkdownContainersController } from '../../exports/hooks/usMarkdownContainers'
 import type { MessageOptions } from '../../exports/messageOptions'
@@ -30,12 +31,7 @@ export type ConversationCompProps<AiMsg> = {
   ) => void
 
   onMarkdownStreamRendered: (segmentId: string, messageId: string) => void
-
-  showEmailInput?: boolean
-  onEmailSubmit: (email: string) => void
-  emailLoading: boolean
-  emailError: string | null
-}
+} & Pick<AiChatProps<AiMsg>, 'events'>
 
 export type ImperativeConversationCompProps<AiMsg> = {
   streamChunk: (segmentId: string, messageId: string, chunk: AiMsg) => void

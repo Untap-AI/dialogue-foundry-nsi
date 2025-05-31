@@ -19,6 +19,7 @@ export type ChatSegmentEventsMap<AiMsg> = {
   aiMessageStreamed: AiMessageStreamedCallback<AiMsg>
   complete: ChatSegmentCompleteCallback<AiMsg>
   error: ChatSegmentErrorCallback
+  emailSubmitted: EmailSubmittedCallback
 }
 
 export type UserMessageReceivedCallback = (
@@ -74,6 +75,8 @@ export type ChatSegmentErrorCallback = (
   errorId: NLErrorId,
   errorObject?: Error
 ) => void
+
+export type EmailSubmittedCallback = (email: string) => void
 
 //
 // Check that the ChatSegmentEventsMap type always satisfies Record<ChatSegmentEvent, function>

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { AiChat, useAsStreamAdapter } from '../../nlux'
+import { AiChat, useAiChatApi, useAsStreamAdapter } from '../../nlux'
 import { useConfig } from '../../contexts/ConfigContext'
 import '@nlux/themes/unstyled.css'
 import './ChatInterface.css'
@@ -61,9 +61,7 @@ export const ChatInterface = ({
     [chatConfig]
   )
 
-  const [emailLoading, setEmailLoading] = useState(false)
-  const [emailError, setEmailError] = useState<string | null>(null)
-  const [emailInputId, setEmailInputId] = useState<string | null>(null)
+  const api = useAiChatApi()
 
   // Adapter with special event support
   const adapter = useAsStreamAdapter(
@@ -76,8 +74,7 @@ export const ChatInterface = ({
         chatConfig.companyId,
         event => {
           if (event.type === 'request_email') {
-            console.log('request_email', event.id)
-            setEmailInputId(event.id)
+            api.conversation.createEmailInput()
           }
         }
       )
@@ -194,26 +191,20 @@ export const ChatInterface = ({
   }
 
   // Handler for submitting email
-  const handleEmailSubmit = async (email: string) => {
-    if (!chatId || !emailInputId) return
-    setEmailLoading(true)
-    setEmailError(null)
+  const handleEmailSubmitted = async (email: string) => {
+    console.log('handleEmailSubmitted', email)
+    if (!chatId) return
     // You can pass subject/conversationSummary as needed
-    const result = await analyticsService.sendEmailRequest(chatId, {
+    await analyticsService.sendEmailRequest(chatId, {
       userEmail: email,
       subject: '',
       conversationSummary: ''
     })
-    setEmailLoading(false)
-    if (result.success) {
-      setEmailInputId(null)
-    } else {
-      setEmailError(result.error || 'Failed to send email. Please try again.')
-    }
   }
 
   // Pass email input handlers and state to AiChat
   const aiChatProps = {
+    api,
     adapter,
     key: chatId,
     displayOptions: {
@@ -238,13 +229,9 @@ export const ChatInterface = ({
     },
     events: {
       error: handleNluxError,
-      messageSent: handleMessageSent
+      messageSent: handleMessageSent,
+      emailSubmitted: handleEmailSubmitted
     },
-    // Email input handlers/state for NLUX
-    showEmailInput: !!emailInputId,
-    onEmailSubmit: handleEmailSubmit,
-    emailLoading,
-    emailError
   }
   // Set up link click tracking - only within the chat interface
   useEffect(() => {

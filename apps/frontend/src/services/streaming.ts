@@ -269,6 +269,7 @@ userQuery: string, onChunk: (chunk: string) => void, onComplete: () => void, onE
             onSpecialEvent(data)
           }
         } catch (error) {
+          console.log('error', error)
           const streamError =
             error instanceof StreamingError
               ? error

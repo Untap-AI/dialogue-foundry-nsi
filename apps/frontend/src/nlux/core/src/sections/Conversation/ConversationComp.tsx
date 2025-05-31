@@ -8,7 +8,6 @@ import type {
   ConversationCompProps,
   ImperativeConversationCompProps
 } from './props'
-import { EmailInputChatItem } from './EmailInputChatItem'
 
 type ConversationCompType = <AiMsg>(
   props: ConversationCompProps<AiMsg>,
@@ -55,7 +54,7 @@ export const ConversationComp: ConversationCompType = function <AiMsg>(
     []
   )
 
-  console.log('showEmailInput1', props.showEmailInput)
+  console.log(props.events)
 
   return (
     <div className="nlux-chatSegments-container">
@@ -91,18 +90,10 @@ export const ConversationComp: ConversationCompType = function <AiMsg>(
             submitShortcutKey={props.submitShortcutKey}
             onPromptResubmit={props.onPromptResubmit}
             onMarkdownStreamRendered={props.onMarkdownStreamRendered}
+            events={props.events}
           />
         )
       })}
-      {props.showEmailInput && (
-        <EmailInputChatItem
-          onSubmit={props.onEmailSubmit}
-          loading={props.emailLoading}
-          error={props.emailError}
-          subject=""
-          conversationSummary=""
-        />
-      )}
     </div>
   )
 }

@@ -333,6 +333,8 @@ const chatItemToReactNode = function <AiMsg>(
     )
   }
 
+  console.log(chatItem.contentType)
+
   // Special handling for email input chat item
   if ('contentType' in chatItem && chatItem.contentType === 'email_input') {
     return (
@@ -349,10 +351,9 @@ const chatItemToReactNode = function <AiMsg>(
         messageOptions={props.messageOptions}
         isPartOfInitialSegment={isPartOfInitialSegment}
         name={''}
-        avatar={''}
-        onEmailSubmit={props.onEmailSubmit}
-        emailLoading={props.emailLoading}
-        emailError={props.emailError}
+        avatar={undefined}
+        fetchedContent={('message' in chatItem ? chatItem.message : '') as unknown as AiMsg}
+        events={props.events}
       />
     )
   }

@@ -11,6 +11,7 @@ import {
     AiServerComponentStreamStartedCallback,
     ChatSegmentCompleteCallback,
     ChatSegmentErrorCallback,
+    EmailSubmittedCallback,
     UserMessageReceivedCallback,
 } from '../../types/chatSegment/chatSegmentEvents';
 import {uid} from '../../utils/uid';
@@ -66,6 +67,9 @@ export const submitPrompt: SubmitPrompt = <AiMsg>(
     let aiMessageStreamStartedCallbacks: Set<AiMessageStreamStartedCallback<AiMsg>> | undefined = undefined;
     let aiMessageStreamedCallbacks: Set<AiMessageStreamedCallback<AiMsg>> | undefined = undefined;
     let aiMessageChunkReceivedCallbacks: Set<AiMessageChunkReceivedCallback<AiMsg>> | undefined = undefined;
+
+    // (e). EMAIL SUBMITTED
+    let emailSubmittedCallbacks: Set<EmailSubmittedCallback> | undefined = new Set();
 
     //
     // We start by emitting a user message received event.
@@ -191,6 +195,9 @@ export const submitPrompt: SubmitPrompt = <AiMsg>(
 
         chatSegmentExceptionCallbacks?.clear();
         chatSegmentExceptionCallbacks = undefined;
+
+        emailSubmittedCallbacks?.clear();
+        emailSubmittedCallbacks = undefined;
     };
 
     return {
@@ -267,6 +274,13 @@ export const submitPrompt: SubmitPrompt = <AiMsg>(
                     );
                     return;
                 }
+
+                if (event === 'emailSubmitted' && emailSubmittedCallbacks) {
+                    emailSubmittedCallbacks.add(
+                        callback as EmailSubmittedCallback,
+                    );
+                    return;
+                }
             },
             removeListener: (event, callback) => {
                 if (event === 'userMessageReceived') {
@@ -314,6 +328,13 @@ export const submitPrompt: SubmitPrompt = <AiMsg>(
                 if (event === 'error') {
                     chatSegmentExceptionCallbacks?.delete(
                         callback as ChatSegmentErrorCallback,
+                    );
+                    return;
+                }
+
+                if (event === 'emailSubmitted') {
+                    emailSubmittedCallbacks?.delete(
+                        callback as EmailSubmittedCallback,
                     );
                     return;
                 }

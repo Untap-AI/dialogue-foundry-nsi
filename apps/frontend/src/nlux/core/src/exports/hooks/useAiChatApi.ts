@@ -1,4 +1,5 @@
-import { useRef } from 'react'
+import { useRef } from "react"
+
 
 /**
  * AiChat API methods.
@@ -31,6 +32,12 @@ export type AiChatApi = {
      * Reset the conversation.
      */
     reset: () => void
+    /**
+     * Add new email input to the conversation.
+     *
+     * @param {string} email
+     */
+    createEmailInput: () => void
   }
 }
 
@@ -43,6 +50,7 @@ type AiChatHost = {
   sendMessage: (prompt: string) => void
   resetConversation: () => void
   cancelLastMessageRequest: () => void
+  createEmailInput: () => void
 }
 
 const createVoidInternalApi = (
@@ -67,6 +75,11 @@ const createVoidInternalApi = (
         throw new Error(
           'AiChatApi is not connected to a host <AiChat /> component.'
         )
+      },
+      createEmailInput: () => {
+        throw new Error(
+          'AiChatApi is not connected to a host <AiChat /> component.'
+        )
       }
     },
 
@@ -81,3 +94,57 @@ const createVoidInternalApi = (
     }
   }
 }
+
+/**
+ * Hook to get the AiChat API reference.
+ *
+ * @returns {AiChatApi}
+ */
+export const useAiChatApi = (): AiChatApi => {
+    const currentHost = useRef<AiChatHost | null>(null);
+    const api = useRef<AiChatInternalApi>(createVoidInternalApi());
+
+    api.current.composer.send = (prompt: string) => {
+        if (!currentHost.current) {
+            throw new Error('AiChatApi is not connected to a host <AiChat /> component.');
+        }
+
+        currentHost.current.sendMessage(prompt);
+    };
+
+    api.current.composer.cancel = () => {
+        if (!currentHost.current) {
+            throw new Error('AiChatApi is not connected to a host <AiChat /> component.');
+        }
+
+        currentHost.current.cancelLastMessageRequest();
+    };
+
+    api.current.conversation.reset = () => {
+        if (!currentHost.current) {
+            throw new Error('AiChatApi is not connected to a host <AiChat /> component.');
+        }
+
+        currentHost.current.resetConversation();
+    };
+
+    api.current.conversation.createEmailInput = () => {
+        if (!currentHost.current) {
+            throw new Error('AiChatApi is not connected to a host <AiChat /> component.');
+        }
+
+        currentHost.current.createEmailInput();
+    };
+
+    // @ts-ignore
+    api.current.__setHost = (host: AiChatHost) => {
+        currentHost.current = host;
+    };
+
+    // @ts-ignore
+    api.current.__unsetHost = () => {
+        currentHost.current = null;
+    };
+
+    return api.current;
+};

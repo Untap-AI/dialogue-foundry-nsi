@@ -522,7 +522,7 @@ export class ChatApiService {
     }: { userEmail: string; subject: string; conversationSummary: string }
   ): Promise<{ success: boolean; error?: string }> {
     try {
-      const response = await this.api.post(`/chats/${chatId}/send-email`, {
+      await this.api.post(`/chats/${chatId}/send-email`, {
         userEmail,
         subject,
         conversationSummary

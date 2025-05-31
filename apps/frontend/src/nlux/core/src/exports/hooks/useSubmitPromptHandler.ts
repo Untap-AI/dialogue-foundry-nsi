@@ -17,6 +17,7 @@ import type { MutableRefObject } from 'react'
 import type { ImperativeConversationCompProps } from '../../sections/Conversation/props'
 import type { ChatAdapter } from '../../types/chatAdapter'
 import type { AiChatProps } from '../props'
+import { EmailSubmittedCallback } from 'src/nlux/shared/types/chatSegment/chatSegmentEvents'
 
 type SubmitPromptHandlerProps<AiMsg> = {
   aiChatProps: AiChatProps<AiMsg>
@@ -74,7 +75,9 @@ export const useSubmitPromptHandler = <AiMsg>(
   })
 
   // Callback events can be used by the non-React DOM update code
-  const callbackEvents = useRef<Partial<EventsMap<AiMsg>>>({})
+  const callbackEvents = useRef<Partial<EventsMap<AiMsg> & {
+    emailSubmitted: EmailSubmittedCallback
+  }>>({})
 
   useEffect(() => {
     domToReactRef.current = {
@@ -384,6 +387,12 @@ export const useSubmitPromptHandler = <AiMsg>(
           message: errorMessage,
           errorObject
         })
+      }
+    })
+
+    chatSegmentObservable.on('emailSubmitted', email => {
+      if (callbackEvents.current?.emailSubmitted) {
+        callbackEvents.current.emailSubmitted(email)
       }
     })
 

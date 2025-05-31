@@ -250,7 +250,7 @@ router.post('/:chatId/send-email', authenticateChatAccess, async (req, res) => {
     const { chatId } = req.params
     const { userEmail, subject, conversationSummary } = req.body
 
-    if (!chatId || !userEmail || !subject || !conversationSummary) {
+    if (!chatId || !userEmail || subject === undefined || conversationSummary === undefined) {
       return res.status(400).json({ error: 'Missing required fields' })
     }
 
@@ -499,6 +499,7 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
         chatSettings,
         onChunk,
         event => {
+          console.log('event', event)
           if (!res.writableEnded) {
             res.write(`data: ${JSON.stringify(event)}\n\n`)
             res.flushHeaders()

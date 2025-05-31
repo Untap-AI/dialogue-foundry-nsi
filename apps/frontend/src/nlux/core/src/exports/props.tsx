@@ -12,6 +12,7 @@ import type { ConversationOptions } from '../types/conversationOptions'
 import type { AiChatApi } from './hooks/useAiChatApi'
 import type { MessageOptions } from './messageOptions'
 import type { PersonaOptions } from './personaOptions'
+import type { EmailSubmittedCallback } from 'src/nlux/shared/types/chatSegment/chatSegmentEvents'
 
 /**
  * Props for the AiChat React component.
@@ -35,7 +36,9 @@ export type AiChatProps<AiMsg = string> = {
   /**
    * A map of event handlers.
    */
-  events?: EventsConfig<AiMsg>
+  events?: EventsConfig<AiMsg> & {
+    emailSubmitted?: EmailSubmittedCallback
+  }
 
   /**
    * The class name to add to the root element of the component.
@@ -78,12 +81,4 @@ export type AiChatProps<AiMsg = string> = {
    * Only NLUX UI overrides are accepted at this stage.
    */
   children?: ReactNode | undefined
-
-  /**
-   * Whether to show the email input chat item.
-   */
-  showEmailInput?: boolean
-  onEmailSubmit: (email: string) => void
-  emailLoading: boolean
-  emailError: string | null
 }

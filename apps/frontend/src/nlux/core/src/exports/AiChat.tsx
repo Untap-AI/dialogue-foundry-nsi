@@ -36,6 +36,7 @@ import type { ReactElement, RefObject } from 'react'
 import type { ChatSegment } from '../../../shared/types/chatSegment/chatSegment'
 import type { ComposerStatus } from '../../../shared/components/Composer/props'
 import type { AiChatProps } from './props'
+import { uid } from '../../../shared/utils/uid'
 
 export const AiChat: <AiMsg>(props: AiChatProps<AiMsg>) => ReactElement =
   function <AiMsg>(props: AiChatProps<AiMsg>): ReactElement {
@@ -229,7 +230,27 @@ export const AiChat: <AiMsg>(props: AiChatProps<AiMsg>) => ReactElement =
             setChatSegments([])
             setInitialSegment(undefined)
           },
-          cancelLastMessageRequest
+          cancelLastMessageRequest,
+          createEmailInput: () => {
+            setChatSegments(prev => [
+              ...prev,
+              {
+        uid: 'initial',
+        status: 'complete',
+        items: [{
+                    uid: uid(),
+                    time: new Date(),
+                    status: 'complete',
+                    participantRole: 'assistant',
+                    content: '' as unknown as AiMsg,
+                    contentType: 'email_input',
+                    serverResponse: undefined,
+                    dataTransferMode: 'batch'
+                  }
+                ]
+              }
+            ])
+          }
         })
       } else {
         warnOnce(
@@ -278,8 +299,6 @@ export const AiChat: <AiMsg>(props: AiChatProps<AiMsg>) => ReactElement =
       return <></>
     }
 
-    console.log('showEmailInput', props.showEmailInput)
-
     return (
       <PrimitivesContextProvider>
         <div
@@ -308,10 +327,7 @@ export const AiChat: <AiMsg>(props: AiChatProps<AiMsg>) => ReactElement =
                 submitShortcutKey={props.composerOptions?.submitShortcut}
                 onPromptResubmit={handleResubmitPrompt}
                 onMarkdownStreamRendered={handleMarkdownStreamRendered}
-                showEmailInput={props.showEmailInput}
-                onEmailSubmit={props.onEmailSubmit}
-                emailLoading={props.emailLoading}
-                emailError={props.emailError}
+                events={props.events}
               />
             </div>
             <div className="nlux-launchPad-container">
