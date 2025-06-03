@@ -87,7 +87,7 @@
   color: var(--df-primary-color);
 }
 
-a {
+#dialogue-foundry-app a {
     text-decoration: underline;
 }
 

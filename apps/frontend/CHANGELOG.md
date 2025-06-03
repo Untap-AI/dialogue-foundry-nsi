@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.47
+
+### Patch Changes
+
+- Fix link tag value
+
 ## 0.2.46
 
 ### Patch Changes
