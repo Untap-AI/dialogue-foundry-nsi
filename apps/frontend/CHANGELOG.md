@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.48
+
+### Patch Changes
+
+- Open on load mobile
+
 ## 0.2.47
 
 ### Patch Changes

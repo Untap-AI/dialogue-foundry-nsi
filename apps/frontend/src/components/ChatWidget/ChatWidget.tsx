@@ -32,29 +32,47 @@ export const ChatWidget = () => {
 
   // Determine initial open state based on localStorage and openOnLoad
   const getInitialOpenState = useCallback(() => {
-    const stored = localStorage.getItem(LOCAL_STORAGE_KEY)
-    if (stored === 'true') return true
-    if (stored === 'false') return false
-    // Otherwise, use openOnLoad logic
-    switch (openOnLoad) {
-      case 'all':
-        return true
-      case 'desktop-only':
-        return !isMobile
-      case 'mobile-only':
-        return isMobile
-      case 'none':
-      case undefined:
-        return false
+    if (isMobile) {
+      // On mobile, always use openOnLoad logic
+      switch (openOnLoad) {
+        case 'all':
+          return true
+        case 'desktop-only':
+          return false
+        case 'mobile-only':
+          return true
+        case 'none':
+        case undefined:
+          return false
+      }
+    } else {
+      // On desktop, use localStorage if available
+      const stored = localStorage.getItem(LOCAL_STORAGE_KEY)
+      if (stored === 'true') return true
+      if (stored === 'false') return false
+      // Otherwise, use openOnLoad logic
+      switch (openOnLoad) {
+        case 'all':
+          return true
+        case 'desktop-only':
+          return true
+        case 'mobile-only':
+          return false
+        case 'none':
+        case undefined:
+          return false
+      }
     }
   }, [openOnLoad, isMobile])
 
   const [isOpen, setIsOpen] = useState(getInitialOpenState)
 
-  // Always update localStorage when isOpen changes
+  // Always update localStorage when isOpen changes, but only on desktop
   useEffect(() => {
-    localStorage.setItem(LOCAL_STORAGE_KEY, isOpen ? 'true' : 'false')
-  }, [isOpen])
+    if (!isMobile) {
+      localStorage.setItem(LOCAL_STORAGE_KEY, isOpen ? 'true' : 'false')
+    }
+  }, [isOpen, isMobile])
 
   // eslint-disable-next-line no-null/no-null
   const chatWindowRef = useRef<HTMLDivElement | null>(null)
