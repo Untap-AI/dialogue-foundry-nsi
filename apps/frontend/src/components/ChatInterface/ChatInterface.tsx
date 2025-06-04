@@ -3,6 +3,7 @@ import { AiChat, useAiChatApi, useAsStreamAdapter } from '@nlux/react'
 import { useConfig } from '../../contexts/ConfigContext'
 import '@nlux/themes/unstyled.css'
 import './ChatInterface.css'
+import { useResizeObserver } from '../../hooks/useResizeObserver'
 
 import { ChatStreamingService } from '../../services/streaming'
 import { ChatApiService } from '../../services/api'
@@ -31,13 +32,15 @@ export interface ChatInterfaceProps {
   chatId: string | undefined
   initialConversation: ChatItem[] | undefined
   chatStatus: ChatStatus
+  onClose?: () => void
 }
 
 export const ChatInterface = ({
   className,
   chatId,
   initialConversation,
-  chatStatus
+  chatStatus,
+  onClose
 }: ChatInterfaceProps) => {
   // Get config from context
   const {
@@ -82,6 +85,10 @@ export const ChatInterface = ({
     [chatConfig.companyId, streamingService]
   )
 
+  // Add isMobile detection using useResizeObserver
+  const { width } = useResizeObserver()
+  const isMobile = width <= 768
+
   // Set up link click tracking - only within the chat interface
   useEffect(() => {
     const handleLinkClick = (event: MouseEvent) => {
@@ -108,6 +115,11 @@ export const ChatInterface = ({
         }).catch(error => {
           console.warn('Analytics recording failed:', error)
         })
+
+        // If on mobile, close the chat widget by dispatching a custom event
+        if (isMobile) {
+          onClose?.()
+        }
       }
     }
 
@@ -123,7 +135,7 @@ export const ChatInterface = ({
         chatContainer.removeEventListener('click', handleLinkClick)
       }
     }
-  }, [analyticsService])
+  }, [analyticsService, isMobile])
 
   // Create a custom error handler for the NLUX error event
   const handleNluxError = (error: ErrorEventDetails) => {
