@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.50
+
+### Patch Changes
+
+- Route change listener
+
 ## 0.2.49
 
 ### Patch Changes

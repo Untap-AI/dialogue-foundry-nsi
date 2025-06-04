@@ -7,7 +7,6 @@ import './ChatWidget.css'
 import { useChatScroll } from '../../hooks/useChatScroll'
 import { useConfig } from '../../contexts/ConfigContext'
 import { ChatApiService } from '../../services/api'
-import { run } from '../../utils/run'
 import type { ChatItem } from '@nlux/react'
 
 export type ChatStatus = 'uninitialized' | 'loading' | 'initialized' | 'error'

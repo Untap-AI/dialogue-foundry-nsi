@@ -4,6 +4,7 @@ import { ChatHeader } from '../ChatHeader/ChatHeader'
 import './MobileChatModal.css'
 import type { ChatItem } from '@nlux/react'
 import type { ChatStatus } from '../ChatWidget/ChatWidget'
+import { useRouteChangeListener } from '../../hooks/useRouteChangeListener'
 
 interface MobileChatModalProps {
   isOpen: boolean
@@ -40,6 +41,8 @@ export const MobileChatModal = ({
     }
   }, [isOpen])
 
+  useRouteChangeListener(onClose)
+
   return (
     <dialog
       ref={dialogRef}
@@ -58,7 +61,6 @@ export const MobileChatModal = ({
         <ChatHeader onClose={onClose} onNewChat={onNewChat} />
         <ChatInterface
           className="mobile-chat-interface mobile-chat-bubbles"
-          onClose={onClose}
           {...propDrop}
         />
       </div>
