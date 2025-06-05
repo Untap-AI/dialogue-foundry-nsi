@@ -14,7 +14,6 @@ export type ChatStatus = 'uninitialized' | 'loading' | 'initialized' | 'error'
 const LOCAL_STORAGE_KEY = 'chatWidgetIsOpen'
 
 export const ChatWidget = () => {
-  const [isClosing, setIsClosing] = useState(false)
   const [chatId, setChatId] = useState<string | undefined>(undefined)
   const [initialConversation, setInitialConversation] = useState<
     ChatItem[] | undefined
@@ -34,7 +33,7 @@ export const ChatWidget = () => {
   // On mount, set isOpen based on openOnLoad, isMobile, and localStorage
   useEffect(() => {
       let shouldOpen = false
-      if (isMobile) {
+      if (typeof window !== 'undefined' && window.innerWidth <= 768) {
         switch (openOnLoad) {
           case 'all':
             shouldOpen = true
@@ -85,10 +84,27 @@ export const ChatWidget = () => {
       const newState = !prev
 
       localStorage.setItem(LOCAL_STORAGE_KEY, newState ? 'true' : 'false')
-      
+
       return newState
     })
-  }, [isMobile])
+  }, [])
+
+  useEffect(() => {
+    const handleNavigation = () => {
+      console.log('handleNavigation')
+      console.log('typeof window', typeof window)
+      if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+        setIsOpen(false)
+      }
+    }
+    
+    window.addEventListener('popstate', handleNavigation)
+    window.addEventListener('hashchange', handleNavigation)
+    return () => {
+      window.removeEventListener('popstate', handleNavigation)
+      window.removeEventListener('hashchange', handleNavigation)
+    }
+  }, [])
 
   // Handle clicking outside to close chat (desktop only)
   useEffect(() => {
@@ -199,7 +215,6 @@ export const ChatWidget = () => {
         <ChatWindow
           ref={chatWindowRef}
           isOpen={isOpen}
-          isClosing={isClosing}
           onClose={toggleChat}
           onNewChat={createNewChat}
           chatId={chatId}
