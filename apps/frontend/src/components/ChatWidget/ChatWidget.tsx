@@ -8,6 +8,7 @@ import { useChatScroll } from '../../hooks/useChatScroll'
 import { useConfig } from '../../contexts/ConfigContext'
 import { ChatApiService } from '../../services/api'
 import type { ChatItem } from '@nlux/react'
+import { useNavigationEvents } from '../../hooks/useNavigationEvents'
 
 export type ChatStatus = 'uninitialized' | 'loading' | 'initialized' | 'error'
 
@@ -89,22 +90,11 @@ export const ChatWidget = () => {
     })
   }, [])
 
-  useEffect(() => {
-    const handleNavigation = () => {
-      console.log('handleNavigation')
-      console.log('typeof window', typeof window)
-      if (typeof window !== 'undefined' && window.innerWidth <= 768) {
-        setIsOpen(false)
-      }
+  useNavigationEvents(() => {
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      setIsOpen(false)
     }
-    
-    window.addEventListener('popstate', handleNavigation)
-    window.addEventListener('hashchange', handleNavigation)
-    return () => {
-      window.removeEventListener('popstate', handleNavigation)
-      window.removeEventListener('hashchange', handleNavigation)
-    }
-  }, [])
+  })
 
   // Handle clicking outside to close chat (desktop only)
   useEffect(() => {

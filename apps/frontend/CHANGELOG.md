@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.53
+
+### Patch Changes
+
+- Try use navigation events
+
 ## 0.2.52
 
 ### Patch Changes
