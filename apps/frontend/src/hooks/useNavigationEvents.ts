@@ -9,6 +9,8 @@ import { useEffect } from 'react'
  */
 export function useNavigationEvents(callback: () => void) {
   useEffect(() => {
+    if (typeof window === 'undefined') return
+
     const handleNavigation = () => {
       callback()
     }

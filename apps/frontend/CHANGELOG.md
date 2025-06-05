@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.54
+
+### Patch Changes
+
+- Safety window
+
 ## 0.2.53
 
 ### Patch Changes
