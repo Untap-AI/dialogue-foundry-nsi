@@ -48,7 +48,7 @@ export const defaultConfig: DialogueFoundryConfig = {
   },
   logoUrl: "https://keystonecoachworks.net/wp-content/uploads//2017/06/Keystone-logo-wht-grey-no-outline-header.png",
   popupMessage: "Have questions? Click here for help!",
-  openOnLoad: "all",
+  openOnLoad: "desktop-only",
   welcomeMessage: "Welcome to Keystone Coach Works!\n\nReady to hit the road in style? Whether you're looking to rent, buy, or customize a luxury camper van, I'm here to help.\n\nHave a question? Just ask, or click one of the quick topics below to get started on your next adventure!",
   conversationStarters: [
     {

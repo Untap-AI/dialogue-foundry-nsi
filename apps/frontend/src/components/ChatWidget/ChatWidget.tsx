@@ -29,69 +29,66 @@ export const ChatWidget = () => {
   // Determine if mobile based on current width
   const isMobile = width <= 768
 
-  // Determine initial open state based on localStorage and openOnLoad
-  const getInitialOpenState = useCallback(() => {
-    if (isMobile) {
-      // On mobile, always use openOnLoad logic
-      switch (openOnLoad) {
-        case 'all':
-          return true
-        case 'desktop-only':
-          return false
-        case 'mobile-only':
-          return true
-        case 'none':
-        case undefined:
-          return false
-      }
-    } else {
-      // On desktop, use localStorage if available
-      const stored = localStorage.getItem(LOCAL_STORAGE_KEY)
-      if (stored === 'true') return true
-      if (stored === 'false') return false
-      // Otherwise, use openOnLoad logic
-      switch (openOnLoad) {
-        case 'all':
-          return true
-        case 'desktop-only':
-          return true
-        case 'mobile-only':
-          return false
-        case 'none':
-        case undefined:
-          return false
-      }
-    }
-  }, [openOnLoad, isMobile])
+  const [isOpen, setIsOpen] = useState(false)
 
-  const [isOpen, setIsOpen] = useState(getInitialOpenState)
-
-  // Always update localStorage when isOpen changes, but only on desktop
+  // On mount, set isOpen based on openOnLoad, isMobile, and localStorage
   useEffect(() => {
-    if (!isMobile) {
-      localStorage.setItem(LOCAL_STORAGE_KEY, isOpen ? 'true' : 'false')
-    }
-  }, [isOpen, isMobile])
+      let shouldOpen = false
+      if (isMobile) {
+        switch (openOnLoad) {
+          case 'all':
+            shouldOpen = true
+            break
+          case 'desktop-only':
+            shouldOpen = false
+            break
+          case 'mobile-only':
+            shouldOpen = true
+            break
+          case 'none':
+          case undefined:
+            shouldOpen = false
+            break
+        }
+      } else {
+        const stored = localStorage.getItem(LOCAL_STORAGE_KEY)
+        if (stored === 'true') shouldOpen = true
+        else if (stored === 'false') shouldOpen = false
+        else {
+          switch (openOnLoad) {
+            case 'all':
+              shouldOpen = true
+              break
+            case 'desktop-only':
+              shouldOpen = true
+              break
+            case 'mobile-only':
+              shouldOpen = false
+              break
+            case 'none':
+            case undefined:
+              shouldOpen = false
+              break
+          }
+        }
+      }
+      setIsOpen(shouldOpen)
+    // Only run on mount and when isMobile or openOnLoad changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openOnLoad])
 
   // eslint-disable-next-line no-null/no-null
   const chatWindowRef = useRef<HTMLDivElement | null>(null)
 
   const toggleChat = useCallback(() => {
-    if (isOpen) {
-      // For desktop view, start closing animation
-      if (!isMobile) {
-        setIsClosing(true)
-        setTimeout(() => {
-          setIsOpen(false)
-          setIsClosing(false)
-        }, 400)
-      } else {
-        setIsOpen(false)
-      }
-    } else {
-      setIsOpen(true)
-    }
-  }, [isOpen, isMobile])
+    setIsOpen(prev => {
+      const newState = !prev
+
+      localStorage.setItem(LOCAL_STORAGE_KEY, newState ? 'true' : 'false')
+      
+      return newState
+    })
+  }, [isMobile])
 
   // Handle clicking outside to close chat (desktop only)
   useEffect(() => {

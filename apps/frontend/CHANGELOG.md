@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.51
+
+### Patch Changes
+
+- Fix open on load race condition
+
 ## 0.2.50
 
 ### Patch Changes
