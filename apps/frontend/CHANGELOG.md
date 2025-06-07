@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.55
+
+### Patch Changes
+
+- Make button height
+
 ## 0.2.54
 
 ### Patch Changes

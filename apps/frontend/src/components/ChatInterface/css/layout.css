@@ -149,3 +149,7 @@
 .nlux-conversationStarters-container>.nlux-comp-conversationStarters>.nlux-comp-conversationStarter:first-child {
     margin-left: 10px;
 }
+
+.nlux-comp-sendIcon {
+    max-height: 24px;
+}
