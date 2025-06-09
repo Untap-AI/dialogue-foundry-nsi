@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.57
+
+### Patch Changes
+
+- Reduce h1 size
+
 ## 0.2.56
 
 ### Patch Changes
