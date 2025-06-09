@@ -159,6 +159,7 @@
 }
 
 .nlux-theme-dialogue-foundry ul {
+  list-style: disc;
   list-style-type: disc;
   font-size: var(--df-font-size-base, 16px);
   font-weight: var(--df-font-weight-base, 400);

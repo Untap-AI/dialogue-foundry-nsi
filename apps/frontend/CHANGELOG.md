@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.60
+
+### Patch Changes
+
+- list style
+
 ## 0.2.59
 
 ### Patch Changes
