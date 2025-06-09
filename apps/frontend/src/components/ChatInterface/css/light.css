@@ -151,3 +151,15 @@
     font-size: var(--df-font-size-h6, 14px);
     font-weight: var(--df-font-weight-h6, 600);
 }
+
+.nlux-theme-dialogue-foundry li {
+  list-style-type: disc;
+  font-size: var(--df-font-size-base, 16px);
+  font-weight: var(--df-font-weight-base, 400);
+}
+
+.nlux-theme-dialogue-foundry ul {
+  list-style-type: disc;
+  font-size: var(--df-font-size-base, 16px);
+  font-weight: var(--df-font-weight-base, 400);
+}
