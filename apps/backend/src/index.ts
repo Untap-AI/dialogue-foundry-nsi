@@ -17,6 +17,10 @@ dotenv.config()
 const app = express()
 const port = parseInt(process.env.PORT || '3000', 10)
 
+// Trust the proxy (required for Render and other hosting platforms)
+// This allows Express to trust the X-Forwarded-For header for accurate IP detection
+app.set('trust proxy', true)
+
 // Parse JSON bodies
 app.use(express.json())
 
