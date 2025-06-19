@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.61
+
+### Patch Changes
+
+- No button padding
+
 ## 0.2.60
 
 ### Patch Changes

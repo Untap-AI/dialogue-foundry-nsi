@@ -13,6 +13,8 @@
   transition: all 200ms;
   cursor: pointer;
   animation-duration: 10s;
+  padding: 0;
+  margin: 0;
 }
 
 .chat-icon-button:hover {
