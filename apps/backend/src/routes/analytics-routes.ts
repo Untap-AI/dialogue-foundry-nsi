@@ -14,6 +14,12 @@ const linkClickEventSchema = z.object({
   click_position: z.number().optional()
 })
 
+const conversationStarterClickEventSchema = z.object({
+  label: z.string(),
+  position: z.number(),
+  prompt: z.string().optional()
+})
+
 // Base analytics event schema
 const analyticsEventSchema = z.object({
   chat_id: z.string().uuid(),
@@ -22,6 +28,7 @@ const analyticsEventSchema = z.object({
   company_id: z.string(),
   event_type: z.enum([
     'link_click',
+    'conversation_starter_click',
   ]),
   event_data: z.any(), // Will be validated based on event_type
   message_role: z.enum(['user', 'assistant']).optional(),
@@ -36,6 +43,8 @@ const validateEventData = (eventType: EventType, eventData: any) => {
   switch (eventType) {
     case 'link_click':
       return linkClickEventSchema.parse(eventData)
+    case 'conversation_starter_click':
+      return conversationStarterClickEventSchema.parse(eventData)
     default:
       throw new Error(`Unknown event type: ${eventType}`)
   }

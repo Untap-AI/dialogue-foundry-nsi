@@ -23,6 +23,7 @@ const serviceSupabase =
 // Event type definitions for type safety
 export type EventType = 
   | 'link_click'
+  | 'conversation_starter_click'
 
 // Event data interfaces for different event types
 export interface LinkClickEventData {
@@ -31,9 +32,16 @@ export interface LinkClickEventData {
   click_position?: number
 }
 
+export interface ConversationStarterClickEventData {
+  label: string
+  position: number
+  prompt?: string
+}
+
 // Union type for all event data
 export type EventData = 
   | LinkClickEventData
+  | ConversationStarterClickEventData
 
 
 export interface AnalyticsEventData {

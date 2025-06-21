@@ -247,7 +247,7 @@ export const ChatInterface = ({
     ) {
       setTimeout(() => {
         if (!messageSent.current) {
-          addConversationStarters(conversationStarters, send)
+          addConversationStarters(conversationStarters, send, analyticsService)
         }
       }, 100)
     }
@@ -316,7 +316,8 @@ export const ChatInterface = ({
 
 function addConversationStarters(
   conversationStarters: ConversationStarter[],
-  send: (prompt: string) => void
+  send: (prompt: string) => void,
+  analyticsService?: ChatApiService
 ) {
   const conversationContainer = document.querySelector(
     '.nlux-conversation-container'
@@ -336,11 +337,17 @@ function addConversationStarters(
     innerContainer.className = 'nlux-comp-conversationStarters'
 
     // Add each conversation starter as a button with proper click handler
-    conversationStarters.forEach(({ prompt: promptFromStarter, label }) => {
+    conversationStarters.forEach(({ prompt: promptFromStarter, label }, index) => {
       if (promptFromStarter && label) {
         const button = document.createElement('button')
         button.className = 'nlux-comp-conversationStarter'
         button.addEventListener('click', () => {
+          // Record analytics event before sending the message
+          if (analyticsService) {
+            analyticsService.recordConversationStarterClick(label, index, promptFromStarter).catch(error => {
+              console.warn('Analytics recording failed:', error)
+            })
+          }
           send(promptFromStarter)
         })
 
