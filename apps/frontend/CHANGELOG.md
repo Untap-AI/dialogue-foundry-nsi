@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.2.63
+
+### Patch Changes
+
+- conversation starter index + 1
+
 ## 0.2.62
 
 ### Patch Changes

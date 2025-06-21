@@ -344,7 +344,7 @@ function addConversationStarters(
         button.addEventListener('click', () => {
           // Record analytics event before sending the message
           if (analyticsService) {
-            analyticsService.recordConversationStarterClick(label, index, promptFromStarter).catch(error => {
+            analyticsService.recordConversationStarterClick(label, index + 1, promptFromStarter).catch(error => {
               console.warn('Analytics recording failed:', error)
             })
           }
