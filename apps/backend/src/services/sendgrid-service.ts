@@ -25,6 +25,42 @@ if (!DEFAULT_TEMPLATE_ID) {
   )
 }
 
+/**
+ * Utility function to strip markdown formatting from text
+ * Makes the text more readable in plain text email format
+ */
+const stripMarkdown = (text: string): string => {
+  return text
+    // Remove headers (## Header -> Header)
+    .replace(/^#{1,6}\s+/gm, '')
+    // Remove bold formatting (**text** -> text)
+    .replace(/\*\*(.*?)\*\*/g, '$1')
+    // Remove italic formatting (*text* -> text)
+    .replace(/\*(.*?)\*/g, '$1')
+    // Remove links [text](url) -> text
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    // Remove inline code `code` -> code
+    .replace(/`([^`]+)`/g, '$1')
+    // Remove code blocks ```code``` -> code
+    .replace(/```[\s\S]*?```/g, (match) => {
+      // Extract just the code content, removing the language identifier
+      return match.replace(/```[\w]*\n?/g, '').replace(/```/g, '')
+    })
+    // Clean up bullet points and lists
+    .replace(/^\s*[-*+]\s+/gm, '• ')
+    // Clean up numbered lists
+    .replace(/^\s*\d+\.\s+/gm, (_match, offset, string) => {
+      const lineStart = string.lastIndexOf('\n', offset) + 1
+      const indent = string.slice(lineStart, offset)
+      return indent + '• '
+    })
+    // Remove horizontal rules
+    .replace(/^---+$/gm, '')
+    // Clean up extra whitespace and line breaks
+    .replace(/\n{3,}/g, '\n\n')
+    .trim()
+}
+
 // TODO: Create zod schema for email data and use in function tool
 export interface EmailData {
   userEmail: string
@@ -69,13 +105,17 @@ export const sendInquiryEmail = async (
     // Format recent messages for better readability in the email
     const formattedMessages = emailData.recentMessages.map(msg => ({
       role: msg.role.charAt(0).toUpperCase() + msg.role.slice(1), // Capitalize role
-      content: msg.content
+      content: stripMarkdown(msg.content) // Strip markdown formatting
     }))
 
-    // Convert messages to presentable format for email
+    // Convert messages to presentable format for email with better structure
     const chatHistory = formattedMessages
-      .map(msg => `${msg.role}: ${msg.content}`)
-      .join('\n\n')
+      .map(msg => {
+        // Add visual separation and structure
+        const separator = msg.role === 'User' ? '👤' : '🤖'
+        return `${separator} ${msg.role}:\n${msg.content}`
+      })
+      .join('\n\n' + '─'.repeat(50) + '\n\n')
 
     // Define support email - required for SendGrid
     const supportEmail = companyConfig.support_email
@@ -102,7 +142,7 @@ export const sendInquiryEmail = async (
       templateId,
       dynamicTemplateData: {
         subject: emailData.subject,
-        conversationSummary: emailData.conversationSummary,
+        conversationSummary: stripMarkdown(emailData.conversationSummary), // Also strip markdown from summary
         chatHistory,
         userEmail: emailData.userEmail,
         date: new Date().toLocaleDateString('en-US', {

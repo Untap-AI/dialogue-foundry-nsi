@@ -121,7 +121,7 @@ export class ChatStreamingService {
    * @param onSpecialEvent Optional callback for special events
    */
   async streamMessage(
-userQuery: string, onChunk: (chunk: string) => void, onComplete: () => void, onError: (error: Error) => void, companyId?: string, onSpecialEvent?: (event: any) => void, p0?: (string | ChatStreamingService)[]  ): Promise<void> {
+    userQuery: string, onChunk: (chunk: string) => void, onComplete: () => void, onError: (error: Error) => void, companyId?: string, onSpecialEvent?: (event: any) => void ): Promise<void> {
     // Reset reconnection counters if it's been a while
     this.checkAndResetReconnectCounters()
 

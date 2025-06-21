@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { AiChat, useAiChatApi, useAsStreamAdapter } from '../../nlux'
 import { useConfig } from '../../contexts/ConfigContext'
 import '@nlux/themes/unstyled.css'
@@ -49,6 +49,12 @@ export const ChatInterface = ({
   // Add ref for the chat interface container
   const chatInterfaceRef = useRef<HTMLDivElement>(null)
 
+  // Add state to store email request details
+  const [emailRequestDetails, setEmailRequestDetails] = useState<{
+    subject: string
+    conversationSummary: string
+  } | null>(null)
+
   const streamingService = useMemo(
     () => new ChatStreamingService(chatConfig),
     [chatConfig]
@@ -73,6 +79,13 @@ export const ChatInterface = ({
         chatConfig.companyId,
         event => {
           if (event.type === 'request_email') {
+            // Store the email request details from the LLM
+            if (event.details) {
+              setEmailRequestDetails({
+                subject: event.details.subject || '',
+                conversationSummary: event.details.conversationSummary || ''
+              })
+            }
             api.conversation.createEmailInput()
           }
         }
@@ -127,6 +140,8 @@ export const ChatInterface = ({
 
   useEffect(() => {
     messageSent.current = false
+    // Clear email request details when chat changes
+    setEmailRequestDetails(null)
   }, [chatId])
 
   // Handle message sent event - creates ChatGPT-like scrolling
@@ -193,12 +208,19 @@ export const ChatInterface = ({
   const handleEmailSubmitted = async (email: string) => {
     console.log('handleEmailSubmitted', email)
     if (!chatId) return
-    // You can pass subject/conversationSummary as needed
+
+    // Use the stored email request details from the LLM or fallback to empty strings
+    const subject = emailRequestDetails?.subject || ''
+    const conversationSummary = emailRequestDetails?.conversationSummary || ''
+
     await analyticsService.sendEmailRequest(chatId, {
       userEmail: email,
-      subject: '',
-      conversationSummary: ''
+      subject,
+      conversationSummary
     })
+
+    // Clear the stored email request details after use
+    setEmailRequestDetails(null)
   }
 
   // Pass email input handlers and state to AiChat

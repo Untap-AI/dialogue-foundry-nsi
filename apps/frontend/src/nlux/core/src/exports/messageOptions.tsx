@@ -28,7 +28,7 @@ export type ResponseRendererProps<AiMsg> = {
   uid: string
   dataTransferMode: 'stream' | 'batch'
   status: 'streaming' | 'complete'
-  contentType: 'text' | 'server-component'
+  contentType: 'text' | 'server-component' | 'email_input'
   content: AiMsg[]
   serverComponent?: StreamedServerComponent
   serverResponse: unknown[]

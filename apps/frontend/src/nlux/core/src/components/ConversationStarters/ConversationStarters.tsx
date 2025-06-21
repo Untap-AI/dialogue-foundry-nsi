@@ -2,7 +2,7 @@ import { useConfig } from '../../../../../contexts/ConfigContext'
 import type { ConversationStarter } from '../../types/conversationStarter'
 import type { ConversationStartersProps } from './props'
 import { useMemo } from 'react'
-import { ChatApiService } from 'src/services/api'
+import { ChatApiService } from '../../../../../services/api'
 
 const ConversationStarterIcon = ({
   icon

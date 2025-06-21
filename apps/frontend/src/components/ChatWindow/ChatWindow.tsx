@@ -3,7 +3,7 @@ import { ChatHeader } from '../ChatHeader/ChatHeader'
 import { ChatInterface } from '../ChatInterface/ChatInterface'
 import './ChatWindow.css'
 import type { ChatStatus } from '../ChatWidget/ChatWidget'
-import type { ChatItem } from '@nlux/react'
+import type { ChatItem } from '../../nlux'
 
 interface ChatWindowProps {
   isOpen: boolean

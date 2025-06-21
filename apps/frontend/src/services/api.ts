@@ -3,7 +3,7 @@ import { ApiError, ErrorCodes as ServiceErrorCodes } from './errors'
 import { logger } from './logger'
 import type { ErrorCodeValue } from './errors'
 import type { AxiosError } from 'axios'
-import type { ChatItem } from '@nlux/react'
+import type { ChatItem } from '../nlux'
 
 // Default config values (can be overridden)
 export const DEFAULT_TOKEN_STORAGE_KEY = 'dialogue_foundry_token'
@@ -369,12 +369,24 @@ export class ChatApiService {
    * @param messages - Backend messages
    */
   private mapMessagesToNluxFormat(messages: Message[]): ChatItem[] {
-    return messages.map(message => ({
-      id: message.id,
-      message: message.content,
-      role: message.role === 'user' ? 'user' : 'assistant',
-      timestamp: new Date(message.created_at).getTime()
-    }))
+    return messages.map(message => {
+      if (message.role === 'user') {
+        return {
+          id: message.id,
+          message: message.content,
+          role: 'user' as const,
+          timestamp: new Date(message.created_at).getTime()
+        }
+      } else {
+        return {
+          id: message.id,
+          message: message.content,
+          role: 'assistant' as const,
+          type: 'text' as const,
+          timestamp: new Date(message.created_at).getTime()
+        }
+      }
+    })
   }
 
   /**

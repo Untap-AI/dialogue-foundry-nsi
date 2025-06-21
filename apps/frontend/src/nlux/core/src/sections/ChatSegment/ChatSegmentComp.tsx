@@ -333,8 +333,6 @@ const chatItemToReactNode = function <AiMsg>(
     )
   }
 
-  console.log(chatItem.contentType)
-
   // Special handling for email input chat item
   if ('contentType' in chatItem && chatItem.contentType === 'email_input') {
     return (

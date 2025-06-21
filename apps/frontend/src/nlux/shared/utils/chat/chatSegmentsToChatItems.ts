@@ -15,6 +15,7 @@ export const chatSegmentsToChatItems = <AiMsg>(
                 chatItems.push({
                     role: 'assistant',
                     message: item.content as AiMsg,
+                    type: 'contentType' in item ? item.contentType : 'text',
                 });
             } else {
                 if (item.participantRole === 'user') {

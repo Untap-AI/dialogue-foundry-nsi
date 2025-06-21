@@ -527,7 +527,6 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
           openaiMessages,
           chatSettings,
           event => {
-            console.log('Email detection event:', event)
             if (!res.writableEnded) {
               res.write(`data: ${JSON.stringify(event)}\n\n`)
               res.flushHeaders()

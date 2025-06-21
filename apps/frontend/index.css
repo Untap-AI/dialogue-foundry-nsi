@@ -31,22 +31,6 @@
   /* --df-mono-font-family: monospace; */
   --df-font-size-base: 16px;
 
-  /* Heading font sizes - graduated scale based on base font size */
-  --df-font-size-h1: 32px;
-  --df-font-size-h2: 28px;
-  --df-font-size-h3: 24px;
-  --df-font-size-h4: 20px;
-  --df-font-size-h5: 18px;
-  --df-font-size-h6: 16px;
-
-  /* Heading font weights - graduated scale */
-  --df-font-weight-h1: 800;
-  --df-font-weight-h2: 750;
-  --df-font-weight-h3: 700;
-  --df-font-weight-h4: 650;
-  --df-font-weight-h5: 600;
-  --df-font-weight-h6: 600;
-
   --df-border-width: 0;
   --df-border-radius: 20px;
   --df-line-height: 1.5;
