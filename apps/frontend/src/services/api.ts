@@ -500,7 +500,7 @@ export class ChatApiService {
   /**
    * Record a conversation starter click event
    */
-  async recordConversationStarterClick(label: string, position: number, prompt?: string): Promise<void> {
+  async recordConversationStarterClick(label: string | undefined, position: number, prompt?: string): Promise<void> {
     await this.recordAnalyticsEvent('conversation_starter_click', {
       label,
       position,

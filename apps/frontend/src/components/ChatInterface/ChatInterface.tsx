@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { AiChat, useAiChatApi, useAsStreamAdapter } from '../../nlux'
 import { useConfig } from '../../contexts/ConfigContext'
 import '@nlux/themes/unstyled.css'
 import './ChatInterface.css'
-import { useResizeObserver } from '../../hooks/useResizeObserver'
 
 import { ChatStreamingService } from '../../services/streaming'
 import { ChatApiService } from '../../services/api'
@@ -15,7 +14,6 @@ import type {
   ChatItem,
   ErrorEventDetails
 } from '../../nlux'
-import EmailInputChatItem from '../../nlux/core/src/sections/Conversation/EmailInputChatItem'
 
 // Add the icon based on error category
 const ERROR_ICON_MAP: Record<ErrorCategory, string> = {

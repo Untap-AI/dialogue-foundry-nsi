@@ -1,5 +1,8 @@
+import { useConfig } from '../../../../../contexts/ConfigContext'
 import type { ConversationStarter } from '../../types/conversationStarter'
 import type { ConversationStartersProps } from './props'
+import { useMemo } from 'react'
+import { ChatApiService } from 'src/services/api'
 
 const ConversationStarterIcon = ({
   icon
@@ -19,13 +22,29 @@ const ConversationStarterIcon = ({
 
 export const ConversationStarters = (props: ConversationStartersProps) => {
   const { onConversationStarterSelected } = props
+
+  const {
+    chatConfig,
+  } = useConfig()
+
+  // Create analytics service for tracking conversation starter clicks
+  const analyticsService = useMemo(
+    () => new ChatApiService(chatConfig),
+    [chatConfig]
+  )
+
+  const handleConversationStarterClick = (conversationStarter: ConversationStarter, index: number) => {
+    onConversationStarterSelected(conversationStarter)
+    analyticsService.recordConversationStarterClick(conversationStarter.label, index + 1, conversationStarter.prompt ?? '')
+  }
+
   return (
     <div className="nlux-comp-conversationStarters">
       {props.items.map((conversationStarter, index) => (
         <button
           key={index}
           className="nlux-comp-conversationStarter"
-          onClick={() => onConversationStarterSelected(conversationStarter)}
+          onClick={() => handleConversationStarterClick(conversationStarter, index)}
         >
           <ConversationStarterIcon icon={conversationStarter.icon} />
           <span className="nlux-comp-conversationStarter-prompt">
