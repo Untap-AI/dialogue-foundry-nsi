@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { AiChat, useAiChatApi, useAsStreamAdapter } from '../../nlux'
 import { useConfig } from '../../contexts/ConfigContext'
 import '@nlux/themes/unstyled.css'
@@ -55,6 +55,9 @@ export const ChatInterface = ({
     conversationSummary: string
   } | null>(null)
 
+  // Add state to track if we should create email input after streaming
+  const pendingEmailInput = useRef(false)
+
   const streamingService = useMemo(
     () => new ChatStreamingService(chatConfig),
     [chatConfig]
@@ -68,6 +71,17 @@ export const ChatInterface = ({
 
   const api = useAiChatApi()
 
+  // Handle markdown rendering completion
+  const handleMessageRendered = useCallback(() => {
+    
+    // If we have a pending email input, create it after any markdown rendering completes
+    // This ensures the email input appears after the text is fully rendered
+    if (pendingEmailInput.current) {
+      pendingEmailInput.current = false
+      api.conversation.createEmailInput()
+    }
+  }, [api])
+
   // Adapter with special event support
   const adapter = useAsStreamAdapter(
     (userMessage: string, observer) => {
@@ -79,14 +93,16 @@ export const ChatInterface = ({
         chatConfig.companyId,
         event => {
           if (event.type === 'request_email') {
-            // Store the email request details from the LLM
+            // Store the email request details from the LLM but don't create input yet
             if (event.details) {
               setEmailRequestDetails({
                 subject: event.details.subject || '',
                 conversationSummary: event.details.conversationSummary || ''
               })
             }
-            api.conversation.createEmailInput()
+            // Set flag to create email input after markdown rendering completes
+            pendingEmailInput.current = true
+            // We'll need to get the message ID when it's available
           }
         }
       )
@@ -135,18 +151,12 @@ export const ChatInterface = ({
     console.error('NLUX chat error:', error)
   }
 
-  // Track if we've sent a message
-  const messageSent = useRef(false)
-
-  useEffect(() => {
-    messageSent.current = false
-    // Clear email request details when chat changes
-    setEmailRequestDetails(null)
-  }, [chatId])
-
   // Handle message sent event - creates ChatGPT-like scrolling
   const handleMessageSent = () => {
-    messageSent.current = true
+    // Clear pending email input flag when new message is sent
+    pendingEmailInput.current = false
+    setEmailRequestDetails(null)
+    
     // Remove the conversation starters container
     const startersContainer = document.querySelectorAll(
       '.nlux-conversationStarters-container'
@@ -206,7 +216,6 @@ export const ChatInterface = ({
 
   // Handler for submitting email
   const handleEmailSubmitted = async (email: string) => {
-    console.log('handleEmailSubmitted', email)
     if (!chatId) return
 
     // Use the stored email request details from the LLM or fallback to empty strings
@@ -227,7 +236,6 @@ export const ChatInterface = ({
   const aiChatProps = {
     api,
     adapter,
-    key: chatId,
     displayOptions: {
       themeId: 'dialogue-foundry',
       colorScheme: theme
@@ -251,7 +259,8 @@ export const ChatInterface = ({
     events: {
       error: handleNluxError,
       messageSent: handleMessageSent,
-      emailSubmitted: handleEmailSubmitted
+      emailSubmitted: handleEmailSubmitted,
+      messageRendered: handleMessageRendered
     },
   }
   // Set up link click tracking - only within the chat interface
@@ -315,7 +324,7 @@ export const ChatInterface = ({
               )
             case 'initialized':
               return (
-                <AiChat {...aiChatProps} />
+                <AiChat {...aiChatProps} key={chatId} />
               )
             case 'error':
               return (

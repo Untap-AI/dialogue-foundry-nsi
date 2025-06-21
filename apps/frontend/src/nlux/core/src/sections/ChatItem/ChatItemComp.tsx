@@ -86,8 +86,6 @@ export const ChatItemComp: <AiMsg>(
     : compMessageDirectionClassName['received']
   const messageClassName = `${compMessageClassName} ${messageStatusClassName} ${messageDirectionClassName}`
 
-  console.log(props.events)
-
   return (
     <div className={containerClassName}>
       <ParticipantInfo />

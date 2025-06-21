@@ -54,8 +54,6 @@ export const ConversationComp: ConversationCompType = function <AiMsg>(
     []
   )
 
-  console.log(props.events)
-
   return (
     <div className="nlux-chatSegments-container">
       {segments.map((segment, index) => {

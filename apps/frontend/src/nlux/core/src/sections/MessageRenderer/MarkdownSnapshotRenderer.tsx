@@ -5,6 +5,7 @@ import { warn } from '../../../../shared/utils/warn'
 import { attachCopyClickListener } from '../../../../shared/markdown/copyToClipboard/attachCopyClickListener'
 import type { FocusEvent, KeyboardEvent, PropsWithChildren } from 'react'
 import type { SnapshotParserOptions } from '../../../../shared/types/markdown/snapshotParser'
+import { logger } from '../../../../../services/logger'
 
 type MarkdownSnapshotRendererProps = {
   messageUid: string
@@ -156,6 +157,10 @@ class MarkdownParserErrorBoundary extends Component<
         'or it could be because the page requires an HTML sanitizer. Please check the error message ' +
         'for more details and consider configuring NLUX with a compatible sanitizer.'
     )
+
+    logger.error('Markdown rendering error', {
+      error: errorInfo,
+    })
 
     if (this.props.onMarkdownRenderingError) {
       this.props.onMarkdownRenderingError(errorInfo)

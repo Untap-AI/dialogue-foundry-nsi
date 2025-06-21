@@ -18,7 +18,7 @@
     "publish-package": "node ../../packages/deploy-s3/dist/version-based-deploy.js --package ./package.json --source ./dist --bucket dialogue-foundry-frontend"
   },
   "dependencies": {
-    "@nlux/react": "^2",
+    "@nlux/core": "^2",
     "@nlux/themes": "^2",
     "@sentry/browser": "^9.12.0",
     "@sentry/react": "^9.12.0",

@@ -1,4 +1,4 @@
-import { AiChatProps } from '@nlux/react'
+import { AiChatProps } from '../../exports/props'
 import type { ChatSegment } from '../../../../shared/types/chatSegment/chatSegment'
 import type { MarkdownContainersController } from '../../exports/hooks/usMarkdownContainers'
 import type { MessageOptions } from '../../exports/messageOptions'

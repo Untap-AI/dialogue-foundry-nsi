@@ -145,6 +145,7 @@ const handleEmailDetectionFunctionCall = async (
   if (functionCall.name === 'request_user_email') {
     // Emit the special event to trigger email input UI
     if (onSpecialEvent && functionCall.arguments) {
+      console.log('functionCall', functionCall)
       const args = JSON.parse(functionCall.arguments)
       onSpecialEvent({
         type: 'request_email',
