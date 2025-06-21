@@ -32,6 +32,7 @@ export type ChatSettings = {
   companyId: string
   enableEmailFunction?: boolean
   timezone?: string
+  hasUserEmail?: boolean
 }
 
 // Default settings to use if none are provided
@@ -80,7 +81,12 @@ export const generateStreamingChatCompletion = async (
       MAX_MESSAGES_PER_CHAT
     )
 
-    const systemPromptWithCurrentDate = `Respond using Markdown formatting for headings, lists, and emphasis for all answers.\n\n${settings.systemPrompt}\n\nThe current date and time is ${new Date().toLocaleString(
+    // Add email status information to system prompt if applicable
+    const emailStatusInfo = settings.hasUserEmail 
+      ? '\n\nIMPORTANT: The user has already provided their email address for this conversation. Do not ask for their email again or suggest providing contact information.'
+      : ''
+
+    const systemPromptWithCurrentDate = `Respond using Markdown formatting for headings, lists, and emphasis for all answers.\n\n${settings.systemPrompt}${emailStatusInfo}\n\nThe current date and time is ${new Date().toLocaleString(
       'en-US',
       {
         weekday: 'long',
@@ -145,7 +151,6 @@ const handleEmailDetectionFunctionCall = async (
   if (functionCall.name === 'request_user_email') {
     // Emit the special event to trigger email input UI
     if (onSpecialEvent && functionCall.arguments) {
-      console.log('functionCall', functionCall)
       const args = JSON.parse(functionCall.arguments)
       onSpecialEvent({
         type: 'request_email',

@@ -431,7 +431,8 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       // Pass company ID and support email if available
       companyId,
       enableEmailFunction: Boolean(chatConfig?.support_email) && !hasUserEmail,
-      timezone
+      timezone,
+      hasUserEmail
     }
 
     // Get all previous messages in this chat
