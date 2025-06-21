@@ -15,6 +15,7 @@ import {
 } from '../db/messages'
 import {
   generateStreamingChatCompletion,
+  detectEmailRequest,
   DEFAULT_SETTINGS
 } from '../services/openai-service'
 import { generateChatAccessToken } from '../lib/jwt-utils'
@@ -491,20 +492,13 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       }
     }
 
-    // Generate streaming response from OpenAI
+    // Generate streaming response from OpenAI (main content generation)
     let aiResponseContent
     try {
       aiResponseContent = await generateStreamingChatCompletion(
         openaiMessages,
         chatSettings,
-        onChunk,
-        event => {
-          console.log('event', event)
-          if (!res.writableEnded) {
-            res.write(`data: ${JSON.stringify(event)}\n\n`)
-            res.flushHeaders()
-          }
-        }
+        onChunk
       )
     } catch (streamError) {
       logger.error('Error in streaming chat completion', {
@@ -515,6 +509,7 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       throw streamError
     }
 
+    // Save the assistant's response to the database
     await createMessageAdmin({
       chat_id: chatId,
       user_id: userId,
@@ -523,6 +518,30 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       role: 'assistant',
       sequence_number: nextSequenceNumber + 1
     })
+
+    // After main streaming is complete, run email detection using smaller LLM
+    try {
+      if (aiResponseContent) {
+        await detectEmailRequest(
+          aiResponseContent,
+          openaiMessages,
+          chatSettings,
+          event => {
+            console.log('Email detection event:', event)
+            if (!res.writableEnded) {
+              res.write(`data: ${JSON.stringify(event)}\n\n`)
+              res.flushHeaders()
+            }
+          }
+        )
+      }
+    } catch (emailDetectionError) {
+      logger.warn('Error in email detection (non-critical)', {
+        error: emailDetectionError as Error,
+        chatId
+      })
+      // Don't throw - email detection failure shouldn't break the main flow
+    }
 
     // Send a completion message
     if (!res.writableEnded) {
