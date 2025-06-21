@@ -125,6 +125,7 @@ export type Database = {
           messages_count: number | null
           name: string
           updated_at: string | null
+          user_email: string | null
           user_id: string
         }
         Insert: {
@@ -134,6 +135,7 @@ export type Database = {
           messages_count?: number | null
           name: string
           updated_at?: string | null
+          user_email?: string | null
           user_id: string
         }
         Update: {
@@ -143,6 +145,7 @@ export type Database = {
           messages_count?: number | null
           name?: string
           updated_at?: string | null
+          user_email?: string | null
           user_id?: string
         }
         Relationships: [

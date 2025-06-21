@@ -6,7 +6,8 @@ import {
   updateChat,
   deleteChat,
   createChatAdmin,
-  getChatsByCompanyId
+  getChatsByCompanyId,
+  updateChatUserEmailAdmin
 } from '../db/chats'
 import {
   getMessagesByChatId,
@@ -286,6 +287,22 @@ router.post('/:chatId/send-email', authenticateChatAccess, async (req, res) => {
     })
 
     if (emailSent) {
+      // Store the user's email in the chat record for future reference
+      try {
+        const updatedChat = await updateChatUserEmailAdmin(chatId, userEmail)
+        // Update the cached chat with the new email
+        if (updatedChat) {
+          cacheService.setChat(chatId, updatedChat)
+        }
+      } catch (emailUpdateError) {
+        // Log the error but don't fail the request since the email was sent successfully
+        logger.error('Error updating chat with user email', {
+          error: emailUpdateError as Error,
+          chatId,
+          userEmail
+        })
+      }
+      
       return res.json({ success: true })
     } else {
       return res.status(500).json({ error: 'Failed to send email' })
@@ -405,12 +422,15 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     }
 
     // Get chat settings - using request parameters, chat config, or defaults
+    // Check if user has already provided their email to avoid requesting it again
+    const hasUserEmail = Boolean(chat.user_email)
+    
     const chatSettings: ChatSettings = {
       ...DEFAULT_SETTINGS,
       systemPrompt: chatConfig.system_prompt,
       // Pass company ID and support email if available
       companyId,
-      enableEmailFunction: Boolean(chatConfig?.support_email),
+      enableEmailFunction: Boolean(chatConfig?.support_email) && !hasUserEmail,
       timezone
     }
 
