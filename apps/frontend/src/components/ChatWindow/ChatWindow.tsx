@@ -7,7 +7,6 @@ import type { ChatItem } from '@nlux/react'
 
 interface ChatWindowProps {
   isOpen: boolean
-  isClosing: boolean
   onClose: () => void
   onNewChat: () => void
   chatId: string | undefined
@@ -16,20 +15,17 @@ interface ChatWindowProps {
 }
 
 export const ChatWindow = forwardRef<HTMLDivElement, ChatWindowProps>(
-  ({ isOpen, isClosing, onClose, onNewChat, ...propDrop }, ref) => {
+  ({ isOpen, onClose, onNewChat, ...propDrop }, ref) => {
     // Generate CSS class names based on component state
     const className = useMemo(() => {
       const baseClass = 'chat-window'
-      let stateClass = 'is-closed'
 
-      if (isClosing) {
-        stateClass = 'is-closing'
-      } else if (isOpen) {
-        stateClass = 'is-open'
+      if (isOpen) {
+        return `${baseClass} is-open`
       }
 
-      return `${baseClass} ${stateClass}`
-    }, [isClosing, isOpen])
+      return `${baseClass} is-closed`
+    }, [isOpen])
 
     return (
       <div ref={ref} className={className} aria-hidden={!isOpen}>

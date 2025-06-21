@@ -9,7 +9,7 @@ const JWT_SECRET =
   'super-secret-jwt-token-with-at-least-32-characters-long'
 const TOKEN_EXPIRY = process.env.JWT_EXPIRY
   ? parseInt(process.env.JWT_EXPIRY)
-  : 86400 * 30 // 30 days in seconds
+  : 86400 * 0.5 // 30 days in seconds
 
 // Admin-specific JWT settings
 const ADMIN_JWT_SECRET =

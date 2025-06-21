@@ -400,10 +400,7 @@ export class ChatApiService {
   /**
    * Record an analytics event - tries sendBeacon first, falls back to regular POST
    */
-  async recordAnalyticsEvent(
-    eventType: string,
-    eventData: Record<string, any> = {}
-  ): Promise<void> {
+  async recordAnalyticsEvent(eventType: string, eventData: Record<string, any> = {}, messageId?: string): Promise<void> {
     // Capture all required values immediately to avoid issues during page unload
     const chatId = this.storage.getItem(this.chatIdStorageKey)
     const userId = this.storage.getItem(this.userIdStorageKey)
@@ -429,23 +426,14 @@ export class ChatApiService {
 
     const analyticsPayload = {
       chat_id: chatId,
-      message_id: eventData.messageId || undefined,
+      message_id: messageId,
       user_id: userId,
       company_id: this.companyId,
       event_type: eventType,
-      event_data: {
-        url: eventData.url,
-        link_text: eventData.linkText
-      },
+      event_data: eventData,
       user_agent: navigator.userAgent,
       referrer: document.referrer
     }
-
-    console.log('Sending analytics event:', {
-      eventType,
-      url: eventData.url,
-      method: 'attempting sendBeacon first'
-    })
 
     // Try sendBeacon first if available (for better reliability during page unload)
     if (typeof navigator.sendBeacon === 'function') {
@@ -506,7 +494,17 @@ export class ChatApiService {
     await this.recordAnalyticsEvent('link_click', {
       url,
       linkText,
-      messageId
+    }, messageId)
+  }
+
+  /**
+   * Record a conversation starter click event
+   */
+  async recordConversationStarterClick(label: string, position: number, prompt?: string): Promise<void> {
+    await this.recordAnalyticsEvent('conversation_starter_click', {
+      label,
+      position,
+      prompt
     })
   }
 

@@ -3,6 +3,7 @@ import { AiChat, useAiChatApi, useAsStreamAdapter } from '../../nlux'
 import { useConfig } from '../../contexts/ConfigContext'
 import '@nlux/themes/unstyled.css'
 import './ChatInterface.css'
+import { useResizeObserver } from '../../hooks/useResizeObserver'
 
 import { ChatStreamingService } from '../../services/streaming'
 import { ChatApiService } from '../../services/api'
@@ -37,7 +38,7 @@ export const ChatInterface = ({
   className,
   chatId,
   initialConversation,
-  chatStatus
+  chatStatus,
 }: ChatInterfaceProps) => {
   // Get config from context
   const {

@@ -1,5 +1,113 @@
 # @dialogue-foundry/frontend
 
+## 0.2.63
+
+### Patch Changes
+
+- conversation starter index + 1
+
+## 0.2.62
+
+### Patch Changes
+
+- conversation starter analytics
+
+## 0.2.61
+
+### Patch Changes
+
+- No button padding
+
+## 0.2.60
+
+### Patch Changes
+
+- list style
+
+## 0.2.59
+
+### Patch Changes
+
+- List formatting
+
+## 0.2.58
+
+### Patch Changes
+
+- Even smaller
+
+## 0.2.57
+
+### Patch Changes
+
+- Reduce h1 size
+
+## 0.2.56
+
+### Patch Changes
+
+- headings
+
+## 0.2.55
+
+### Patch Changes
+
+- Make button height
+
+## 0.2.54
+
+### Patch Changes
+
+- Safety window
+
+## 0.2.53
+
+### Patch Changes
+
+- Try use navigation events
+
+## 0.2.52
+
+### Patch Changes
+
+- More debugging
+
+## 0.2.51
+
+### Patch Changes
+
+- Fix open on load race condition
+
+## 0.2.50
+
+### Patch Changes
+
+- Route change listener
+
+## 0.2.49
+
+### Patch Changes
+
+- Close on mobile link
+
+## 0.2.48
+
+### Patch Changes
+
+- Open on load mobile
+
+## 0.2.47
+
+### Patch Changes
+
+- Fix link tag value
+
+## 0.2.46
+
+### Patch Changes
+
+- Keep widget closed if customer closed it
+
 ## 0.2.45
 
 ### Patch Changes

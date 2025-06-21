@@ -7,13 +7,14 @@ import './ChatWidget.css'
 import { useChatScroll } from '../../hooks/useChatScroll'
 import { useConfig } from '../../contexts/ConfigContext'
 import { ChatApiService } from '../../services/api'
-import { run } from '../../utils/run'
 import type { ChatItem } from '@nlux/react'
+import { useNavigationEvents } from '../../hooks/useNavigationEvents'
 
 export type ChatStatus = 'uninitialized' | 'loading' | 'initialized' | 'error'
 
+const LOCAL_STORAGE_KEY = 'chatWidgetIsOpen'
+
 export const ChatWidget = () => {
-  const [isClosing, setIsClosing] = useState(false)
   const [chatId, setChatId] = useState<string | undefined>(undefined)
   const [initialConversation, setInitialConversation] = useState<
     ChatItem[] | undefined
@@ -28,44 +29,72 @@ export const ChatWidget = () => {
   // Determine if mobile based on current width
   const isMobile = width <= 768
 
-  const [isOpen, setIsOpen] = useState(
-    run(() => {
-      switch (openOnLoad) {
-        case 'all':
-          return true
-        case 'desktop-only':
-          return !isMobile
-        case 'mobile-only':
-          return isMobile
-        case 'none':
-        case undefined:
-          return false
+  const [isOpen, setIsOpen] = useState(false)
+
+  // On mount, set isOpen based on openOnLoad, isMobile, and localStorage
+  useEffect(() => {
+      let shouldOpen = false
+      if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+        switch (openOnLoad) {
+          case 'all':
+            shouldOpen = true
+            break
+          case 'desktop-only':
+            shouldOpen = false
+            break
+          case 'mobile-only':
+            shouldOpen = true
+            break
+          case 'none':
+          case undefined:
+            shouldOpen = false
+            break
+        }
+      } else {
+        const stored = localStorage.getItem(LOCAL_STORAGE_KEY)
+        if (stored === 'true') shouldOpen = true
+        else if (stored === 'false') shouldOpen = false
+        else {
+          switch (openOnLoad) {
+            case 'all':
+              shouldOpen = true
+              break
+            case 'desktop-only':
+              shouldOpen = true
+              break
+            case 'mobile-only':
+              shouldOpen = false
+              break
+            case 'none':
+            case undefined:
+              shouldOpen = false
+              break
+          }
+        }
       }
-    })
-  )
+      setIsOpen(shouldOpen)
+    // Only run on mount and when isMobile or openOnLoad changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [openOnLoad])
 
   // eslint-disable-next-line no-null/no-null
   const chatWindowRef = useRef<HTMLDivElement | null>(null)
 
   const toggleChat = useCallback(() => {
-    if (isOpen) {
-      // For desktop view, start closing animation
-      if (!isMobile) {
-        setIsClosing(true)
+    setIsOpen(prev => {
+      const newState = !prev
 
-        // After animation complete, set isOpen to false
-        setTimeout(() => {
-          setIsOpen(false)
-          setIsClosing(false)
-        }, 400)
-      } else {
-        // For mobile, just close immediately (modal handles animation)
-        setIsOpen(false)
-      }
-    } else {
-      setIsOpen(true)
+      localStorage.setItem(LOCAL_STORAGE_KEY, newState ? 'true' : 'false')
+
+      return newState
+    })
+  }, [])
+
+  useNavigationEvents(() => {
+    if (typeof window !== 'undefined' && window.innerWidth <= 768) {
+      setIsOpen(false)
     }
-  }, [isOpen, isMobile])
+  })
 
   // Handle clicking outside to close chat (desktop only)
   useEffect(() => {
@@ -176,7 +205,6 @@ export const ChatWidget = () => {
         <ChatWindow
           ref={chatWindowRef}
           isOpen={isOpen}
-          isClosing={isClosing}
           onClose={toggleChat}
           onNewChat={createNewChat}
           chatId={chatId}
