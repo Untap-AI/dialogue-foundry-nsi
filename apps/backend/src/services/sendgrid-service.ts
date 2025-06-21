@@ -142,7 +142,7 @@ export const sendInquiryEmail = async (
       templateId,
       dynamicTemplateData: {
         subject: emailData.subject,
-        conversationSummary: stripMarkdown(emailData.conversationSummary), // Also strip markdown from summary
+        conversationSummary: emailData.conversationSummary,
         chatHistory,
         userEmail: emailData.userEmail,
         date: new Date().toLocaleDateString('en-US', {

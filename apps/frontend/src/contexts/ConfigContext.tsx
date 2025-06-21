@@ -65,7 +65,7 @@ const defaultConfig: DialogueFoundryConfig = {
     {
       label: 'Contact',
       prompt: 'How can I contact Keystone Coachworks?'
-    }
+    },
   ]
 }
 

@@ -155,7 +155,6 @@ export const ChatInterface = ({
   const handleMessageSent = () => {
     // Clear pending email input flag when new message is sent
     pendingEmailInput.current = false
-    setEmailRequestDetails(null)
     
     // Remove the conversation starters container
     const startersContainer = document.querySelectorAll(
