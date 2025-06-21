@@ -215,21 +215,33 @@ export const ChatInterface = ({
   }
 
   // Handler for submitting email
-  const handleEmailSubmitted = async (email: string) => {
-    if (!chatId) return
+  const handleEmailSubmitted = async (email: string): Promise<{ success: boolean; error?: string }> => {
+    if (!chatId) {
+      return { success: false, error: 'No chat session available' }
+    }
 
-    // Use the stored email request details from the LLM or fallback to empty strings
-    const subject = emailRequestDetails?.subject || ''
-    const conversationSummary = emailRequestDetails?.conversationSummary || ''
+    try {
+      // Use the stored email request details from the LLM or fallback to empty strings
+      const subject = emailRequestDetails?.subject || ''
+      const conversationSummary = emailRequestDetails?.conversationSummary || ''
 
-    await analyticsService.sendEmailRequest(chatId, {
-      userEmail: email,
-      subject,
-      conversationSummary
-    })
+      const result = await analyticsService.sendEmailRequest(chatId, {
+        userEmail: email,
+        subject,
+        conversationSummary
+      })
 
-    // Clear the stored email request details after use
-    setEmailRequestDetails(null)
+      // Clear the stored email request details after use
+      setEmailRequestDetails(null)
+
+      return result
+    } catch (error) {
+      console.error('Error submitting email:', error)
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'An unexpected error occurred' 
+      }
+    }
   }
 
   // Pass email input handlers and state to AiChat

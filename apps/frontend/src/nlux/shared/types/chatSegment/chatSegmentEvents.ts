@@ -76,7 +76,7 @@ export type ChatSegmentErrorCallback = (
   errorObject?: Error
 ) => void
 
-export type EmailSubmittedCallback = (email: string) => void
+export type EmailSubmittedCallback = (email: string) => Promise<{ success: boolean; error?: string }>
 
 //
 // Check that the ChatSegmentEventsMap type always satisfies Record<ChatSegmentEvent, function>

@@ -7,13 +7,17 @@ interface EmailInputChatItemProps {
   onSubmit: EmailSubmittedCallback
 }
 
+// Define the possible states for the email input
+type EmailInputState = 'idle' | 'loading' | 'success' | 'error'
+
 export const EmailInputChatItem: React.FC<EmailInputChatItemProps> = ({
   onSubmit
 }) => {
   const [email, setEmail] = useState('')
-  const [submitted, setSubmitted] = useState(false)
+  const [state, setState] = useState<EmailInputState>('idle')
   const [isVisible, setIsVisible] = useState(false)
-  const [error, setError] = useState('')
+  const [validationError, setValidationError] = useState('')
+  const [submitError, setSubmitError] = useState('')
 
   // Trigger fade-in animation on mount
   useEffect(() => {
@@ -24,38 +28,73 @@ export const EmailInputChatItem: React.FC<EmailInputChatItemProps> = ({
   const isValidEmail = (val: string) =>
     /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (isValidEmail(email)) {
-      onSubmit(email)
-      setSubmitted(true)
+    
+    if (!isValidEmail(email)) {
+      setValidationError('Please enter a valid email address')
+      return
+    }
+
+    // Clear any previous errors
+    setValidationError('')
+    setSubmitError('')
+    
+    // Set loading state
+    setState('loading')
+
+    try {
+      // Call the async onSubmit callback
+      const result = await onSubmit(email)
+      
+      if (result.success) {
+        setState('success')
+      } else {
+        setState('error')
+        setSubmitError(result.error || 'Failed to send email. Please try again.')
+      }
+    } catch (error) {
+      setState('error')
+      setSubmitError('An unexpected error occurred. Please try again.')
+      console.error('Email submission error:', error)
     }
   }
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && isValidEmail(email)) {
+    if (e.key === 'Enter' && isValidEmail(email) && state !== 'loading') {
       handleSubmit(e)
     }
   }
 
   const handleBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     if (e.target.value && !isValidEmail(e.target.value)) {
-      setError('Please enter a valid email address')
+      setValidationError('Please enter a valid email address')
     } else {
-      setError('')
+      setValidationError('')
     }
   }
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setEmail(e.target.value)
-
-    setError('')
+    setValidationError('')
+    
+    // Clear submit error when user starts typing again
+    if (submitError) {
+      setSubmitError('')
+    }
   }
 
+  const handleRetry = () => {
+    setState('idle')
+    setSubmitError('')
+  }
+
+  // Determine if form should be disabled
+  const isFormDisabled = state === 'loading' || state === 'success'
 
   return (
     <div className={`email-input-container ${isVisible ? 'email-input-visible' : ''}`}>
-      {submitted ? (
+      {state === 'success' ? (
         <div className="email-success-container">
           <div className="email-success-icon">
             <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -87,26 +126,47 @@ export const EmailInputChatItem: React.FC<EmailInputChatItemProps> = ({
               <input
                 id="email-input"
                 type="email"
-                className={`email-input-field ${Boolean(error) ? 'email-input-error' : ''}`}
+                className={`email-input-field ${Boolean(validationError) ? 'email-input-error' : ''}`}
                 placeholder="your@email.com"
                 value={email}
                 onChange={handleChange}
                 onKeyPress={handleKeyPress}
                 onBlur={handleBlur}
                 autoComplete="email"
+                disabled={isFormDisabled}
                 required
               />
               <button
                 type="submit"
-                disabled={!isValidEmail(email)}
-                className="email-send-button"
-                aria-label="Send email"
+                disabled={!isValidEmail(email) || isFormDisabled}
+                className={`email-send-button ${state === 'loading' ? 'email-send-button-loading' : ''}`}
+                aria-label={state === 'loading' ? 'Sending email...' : 'Send email'}
               >
-                <EmailSendIcon />
+                {state === 'loading' ? (
+                  <div className="email-loading-spinner" />
+                ) : (
+                  <EmailSendIcon />
+                )}
               </button>
             </div>
-            {error && (
-              <p className="email-error-message">{error}</p>
+            
+            {/* Show validation error */}
+            {validationError && (
+              <p className="email-error-message">{validationError}</p>
+            )}
+            
+            {/* Show submit error with retry option */}
+            {state === 'error' && submitError && (
+              <div className="email-submit-error">
+                <p className="email-error-message">{submitError}</p>
+                <button
+                  type="button"
+                  onClick={handleRetry}
+                  className="email-retry-button"
+                >
+                  Try again
+                </button>
+              </div>
             )}
           </form>
         </div>

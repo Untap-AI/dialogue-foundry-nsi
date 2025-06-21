@@ -101,6 +101,22 @@
   color: #dc2626;
 }
 
+#dialogue-foundry-app .email-input-field:disabled {
+  background: #f3f4f6;
+  color: #9ca3af;
+  cursor: not-allowed;
+}
+
+#dialogue-foundry-app .email-input-wrapper:has(.email-input-field:disabled) {
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+}
+
+#dialogue-foundry-app .email-input-wrapper:has(.email-input-field:disabled):hover {
+  background: #f3f4f6;
+  border-color: #e5e7eb;
+}
+
 /* Send button */
 #dialogue-foundry-app .email-send-button {
   background: #3b82f6;
@@ -132,6 +148,16 @@
   transform: none;
 }
 
+/* Loading state for send button */
+#dialogue-foundry-app .email-send-button-loading {
+  background: #3b82f6;
+  cursor: not-allowed;
+}
+
+#dialogue-foundry-app .email-send-button-loading:hover {
+  background: #3b82f6;
+}
+
 /* Send icon styling */
 #dialogue-foundry-app .email-send-button .email-send-icon {
   width: 14px;
@@ -150,6 +176,58 @@
   font-size: 0.8rem;
   color: #dc2626;
   font-weight: 500;
+}
+
+/* Loading spinner */
+#dialogue-foundry-app .email-loading-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: white;
+  animation: emailSpinnerRotate 0.8s linear infinite;
+}
+
+@keyframes emailSpinnerRotate {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Submit error container */
+#dialogue-foundry-app .email-submit-error {
+  margin-top: 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+#dialogue-foundry-app .email-submit-error .email-error-message {
+  margin: 0;
+  flex: 1;
+}
+
+/* Retry button */
+#dialogue-foundry-app .email-retry-button {
+  background: transparent;
+  color: #3b82f6;
+  border: 1px solid #3b82f6;
+  border-radius: 6px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+#dialogue-foundry-app .email-retry-button:hover {
+  background: #3b82f6;
+  color: white;
+}
+
+#dialogue-foundry-app .email-retry-button:active {
+  transform: translateY(1px);
 }
 
 /* Success state */
@@ -264,6 +342,16 @@
   #dialogue-foundry-app .email-success-icon svg {
     width: 16px;
     height: 16px;
+  }
+  
+  #dialogue-foundry-app .email-submit-error {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0.5rem;
+  }
+  
+  #dialogue-foundry-app .email-retry-button {
+    align-self: flex-start;
   }
 }
 
