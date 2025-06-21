@@ -93,7 +93,13 @@ export const ChatItemComp: <AiMsg>(
       {props.contentType === 'email_input' ? (
         <div className={messageClassName} style={{ width: '100%' }}>
           <EmailInputChatItem
-            onSubmit={(email: string) => props.events?.emailSubmitted?.(email)}
+            onSubmit={async (email: string) => {
+              if (props.events?.emailSubmitted) {
+                return await props.events.emailSubmitted(email)
+              }
+              
+              return { success: false, error: 'Email submission not configured' }
+            }}
           />
         </div>
       ) : (

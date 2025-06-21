@@ -390,9 +390,13 @@ export const useSubmitPromptHandler = <AiMsg>(
       }
     })
 
-    chatSegmentObservable.on('emailSubmitted', email => {
+    chatSegmentObservable.on('emailSubmitted', async email => {
       if (callbackEvents.current?.emailSubmitted) {
-        callbackEvents.current.emailSubmitted(email)
+        try {
+          await callbackEvents.current.emailSubmitted(email)
+        } catch (error) {
+          console.error('Error in email submission callback:', error)
+        }
       }
     })
 
