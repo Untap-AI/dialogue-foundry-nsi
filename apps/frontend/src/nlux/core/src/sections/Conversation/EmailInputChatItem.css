@@ -1,81 +1,290 @@
-.email-input-chat-item-container {
-  display: flex;
+/* Main container with fade-in animation */
+#dialogue-foundry-app .email-input-container {
   width: 100%;
-  justify-content: flex-start;
-  align-items: center;
-  font-family: var(--df-font-family);
+  max-width: 420px;
+  margin: 0.5rem 0;
+  font-family: var(--df-font-family, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif);
+  
+  /* Initial state - hidden */
+  opacity: 0;
+  transform: translateY(16px);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.email-input {
-  border-radius: 0.5rem;
-  border: 1px solid var(--df-border-color);
-  padding: 0.5rem 0.75rem;
-  font-size: 0.875rem;
-  outline: none;
-  background: var(--df-bg-primary);
-  color: var(--df-text-primary);
-  margin-right: 0.5rem;
-  transition: border-color 0.2s, box-shadow 0.2s;
-  display: flex;
-  flex-grow: 1;
+/* Visible state with smooth animation */
+#dialogue-foundry-app .email-input-container.email-input-visible {
+  opacity: 1;
+  transform: translateY(0);
 }
 
-.email-input:focus {
-  border-color: var(--df-primary-color);
-  box-shadow: 0 0 0 2px black;
+/* Email input form styling */
+#dialogue-foundry-app .email-input-form {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  position: relative;
 }
 
-.email-send-button {
-  background: var(--df-bg-secondary);
-  color: var(--df-text-contrast);
-  font-size: var(--df-font-size-base);
+/* Header section */
+#dialogue-foundry-app .email-input-header {
+  margin-bottom: 1rem;
+  text-align: left;
+}
+
+#dialogue-foundry-app .email-input-title {
+  font-size: 1rem;
   font-weight: 600;
-  border-radius: 50%;
-  fill: var(--df-text-contrast);
-  padding: 0;
+  color: #1f2937;
+  margin: 0 0 0.25rem 0;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+}
+
+#dialogue-foundry-app .email-input-subtitle {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+/* Form container */
+#dialogue-foundry-app .email-input-field-container {
+  width: 100%;
+}
+
+/* Input wrapper for seamless input+button design */
+#dialogue-foundry-app .email-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+#dialogue-foundry-app .email-input-wrapper:hover {
+  border-color: #d1d5db;
+  background: #ffffff;
+}
+
+#dialogue-foundry-app .email-input-wrapper:focus-within {
+  border-color: #3b82f6;
+  background: #ffffff;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+/* Email input field */
+#dialogue-foundry-app .email-input-field {
+  flex: 1;
+  padding: 0.75rem 0rem 0.75rem 0.75rem;
   border: none;
+  outline: none;
+  font-size: 0.9rem;
+  font-weight: 400;
+  color: #1f2937;
+  background: transparent;
+  line-height: 1.4;
+  min-height: 44px;
+}
+
+#dialogue-foundry-app .email-input-field::placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+}
+
+#dialogue-foundry-app .email-input-field.email-input-error {
+  color: #dc2626;
+}
+
+/* Send button */
+#dialogue-foundry-app .email-send-button {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding-inline: 0.35rem;
   cursor: pointer;
   outline: none;
-  transition: background 0.2s, opacity 0.2s;
-  height: 100%;
+  transition: all 0.2s ease;
   display: flex;
   align-items: center;
   justify-content: center;
+  height: auto;
+  border-radius: 0 6px 6px 0;
+  flex-shrink: 0;
 }
 
-.email-send-button:hover:not(:disabled) {
-  background: var(--df-bg-secondary);
+#dialogue-foundry-app .email-send-button:hover:not(:disabled) {
+  background: #2563eb;
 }
 
-.email-send-button:disabled {
+#dialogue-foundry-app .email-send-button:active:not(:disabled) {
+  transform: translateY(1px);
+}
+
+#dialogue-foundry-app .email-send-button:disabled {
+  background: #d1d5db;
   cursor: not-allowed;
-  background: var(--df-disabled);
+  transform: none;
 }
 
-.email-send-button .nlux-comp-sendIcon {
-  width: 24px;
-  height: 24px;
-  fill: var(--df-text-contrast);
-  display: inline-block;
+/* Send icon styling */
+#dialogue-foundry-app .email-send-button .email-send-icon {
+  width: 14px;
+  height: 14px;
+  color: currentColor;
+  stroke: currentColor;
 }
 
-.email-send-button .nlux-comp-sendIcon-container {
-  width: 24px;
-  height: 24px;
-  fill: var(--df-text-primary);
-  color: var(--df-text-primary);
-  display: inline-block;
-    width: 100%;
-    background-color: currentColor;
-    background-repeat: no-repeat;
-    background-size: contain;
-    mask: var(--nlux-send-icon);
-    aspect-ratio: 1;
+#dialogue-foundry-app .email-send-button .email-send-icon path {
+  stroke: currentColor;
 }
 
-.email-input-submitted {
-  color: var(--df-text-primary);
-  font-size: 0.875rem;
+/* Error message */
+#dialogue-foundry-app .email-error-message {
+  margin: 0.5rem 0 0 0;
+  font-size: 0.8rem;
+  color: #dc2626;
+  font-weight: 500;
+}
+
+/* Success state */
+#dialogue-foundry-app .email-success-container {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 1rem;
+  animation: successSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+}
+
+@keyframes successSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+#dialogue-foundry-app .email-success-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  background: #10b981;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  animation: successIconBounce 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) 0.1s both;
+}
+
+@keyframes successIconBounce {
+  from {
+    opacity: 0;
+    transform: scale(0);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+#dialogue-foundry-app .email-success-icon svg {
+  width: 18px;
+  height: 18px;
+}
+
+#dialogue-foundry-app .email-success-content {
+  flex: 1;
+  min-width: 0;
+}
+
+#dialogue-foundry-app .email-success-title {
+  font-size: 0.9rem;
   font-weight: 600;
-  margin-right: 0.5rem;
+  color: #1f2937;
+  margin: 0 0 0.25rem 0;
+  line-height: 1.3;
+}
+
+#dialogue-foundry-app .email-success-subtitle {
+  font-size: 0.8rem;
+  color: #6b7280;
+  margin: 0;
+  line-height: 1.4;
+  font-weight: 400;
+}
+
+#dialogue-foundry-app .email-success-subtitle strong {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+/* Responsive design */
+@media (max-width: 480px) {
+  #dialogue-foundry-app .email-input-form,
+  #dialogue-foundry-app .email-success-container {
+    padding: 1rem;
+    border-radius: 10px;
+  }
+  
+  #dialogue-foundry-app .email-input-title {
+    font-size: 0.95rem;
+  }
+  
+  #dialogue-foundry-app .email-input-field {
+    padding: 0.625rem 0 0.625rem 0.625rem;
+    font-size: 0.875rem;
+  }
+  
+  #dialogue-foundry-app .email-send-button {
+    min-width: 40px;
+  }
+  
+  #dialogue-foundry-app .email-success-container {
+    gap: 0.625rem;
+  }
+  
+  #dialogue-foundry-app .email-success-icon {
+    width: 28px;
+    height: 28px;
+  }
+  
+  #dialogue-foundry-app .email-success-icon svg {
+    width: 16px;
+    height: 16px;
+  }
+}
+
+/* Ensure proper contrast in all scenarios */
+#dialogue-foundry-app .email-input-container * {
+  box-sizing: border-box;
+}
+
+/* Force text colors for better visibility */
+#dialogue-foundry-app .email-input-form .email-input-title {
+  color: #1f2937 !important;
+}
+
+#dialogue-foundry-app .email-input-form .email-input-subtitle {
+  color: #6b7280 !important;
+}
+
+#dialogue-foundry-app .email-input-field {
+  color: #1f2937 !important;
+}
+
+#dialogue-foundry-app .email-input-field::placeholder {
+  color: #9ca3af !important;
 }
