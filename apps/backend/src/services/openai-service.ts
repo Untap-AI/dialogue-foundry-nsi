@@ -179,7 +179,7 @@ const requestUserEmailTool = {
   type: 'function',
   name: 'request_user_email',
   description:
-    'Analyze the assistant\'s response and recent conversation context to determine if the assistant is requesting the user\'s email address or contact information. If the assistant asked for or requested the user\'s email address or contact information you should call the request_user_email function.',
+    'Analyze the assistant\'s response to determine if the assistant is requesting the user\'s email address or contact information. If the assistant asked for or requested the user\'s email address or contact information you should call the request_user_email function.',
   parameters: {
     type: 'object',
     properties: {
@@ -204,7 +204,6 @@ const requestUserEmailTool = {
  */
 export const detectEmailRequest = async (
   assistantResponse: string,
-  conversationContext: Message[],
   settings: ChatSettings,
   onSpecialEvent?: (event: any) => void
 ): Promise<void> => {
@@ -221,15 +220,9 @@ export const detectEmailRequest = async (
 
   try {
     // Create a focused prompt for email detection
-    const emailDetectionPrompt = `You are an email request detection system. Your job is to analyze an assistant's response and determine if the assistant asked the user for their email address or contact information.
+    const emailDetectionPrompt = `You are an email request detection system. Your job is to analyze an assistant's latest response and determine if the assistant asked the user for their email address or contact information.
 
 Analyze the following assistant response and recent conversation context to determine if the assistant is requesting the user's email.
-
-Recent conversation context:
-${conversationContext
-  .slice(-5) // Last 5 messages for context
-  .map(msg => `${msg.role}: ${msg.content}`)
-  .join('\n')}
 
 Assistant's latest response:
 ${assistantResponse}
@@ -251,7 +244,7 @@ Only call the function if you are confident the assistant explicitly asked the u
         }
       ],
       temperature: EMAIL_DETECTION_TEMPERATURE,
-      instructions: 'You are a precise email request detection system. Only call the function when you are certain the assistant requested contact information.',
+      instructions: 'You are a precise email request detection system. Only call the function when you are certain the assistant requested the user\'s email address.',
       tools: [requestUserEmailTool]
     } as const satisfies ResponseCreateParams
 

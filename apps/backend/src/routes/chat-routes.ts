@@ -545,7 +545,6 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       if (aiResponseContent) {
         await detectEmailRequest(
           aiResponseContent,
-          openaiMessages,
           chatSettings,
           event => {
             if (!res.writableEnded) {
