@@ -171,25 +171,25 @@ const handleEmailDetectionFunctionCall = async (
 }
 
 // Email detection model settings
-const EMAIL_DETECTION_MODEL = 'gpt-4.1-nano'
-const EMAIL_DETECTION_TEMPERATURE = 0.1
+const EMAIL_DETECTION_MODEL = 'gpt-4.1-mini'
+const EMAIL_DETECTION_TEMPERATURE = 0.3
 
 // Tool definition for the email detection LLM
 const requestUserEmailTool = {
   type: 'function',
   name: 'request_user_email',
   description:
-    'Analyze the assistant\'s response to determine if the assistant is requesting the user\'s email address or contact information. If the assistant asked for or requested the user\'s email address or contact information you should call the request_user_email function.',
+    'Call this function when the assistant is clearly asking for, requesting, or mentioning that they need the user\'s email address or contact information. This includes direct requests like "What\'s your email?", indirect requests like "I\'d like to follow up with you", or mentions of sending information via email.',
   parameters: {
     type: 'object',
     properties: {
       subject: {
         type: 'string',
-        description: 'The subject or reason for requesting the email.'
+        description: 'The subject or reason why the email is being requested (e.g., "follow up", "send information", "contact later").'
       },
       conversationSummary: {
         type: 'string',
-        description: 'A brief summary of what the user is looking for or needs help with.'
+        description: 'A brief summary of what the user is looking for or needs help with based on the conversation context.'
       }
     },
     required: ['conversationSummary', 'subject'],
@@ -199,7 +199,7 @@ const requestUserEmailTool = {
 } as const satisfies NonNullable<ResponseCreateParams['tools']>[number]
 
 /**
- * Email detection function using a smaller, specialized LLM
+ * Email detection function using a specialized LLM
  * Analyzes the assistant's response to determine if it asked for user email
  */
 export const detectEmailRequest = async (
@@ -212,28 +212,52 @@ export const detectEmailRequest = async (
     return
   }
 
-  // Early return if the assistant response doesn't contain the word "email"
-  // This avoids unnecessary LLM calls when email detection is clearly not needed
-  if (!assistantResponse.toLowerCase().includes('email')) {
+  // Expanded early return condition to catch more email-related patterns
+  const emailPatterns = [
+    'email',
+    'contact',
+    'follow up',
+    'follow-up', 
+    'reach out',
+    'get in touch',
+    'send you',
+    'share with you',
+    'provide you with',
+    '@'
+  ]
+  
+  const responseText = assistantResponse.toLowerCase()
+  const hasEmailIndicator = emailPatterns.some(pattern => responseText.includes(pattern))
+  
+  if (!hasEmailIndicator) {
     return
   }
 
   try {
-    // Create a focused prompt for email detection
-    const emailDetectionPrompt = `You are an email request detection system. Your job is to analyze an assistant's latest response and determine if the assistant asked the user for their email address or contact information.
+    // Create a focused prompt for email detection with clear examples
+    const emailDetectionPrompt = `Analyze the following assistant response to determine if the assistant is asking for or requesting the user's email address or contact information.
 
-Analyze the following assistant response and recent conversation context to determine if the assistant is requesting the user's email.
+Assistant's response:
+"${assistantResponse}"
 
-Assistant's latest response:
-${assistantResponse}
+The assistant is requesting email/contact if they:
+- Directly ask for email address ("What's your email?", "Can you provide your email?")
+- Mention following up or contacting later ("I'd like to follow up", "Let me get back to you")
+- Offer to send information ("I can send you details", "I'll email you the information")
+- Ask for contact information in any form
+- Mention needing to reach out or get in touch
 
-If the assistant asked for or requested the user's email address, contact information, or indicated they would follow up via email, you should call the request_user_email function.
+IMPORTANT: Only call the function if the assistant is clearly requesting the user's email or contact information. Do not call if they're just mentioning email in general terms or talking about someone else's email.
 
-When calling the function, provide:
-- subject: A brief reason why the email is being requested
-- conversationSummary: A concise summary of what the user needs help with
+If the assistant IS requesting the user's email/contact information, call the request_user_email function with appropriate details.`
 
-Only call the function if you are confident the assistant explicitly asked the user for email contact information.`
+    // Debug logging
+    console.log('EMAIL DETECTION: Analyzing response:', {
+      response: assistantResponse.substring(0, 200) + (assistantResponse.length > 200 ? '...' : ''),
+      hasEmailIndicator,
+      matchedPatterns: emailPatterns.filter(pattern => responseText.includes(pattern)),
+      companyId: settings.companyId
+    })
 
     const requestOptions = {
       model: EMAIL_DETECTION_MODEL,
@@ -244,7 +268,6 @@ Only call the function if you are confident the assistant explicitly asked the u
         }
       ],
       temperature: EMAIL_DETECTION_TEMPERATURE,
-      instructions: 'You are a precise email request detection system. Only call the function when you are certain the assistant requested the user\'s email address.',
       tools: [requestUserEmailTool]
     } as const satisfies ResponseCreateParams
 
@@ -256,14 +279,29 @@ Only call the function if you are confident the assistant explicitly asked the u
 
     const response = await openai.responses.create(requestOptionsWithStream)
 
+    let functionCalled = false
     // Process the response to look for function calls
     for await (const chunk of response) {
       if (
         chunk.type === 'response.output_item.done' &&
         chunk.item.type === 'function_call'
       ) {
+        functionCalled = true
+        console.log('EMAIL DETECTION: Function called!', {
+          functionName: chunk.item.name,
+          arguments: chunk.item.arguments,
+          companyId: settings.companyId
+        })
         await handleEmailDetectionFunctionCall(chunk.item, onSpecialEvent)
       }
+    }
+
+    // Debug log when no function was called
+    if (!functionCalled) {
+      console.log('EMAIL DETECTION: No function called', {
+        response: assistantResponse.substring(0, 200) + (assistantResponse.length > 200 ? '...' : ''),
+        companyId: settings.companyId
+      })
     }
   } catch (error) {
     console.error('Error in email detection:', error)
