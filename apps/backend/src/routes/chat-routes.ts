@@ -6,7 +6,8 @@ import {
   updateChat,
   deleteChat,
   createChatAdmin,
-  getChatsByCompanyId
+  getChatsByCompanyId,
+  updateChatUserEmailAdmin
 } from '../db/chats'
 import {
   getMessagesByChatId,
@@ -15,6 +16,7 @@ import {
 } from '../db/messages'
 import {
   generateStreamingChatCompletion,
+  detectEmailRequest,
   DEFAULT_SETTINGS
 } from '../services/openai-service'
 import { generateChatAccessToken } from '../lib/jwt-utils'
@@ -31,6 +33,7 @@ import { cacheService } from '../services/cache-service'
 import { logger } from '../lib/logger'
 import type { CustomRequest } from '../middleware/auth-middleware'
 import type { Message, ChatSettings } from '../services/openai-service'
+import { sendInquiryEmail } from '../services/sendgrid-service'
 
 const router = express.Router()
 
@@ -77,9 +80,10 @@ router.get('/:chatId', authenticateChatAccess, async (req, res) => {
     if (!chat) {
       const dbChat = await getChatById(chatId)
       if (dbChat) {
-        // Cache the chat for future requests
         cacheService.setChat(chatId, dbChat)
         chat = dbChat
+      } else {
+        chat = undefined
       }
     }
 
@@ -242,6 +246,76 @@ router.delete('/:chatId', authenticateChatAccess, async (req, res) => {
   }
 })
 
+// Add after other endpoints
+router.post('/:chatId/send-email', authenticateChatAccess, async (req, res) => {
+  try {
+    const { chatId } = req.params
+    const { userEmail, subject, conversationSummary } = req.body
+
+    if (!chatId || !userEmail || subject === undefined || conversationSummary === undefined) {
+      return res.status(400).json({ error: 'Missing required fields' })
+    }
+
+    // Get chat and companyId
+    let chat = cacheService.getChat(chatId)
+    if (!chat) {
+      chat = (await getChatById(chatId)) ?? undefined
+      if (chat) {
+        cacheService.setChat(chatId, chat)
+      }
+    }
+
+    if (!chat) {
+      return res.status(404).json({ error: 'Chat not found' })
+    }
+
+    const companyId = chat.company_id
+    if (!companyId) {
+      return res.status(400).json({ error: 'Chat missing company ID' })
+    }
+
+    // Get recent messages for context (last 20, excluding system)
+    const messages = await getMessagesByChatId(chatId)
+    const recentMessages = messages.slice(-20).filter(msg => msg.role !== 'system')
+
+    const emailSent = await sendInquiryEmail({
+      userEmail,
+      subject,
+      conversationSummary,
+      recentMessages,
+      companyId
+    })
+
+    if (emailSent) {
+      // Store the user's email in the chat record for future reference
+      try {
+        const updatedChat = await updateChatUserEmailAdmin(chatId, userEmail)
+        // Update the cached chat with the new email
+        if (updatedChat) {
+          cacheService.setChat(chatId, updatedChat)
+        }
+      } catch (emailUpdateError) {
+        // Log the error but don't fail the request since the email was sent successfully
+        logger.error('Error updating chat with user email', {
+          error: emailUpdateError as Error,
+          chatId,
+          userEmail
+        })
+      }
+      
+      return res.json({ success: true })
+    } else {
+      return res.status(500).json({ error: 'Failed to send email' })
+    }
+  } catch (error) {
+    logger.error('Error sending email from /chats/:chatId/send-email', {
+      error: error as Error,
+      chatId: req.params.chatId
+    })
+    return res.status(500).json({ error: 'Internal server error' })
+  }
+})
+
 // Shared handler function for stream requests
 async function handleStreamRequest(req: CustomRequest, res: express.Response) {
   // Set the proper headers for Server-Sent Events (SSE)
@@ -306,8 +380,10 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       const dbChat = await getChatById(chatId)
 
       if (dbChat) {
-        chat = dbChat
         cacheService.setChat(chatId, dbChat)
+        chat = dbChat
+      } else {
+        chat = undefined
       }
     }
 
@@ -346,13 +422,17 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     }
 
     // Get chat settings - using request parameters, chat config, or defaults
+    // Check if user has already provided their email to avoid requesting it again
+    const hasUserEmail = Boolean(chat.user_email)
+    
     const chatSettings: ChatSettings = {
       ...DEFAULT_SETTINGS,
       systemPrompt: chatConfig.system_prompt,
       // Pass company ID and support email if available
       companyId,
-      enableEmailFunction: Boolean(chatConfig?.support_email),
-      timezone
+      enableEmailFunction: Boolean(chatConfig?.support_email) && !hasUserEmail,
+      timezone,
+      hasUserEmail
     }
 
     // Get all previous messages in this chat
@@ -433,7 +513,7 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       }
     }
 
-    // Generate streaming response from OpenAI
+    // Generate streaming response from OpenAI (main content generation)
     let aiResponseContent
     try {
       aiResponseContent = await generateStreamingChatCompletion(
@@ -450,6 +530,7 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       throw streamError
     }
 
+    // Save the assistant's response to the database
     await createMessageAdmin({
       chat_id: chatId,
       user_id: userId,
@@ -458,6 +539,29 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       role: 'assistant',
       sequence_number: nextSequenceNumber + 1
     })
+
+    // After main streaming is complete, run email detection using smaller LLM
+    try {
+      if (aiResponseContent) {
+        await detectEmailRequest(
+          aiResponseContent,
+          openaiMessages,
+          chatSettings,
+          event => {
+            if (!res.writableEnded) {
+              res.write(`data: ${JSON.stringify(event)}\n\n`)
+              res.flushHeaders()
+            }
+          }
+        )
+      }
+    } catch (emailDetectionError) {
+      logger.warn('Error in email detection (non-critical)', {
+        error: emailDetectionError as Error,
+        chatId
+      })
+      // Don't throw - email detection failure shouldn't break the main flow
+    }
 
     // Send a completion message
     if (!res.writableEnded) {

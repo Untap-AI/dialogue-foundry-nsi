@@ -1,0 +1,1 @@
+export const className = 'nlux-comp-sendIcon';

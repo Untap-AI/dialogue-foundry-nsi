@@ -3,41 +3,41 @@ import { ApiError, ErrorCodes as ServiceErrorCodes } from './errors'
 import { logger } from './logger'
 import type { ErrorCodeValue } from './errors'
 import type { AxiosError } from 'axios'
-import type { ChatItem } from '@nlux/react'
+import type { ChatItem } from '../nlux'
 
 // Default config values (can be overridden)
 export const DEFAULT_TOKEN_STORAGE_KEY = 'dialogue_foundry_token'
 export const DEFAULT_CHAT_ID_STORAGE_KEY = 'dialogue_foundry_chat_id'
-export const DEFAULT_USER_ID_STORAGE_KEY = 'dialogue_foundry_user_id'
+const DEFAULT_USER_ID_STORAGE_KEY = 'dialogue_foundry_user_id'
 
 // In-memory storage fallback when localStorage is unavailable
 class MemoryStorage implements Storage {
-  private items: Record<string, string> = {};
-  length = 0;
+  private items: Record<string, string> = {}
+  length = 0
 
   clear(): void {
-    this.items = {};
-    this.length = 0;
+    this.items = {}
+    this.length = 0
   }
 
   getItem(key: string): string | null {
-    return key in this.items ? this.items[key] : null;
+    return key in this.items ? this.items[key] : null
   }
 
   key(index: number): string | null {
-    return Object.keys(this.items)[index] || null;
+    return Object.keys(this.items)[index] || null
   }
 
   removeItem(key: string): void {
     if (key in this.items) {
-      delete this.items[key];
-      this.length = Object.keys(this.items).length;
+      delete this.items[key]
+      this.length = Object.keys(this.items).length
     }
   }
 
   setItem(key: string, value: string): void {
-    this.items[key] = value;
-    this.length = Object.keys(this.items).length;
+    this.items[key] = value
+    this.length = Object.keys(this.items).length
   }
 }
 
@@ -45,26 +45,16 @@ class MemoryStorage implements Storage {
 const getStorage = (): Storage => {
   try {
     // Test localStorage access
-    const testKey = '_test_storage_access_';
-    localStorage.setItem(testKey, 'test');
-    localStorage.removeItem(testKey);
-    return localStorage;
+    const testKey = '_test_storage_access_'
+    localStorage.setItem(testKey, 'test')
+    localStorage.removeItem(testKey)
+    return localStorage
   } catch (e) {
-    logger.warning('localStorage not available, falling back to memory storage', { error: e });
-    return new MemoryStorage();
-  }
-};
-
-// Custom error class for API errors
-export class ChatApiError extends Error {
-  statusCode?: number
-  errorCode?: string
-
-  constructor(message: string, statusCode?: number, errorCode?: string) {
-    super(message)
-    this.name = 'ChatApiError'
-    this.statusCode = statusCode
-    this.errorCode = errorCode
+    logger.warning(
+      'localStorage not available, falling back to memory storage',
+      { error: e }
+    )
+    return new MemoryStorage()
   }
 }
 
@@ -76,7 +66,7 @@ export interface ChatConfig {
   userIdStorageKey?: string
 }
 
-export interface Message {
+interface Message {
   id: string
   chat_id: string
   user_id: string
@@ -88,14 +78,9 @@ export interface Message {
   title?: string | null
 }
 
-export interface ChatInit {
+interface ChatInit {
   chatId: string
   messages: ChatItem[]
-}
-
-export interface MessageResponse {
-  userMessage: Message
-  aiMessage: Message
 }
 
 export class ChatApiService {
@@ -113,7 +98,8 @@ export class ChatApiService {
     this.tokenStorageKey = config.tokenStorageKey || DEFAULT_TOKEN_STORAGE_KEY
     this.chatIdStorageKey =
       config.chatIdStorageKey || DEFAULT_CHAT_ID_STORAGE_KEY
-    this.userIdStorageKey = config.userIdStorageKey || DEFAULT_USER_ID_STORAGE_KEY
+    this.userIdStorageKey =
+      config.userIdStorageKey || DEFAULT_USER_ID_STORAGE_KEY
     this.storage = getStorage()
 
     // Create axios instance
@@ -277,23 +263,30 @@ export class ChatApiService {
     }
 
     // Create a new chat
-    return this.createNewChat({welcomeMessage})
+    return this.createNewChat({ welcomeMessage })
   }
 
   /**
    * Create a new chat session
    */
-  async createNewChat({welcomeMessage, sameUser}: {welcomeMessage?: string, sameUser?: boolean} = {}): Promise<ChatInit> {
+  async createNewChat({
+    welcomeMessage,
+    sameUser
+  }: { welcomeMessage?: string; sameUser?: boolean } = {}): Promise<ChatInit> {
     try {
-      const userId = sameUser ? this.storage.getItem(this.userIdStorageKey) : undefined
+      const userId = sameUser
+        ? this.storage.getItem(this.userIdStorageKey)
+        : undefined
 
       const response = await this.api.post('/chats', {
         name: 'New Conversation',
         companyId: this.companyId,
         welcomeMessage,
-        ...(userId ? {
-          userId
-        } : {})
+        ...(userId
+          ? {
+              userId
+            }
+          : {})
       })
 
       // Store token and chat ID
@@ -376,12 +369,24 @@ export class ChatApiService {
    * @param messages - Backend messages
    */
   private mapMessagesToNluxFormat(messages: Message[]): ChatItem[] {
-    return messages.map(message => ({
-      id: message.id,
-      message: message.content,
-      role: message.role === 'user' ? 'user' : 'assistant',
-      timestamp: new Date(message.created_at).getTime()
-    }))
+    return messages.map(message => {
+      if (message.role === 'user') {
+        return {
+          id: message.id,
+          message: message.content,
+          role: 'user' as const,
+          timestamp: new Date(message.created_at).getTime()
+        }
+      } else {
+        return {
+          id: message.id,
+          message: message.content,
+          role: 'assistant' as const,
+          type: 'text' as const,
+          timestamp: new Date(message.created_at).getTime()
+        }
+      }
+    })
   }
 
   /**
@@ -391,14 +396,15 @@ export class ChatApiService {
     const chatId = this.storage.getItem(this.chatIdStorageKey)
     const userId = this.storage.getItem(this.userIdStorageKey)
     const token = this.storage.getItem(this.tokenStorageKey)
-    
-    const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
-    
+
+    const uuidRegex =
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i
+
     return !!(
-      chatId && 
-      userId && 
-      token && 
-      uuidRegex.test(chatId) && 
+      chatId &&
+      userId &&
+      token &&
+      uuidRegex.test(chatId) &&
       uuidRegex.test(userId)
     )
   }
@@ -458,10 +464,15 @@ export class ChatApiService {
           })
           return // Success, no need to fall back
         } else {
-          console.warn('sendBeacon failed to queue request, falling back to regular POST')
+          console.warn(
+            'sendBeacon failed to queue request, falling back to regular POST'
+          )
         }
       } catch (error) {
-        console.warn('sendBeacon threw an error, falling back to regular POST:', error)
+        console.warn(
+          'sendBeacon threw an error, falling back to regular POST:',
+          error
+        )
       }
     }
 
@@ -475,11 +486,11 @@ export class ChatApiService {
       })
     } catch (error) {
       // Don't throw analytics errors - just log them
-      logger.error('Error recording analytics event', { 
-        eventType, 
-        eventData, 
+      logger.error('Error recording analytics event', {
+        eventType,
+        eventData,
         analyticsPayload,
-        error 
+        error
       })
     }
   }
@@ -487,7 +498,11 @@ export class ChatApiService {
   /**
    * Record a link click event
    */
-  async recordLinkClick(url: string, linkText?: string, messageId?: string): Promise<void> {
+  async recordLinkClick(
+    url: string,
+    linkText?: string,
+    messageId?: string
+  ): Promise<void> {
     await this.recordAnalyticsEvent('link_click', {
       url,
       linkText,
@@ -497,11 +512,37 @@ export class ChatApiService {
   /**
    * Record a conversation starter click event
    */
-  async recordConversationStarterClick(label: string, position: number, prompt?: string): Promise<void> {
+  async recordConversationStarterClick(label: string | undefined, position: number, prompt?: string): Promise<void> {
     await this.recordAnalyticsEvent('conversation_starter_click', {
       label,
       position,
       prompt
     })
+  }
+
+  /**
+   * Send an email request (after user provides email)
+   */
+  async sendEmailRequest(
+    chatId: string,
+    {
+      userEmail,
+      subject,
+      conversationSummary
+    }: { userEmail: string; subject: string; conversationSummary: string }
+  ): Promise<{ success: boolean; error?: string }> {
+    try {
+      await this.api.post(`/chats/${chatId}/send-email`, {
+        userEmail,
+        subject,
+        conversationSummary
+      })
+      return { success: true }
+    } catch (error) {
+      if (error instanceof ApiError) {
+        return { success: false, error: error.message }
+      }
+      return { success: false, error: 'Unknown error' }
+    }
   }
 }

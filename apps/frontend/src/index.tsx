@@ -59,9 +59,6 @@ if (typeof window !== 'undefined' && !window.DialogueFoundry) {
   init(appContainer)
 }
 
-// Export public API
-export { init }
-
 // Expose the API to window for non-module usage
 if (typeof window !== 'undefined') {
   window.DialogueFoundry = {

@@ -111,9 +111,9 @@ importers:
 
   apps/frontend:
     dependencies:
-      '@nlux/react':
+      '@nlux/core':
         specifier: ^2
-        version: 2.17.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+        version: 2.17.1
       '@nlux/themes':
         specifier: ^2
         version: 2.17.1
@@ -193,6 +193,9 @@ importers:
       ts-node:
         specifier: ^10.9.2
         version: 10.9.2(@types/node@20.17.30)(typescript@5.3.3)
+      ts-unused-exports:
+        specifier: ^11.0.1
+        version: 11.0.1(typescript@5.3.3)
       typescript:
         specifier: ~5.3.3
         version: 5.3.3
@@ -731,12 +734,6 @@ packages:
 
   '@nlux/core@2.17.1':
     resolution: {integrity: sha512-hIvOnuENVqWaIg5Co4JtFmHph7Sp0Nj+QixOMdOW9Ou7CjU7HK+maB5koLoayNL64B+wHTtgPN7zBrB8NCSPXw==}
-
-  '@nlux/react@2.17.1':
-    resolution: {integrity: sha512-/t6qDAHIefg1vGIthLOtkQxbI4Sh/aL7/eqVuhcoC1w/8NqnvVxwfxR0mkshcIVrKSwHI8Yjav5edZ2yeRBqMw==}
-    peerDependencies:
-      react: ^18
-      react-dom: ^18
 
   '@nlux/themes@2.17.1':
     resolution: {integrity: sha512-spD3QJBSdkF+q45rQFFsUQcR4pTy3OEjQywEP+yc9dHcuPrxIMb0/W/whwiHn1aePGL758lKQH3E/NRHA4aSAw==}
@@ -3323,6 +3320,12 @@ packages:
       '@swc/wasm':
         optional: true
 
+  ts-unused-exports@11.0.1:
+    resolution: {integrity: sha512-b1uIe0B8YfNZjeb+bx62LrB6qaO4CHT8SqMVBkwbwLj7Nh0xQ4J8uV0dS9E6AABId0U4LQ+3yB/HXZBMslGn2A==}
+    hasBin: true
+    peerDependencies:
+      typescript: '>=3.8.3'
+
   tsc@2.0.4:
     resolution: {integrity: sha512-fzoSieZI5KKJVBYGvwbVZs/J5za84f2lSTLPYf6AGiIf43tZ3GNrI1QzTLcjtyDDP4aLxd46RTZq1nQxe7+k5Q==}
     hasBin: true
@@ -4137,12 +4140,6 @@ snapshots:
       eslint-scope: 5.1.1
 
   '@nlux/core@2.17.1': {}
-
-  '@nlux/react@2.17.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
-    dependencies:
-      '@nlux/core': 2.17.1
-      react: 19.1.0
-      react-dom: 19.1.0(react@19.1.0)
 
   '@nlux/themes@2.17.1': {}
 
@@ -7080,6 +7077,12 @@ snapshots:
       typescript: 5.8.3
       v8-compile-cache-lib: 3.0.1
       yn: 3.1.1
+
+  ts-unused-exports@11.0.1(typescript@5.3.3):
+    dependencies:
+      chalk: 4.1.2
+      tsconfig-paths: 3.15.0
+      typescript: 5.3.3
 
   tsc@2.0.4: {}
 
