@@ -65,6 +65,7 @@
   border-radius: 8px;
   transition: all 0.2s ease;
   box-sizing: border-box;
+  width: 100%;
 }
 
 #dialogue-foundry-app .email-input-wrapper:hover {
@@ -90,6 +91,8 @@
   background: transparent;
   line-height: 1.4;
   min-height: 44px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 #dialogue-foundry-app .email-input-field::placeholder {
@@ -119,7 +122,7 @@
 
 /* Send button */
 #dialogue-foundry-app .email-send-button {
-  background: #3b82f6;
+  background: var(--df-primary-color, #3b82f6);
   color: white;
   border: none;
   padding-inline: 0.35rem;
@@ -135,7 +138,7 @@
 }
 
 #dialogue-foundry-app .email-send-button:hover:not(:disabled) {
-  background: #2563eb;
+  background: var(--df-tertiary-color, #2563eb);
 }
 
 #dialogue-foundry-app .email-send-button:active:not(:disabled) {
@@ -150,12 +153,12 @@
 
 /* Loading state for send button */
 #dialogue-foundry-app .email-send-button-loading {
-  background: #3b82f6;
+  background: var(--df-primary-color, #3b82f6);
   cursor: not-allowed;
 }
 
 #dialogue-foundry-app .email-send-button-loading:hover {
-  background: #3b82f6;
+  background: var(--df-primary-color, #3b82f6);
 }
 
 /* Send icon styling */
