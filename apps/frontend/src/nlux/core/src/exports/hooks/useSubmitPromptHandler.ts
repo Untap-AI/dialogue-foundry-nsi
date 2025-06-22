@@ -394,10 +394,13 @@ export const useSubmitPromptHandler = <AiMsg>(
       if (callbackEvents.current?.emailSubmitted) {
         try {
           await callbackEvents.current.emailSubmitted(email)
+          return { success: true }
         } catch (error) {
           console.error('Error in email submission callback:', error)
+          return { success: false, error: 'Email submission failed' }
         }
       }
+      return { success: false, error: 'No email handler configured' }
     })
 
     domToReactRef.current.setChatSegments([
