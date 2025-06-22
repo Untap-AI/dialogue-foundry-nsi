@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.3.0
+
+### Minor Changes
+
+- NLUX v3
+
 ## 0.2.63
 
 ### Patch Changes
