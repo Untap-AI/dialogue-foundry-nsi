@@ -7,7 +7,7 @@ import './ChatWidget.css'
 import { useChatScroll } from '../../hooks/useChatScroll'
 import { useConfig } from '../../contexts/ConfigContext'
 import { ChatApiService } from '../../services/api'
-import type { ChatItem } from '@nlux/react'
+import type { ChatItem } from '../../nlux'
 import { useNavigationEvents } from '../../hooks/useNavigationEvents'
 
 export type ChatStatus = 'uninitialized' | 'loading' | 'initialized' | 'error'
@@ -224,8 +224,9 @@ function createWelcomeMessage(welcomeMessage: string | undefined) {
     ? [
         {
           role: 'assistant' as const,
-          message: welcomeMessage
-        }
+          message: welcomeMessage,
+          type: 'text' as const
+        } as const satisfies ChatItem
       ]
     : undefined
 }

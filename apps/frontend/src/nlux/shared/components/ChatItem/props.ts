@@ -1,0 +1,4 @@
+
+
+type ChatItemLayout = 'bubbles' | 'list';
+

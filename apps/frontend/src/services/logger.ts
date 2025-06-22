@@ -3,9 +3,7 @@ import { categorizeError } from './errors'
 import type { ErrorCodeValue } from './errors'
 
 // Environment type for better type safety
-export type Environment = 'development' | 'production' | string
-
-console.log('isProd', import.meta.env.PROD)
+type Environment = 'development' | 'production' | string
 
 // Default configuration with sensible values
 const DEFAULT_CONFIG = {
@@ -20,10 +18,10 @@ const DEFAULT_CONFIG = {
 }
 
 // Supported log levels
-export type LogLevel = 'debug' | 'info' | 'warning' | 'error' | 'fatal'
+type LogLevel = 'debug' | 'info' | 'warning' | 'error' | 'fatal'
 
 // Logger configuration interface
-export interface LoggerConfig {
+interface LoggerConfig {
   dsn?: string
   environment?: Environment
   release?: string
@@ -33,12 +31,12 @@ export interface LoggerConfig {
 }
 
 // Error metadata for additional context
-export interface ErrorMetadata {
+interface ErrorMetadata {
   [key: string]: unknown
 }
 
 // Logger class for handling logs and errors
-export class Logger {
+class Logger {
   private static instance: Logger
   private config: LoggerConfig
   private initialized: boolean = false
@@ -106,24 +104,6 @@ export class Logger {
   }
 
   /**
-   * Set the environment explicitly
-   */
-  public setEnvironment(environment: Environment): void {
-    this.config.environment = environment
-
-    // Update enabled status based on environment
-    this.config.enabled = environment === 'production'
-
-    // Update console level based on environment
-    this.config.consoleLevel =
-      environment === 'production' ? 'error' : ('debug' as LogLevel)
-
-    if (this.initialized) {
-      Sentry.setTag('environment', environment)
-    }
-  }
-
-  /**
    * Initialize Sentry with the provided configuration
    */
   public initialize(config: LoggerConfig = {}): void {
@@ -185,7 +165,7 @@ export class Logger {
       Sentry.setTag('environment', this.config.environment || 'development')
 
       this.initialized = true
-      
+
       // Set a global error handler for uncaught exceptions
       if (typeof window !== 'undefined') {
         window.onerror = (message, _source, _lineno, _colno, error) => {
@@ -427,26 +407,3 @@ export const logger = Logger.getInstance()
 export function initLogger(config: LoggerConfig): void {
   logger.initialize(config)
 }
-
-// Explicitly set the environment (can be used before initialization)
-export function setEnvironment(environment: Environment): void {
-  logger.setEnvironment(environment)
-}
-
-// Get the current environment
-export function getEnvironment(): Environment {
-  return logger.getEnvironment()
-}
-
-// Check if we're in production
-export function isProduction(): boolean {
-  return logger.isProduction()
-}
-
-// Check if Sentry should be enabled
-export function isSentryEnabled(): boolean {
-  return logger.isProduction()
-}
-
-// Export Sentry directly for advanced usage
-export { Sentry }

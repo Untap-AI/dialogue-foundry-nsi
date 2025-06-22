@@ -1,9 +1,8 @@
-import { useEffect, useMemo, useRef } from 'react'
-import { AiChat, useAiChatApi, useAsStreamAdapter } from '@nlux/react'
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
+import { AiChat, useAiChatApi, useAsStreamAdapter } from '../../nlux'
 import { useConfig } from '../../contexts/ConfigContext'
 import '@nlux/themes/unstyled.css'
 import './ChatInterface.css'
-import { useResizeObserver } from '../../hooks/useResizeObserver'
 
 import { ChatStreamingService } from '../../services/streaming'
 import { ChatApiService } from '../../services/api'
@@ -13,9 +12,8 @@ import type { ServiceError } from '../../services/errors'
 import type {
   AssistantPersona,
   ChatItem,
-  ConversationStarter,
   ErrorEventDetails
-} from '@nlux/react'
+} from '../../nlux'
 
 // Add the icon based on error category
 const ERROR_ICON_MAP: Record<ErrorCategory, string> = {
@@ -27,7 +25,7 @@ const ERROR_ICON_MAP: Record<ErrorCategory, string> = {
   [ErrorCategory.UNKNOWN]: '⚠️'
 }
 
-export interface ChatInterfaceProps {
+interface ChatInterfaceProps {
   className?: string | undefined
   chatId: string | undefined
   initialConversation: ChatItem[] | undefined
@@ -51,6 +49,15 @@ export const ChatInterface = ({
   // Add ref for the chat interface container
   const chatInterfaceRef = useRef<HTMLDivElement>(null)
 
+  // Add state to store email request details
+  const [emailRequestDetails, setEmailRequestDetails] = useState<{
+    subject: string
+    conversationSummary: string
+  } | null>(null)
+
+  // Add state to track if we should create email input after streaming
+  const pendingEmailInput = useRef(false)
+
   const streamingService = useMemo(
     () => new ChatStreamingService(chatConfig),
     [chatConfig]
@@ -62,69 +69,46 @@ export const ChatInterface = ({
     [chatConfig]
   )
 
-  // Create adapter at the top level
+  const api = useAiChatApi()
+
+  // Handle markdown rendering completion
+  const handleMessageRendered = useCallback(() => {
+    
+    // If we have a pending email input, create it after any markdown rendering completes
+    // This ensures the email input appears after the text is fully rendered
+    if (pendingEmailInput.current) {
+      pendingEmailInput.current = false
+      api.conversation.createEmailInput()
+    }
+  }, [api])
+
+  // Adapter with special event support
   const adapter = useAsStreamAdapter(
     (userMessage: string, observer) => {
-      // Call the streaming service with the message content
       streamingService.streamMessage(
         userMessage,
-        // On each chunk update
         chunk => observer.next(chunk),
-        // On complete
         () => observer.complete(),
-        // On error - handle the error and pass to the observer
-        error => {
-          // Pass the error to the observer for NLUX to handle
-          observer.error(error)
-        },
-        chatConfig.companyId
+        error => observer.error(error),
+        chatConfig.companyId,
+        event => {
+          if (event.type === 'request_email') {
+            // Store the email request details from the LLM but don't create input yet
+            if (event.details) {
+              setEmailRequestDetails({
+                subject: event.details.subject || '',
+                conversationSummary: event.details.conversationSummary || ''
+              })
+            }
+            // Set flag to create email input after markdown rendering completes
+            pendingEmailInput.current = true
+            // We'll need to get the message ID when it's available
+          }
+        }
       )
     },
     [chatConfig.companyId, streamingService]
   )
-
-  // Set up link click tracking - only within the chat interface
-  useEffect(() => {
-    const handleLinkClick = (event: MouseEvent) => {
-      const target = event.target as HTMLElement
-      const link = target.closest('a')
-      
-      if (link && link.href) {
-        // Find the message container that contains this link
-        const messageContainer = link.closest('.nlux-comp-message')
-        let messageId: string | undefined
-        
-        if (messageContainer) {
-          messageId = messageContainer.getAttribute('data-message-id') || 
-                    messageContainer.id || 
-                    undefined
-        }
-
-        // Record analytics immediately without waiting - if the user is clicking links,
-        // the chat should already be initialized
-        analyticsService.recordAnalyticsEvent('link_click', {
-          url: link.href,
-          linkText: link.textContent || link.innerText || undefined,
-          messageId
-        }).catch(error => {
-          console.warn('Analytics recording failed:', error)
-        })
-      }
-    }
-
-    // Add event listener only to the chat interface container
-    const chatContainer = chatInterfaceRef.current
-    if (chatContainer) {
-      chatContainer.addEventListener('click', handleLinkClick)
-    }
-
-    // Cleanup
-    return () => {
-      if (chatContainer) {
-        chatContainer.removeEventListener('click', handleLinkClick)
-      }
-    }
-  }, [analyticsService])
 
   // Create a custom error handler for the NLUX error event
   const handleNluxError = (error: ErrorEventDetails) => {
@@ -167,16 +151,11 @@ export const ChatInterface = ({
     console.error('NLUX chat error:', error)
   }
 
-  // Track if we've sent a message
-  const messageSent = useRef(false)
-
-  useEffect(() => {
-    messageSent.current = false
-  }, [chatId])
-
   // Handle message sent event - creates ChatGPT-like scrolling
   const handleMessageSent = () => {
-    messageSent.current = true
+    // Clear pending email input flag when new message is sent
+    pendingEmailInput.current = false
+    
     // Remove the conversation starters container
     const startersContainer = document.querySelectorAll(
       '.nlux-conversationStarters-container'
@@ -234,24 +213,112 @@ export const ChatInterface = ({
     }
   }
 
-  const api = useAiChatApi()
-  const send = api.composer.send
-
-  useEffect(() => {
-    if (
-      (!initialConversation || initialConversation.length <= 1) &&
-      conversationStarters?.length &&
-      chatId &&
-      chatStatus === 'initialized' &&
-      !messageSent.current
-    ) {
-      setTimeout(() => {
-        if (!messageSent.current) {
-          addConversationStarters(conversationStarters, send, analyticsService)
-        }
-      }, 100)
+  // Handler for submitting email
+  const handleEmailSubmitted = async (email: string): Promise<{ success: boolean; error?: string }> => {
+    if (!chatId) {
+      return { success: false, error: 'No chat session available' }
     }
-  }, [initialConversation, chatId, chatStatus, conversationStarters, send])
+
+    try {
+      // Use the stored email request details from the LLM or fallback to empty strings
+      const subject = emailRequestDetails?.subject || ''
+      const conversationSummary = emailRequestDetails?.conversationSummary || ''
+
+      const result = await analyticsService.sendEmailRequest(chatId, {
+        userEmail: email,
+        subject,
+        conversationSummary
+      })
+
+      // Clear the stored email request details after use
+      setEmailRequestDetails(null)
+
+      return result
+    } catch (error) {
+      console.error('Error submitting email:', error)
+      return { 
+        success: false, 
+        error: error instanceof Error ? error.message : 'An unexpected error occurred' 
+      }
+    }
+  }
+
+  // Pass email input handlers and state to AiChat
+  const aiChatProps = {
+    api,
+    adapter,
+    displayOptions: {
+      themeId: 'dialogue-foundry',
+      colorScheme: theme
+    },
+    initialConversation,
+    conversationOptions: {
+      showWelcomeMessage: true,
+      autoScroll: false,
+      conversationStarters
+    },
+    messageOptions: {
+      markdownLinkTarget: 'self' as 'self'
+    },
+    personaOptions: {
+      assistant: personaOptions?.assistant as AssistantPersona
+    },
+    composerOptions: {
+      placeholder: 'Ask me anything...',
+      autoFocus: true
+    },
+    events: {
+      error: handleNluxError,
+      messageSent: handleMessageSent,
+      emailSubmitted: handleEmailSubmitted,
+      messageRendered: handleMessageRendered
+    },
+  }
+  // Set up link click tracking - only within the chat interface
+  useEffect(() => {
+    const handleLinkClick = (event: MouseEvent) => {
+      const target = event.target as HTMLElement
+      const link = target.closest('a')
+
+      if (link && link.href) {
+        // Find the message container that contains this link
+        const messageContainer = link.closest('.nlux-comp-message')
+        let messageId: string | undefined
+
+        if (messageContainer) {
+          messageId =
+            messageContainer.getAttribute('data-message-id') ||
+            messageContainer.id ||
+            undefined
+        }
+
+        // Record analytics immediately without waiting - if the user is clicking links,
+        // the chat should already be initialized
+        analyticsService
+          .recordAnalyticsEvent('link_click', {
+            url: link.href,
+            linkText: link.textContent || link.innerText || undefined,
+            messageId
+          })
+          .catch(error => {
+            console.warn('Analytics recording failed:', error)
+          })
+      }
+    }
+
+    // Add event listener only to the chat interface container
+    const chatContainer = chatInterfaceRef.current
+    if (chatContainer) {
+      chatContainer.addEventListener('click', handleLinkClick)
+    }
+
+    // Cleanup
+    return () => {
+      if (chatContainer) {
+        chatContainer.removeEventListener('click', handleLinkClick)
+      }
+    }
+  }, [analyticsService])
 
   return (
     <div ref={chatInterfaceRef} className={`chat-interface-wrapper ${className}`}>
@@ -268,34 +335,7 @@ export const ChatInterface = ({
               )
             case 'initialized':
               return (
-                <AiChat
-                  api={api}
-                  adapter={adapter}
-                  key={chatId} // Add a key to force re-render when chatId changes
-                  displayOptions={{
-                    themeId: 'dialogue-foundry',
-                    colorScheme: theme
-                  }}
-                  initialConversation={initialConversation}
-                  conversationOptions={{
-                    showWelcomeMessage: true,
-                    autoScroll: false,
-                  }}
-                  messageOptions={{
-                    markdownLinkTarget: 'self'
-                  }}
-                  personaOptions={{
-                    assistant: personaOptions?.assistant as AssistantPersona
-                  }}
-                  composerOptions={{
-                    placeholder: 'Ask me anything...',
-                    autoFocus: true
-                  }}
-                  events={{
-                    error: handleNluxError,
-                    messageSent: handleMessageSent
-                  }}
-                />
+                <AiChat {...aiChatProps} key={chatId} />
               )
             case 'error':
               return (
@@ -308,67 +348,15 @@ export const ChatInterface = ({
         })()}
       </div>
       <div className="df-powered-by">
-        Powered by <a href="https://untap-ai.com" target="_blank" rel="noopener noreferrer">Untap AI</a>
+        Powered by{' '}
+        <a
+          href="https://untap-ai.com"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Untap AI
+        </a>
       </div>
     </div>
   )
-}
-
-function addConversationStarters(
-  conversationStarters: ConversationStarter[],
-  send: (prompt: string) => void,
-  analyticsService?: ChatApiService
-) {
-  const conversationContainer = document.querySelector(
-    '.nlux-conversation-container'
-  )
-  // Check if we should insert conversation starters
-  const containerCheck = document.querySelector(
-    '.nlux-comp-conversationStarters'
-  )
-
-  if (!containerCheck && conversationContainer) {
-    // Create a container for our conversation starters
-    const startersContainer = document.createElement('div')
-    startersContainer.className = 'nlux-conversationStarters-container'
-
-    // Create the inner container
-    const innerContainer = document.createElement('div')
-    innerContainer.className = 'nlux-comp-conversationStarters'
-
-    // Add each conversation starter as a button with proper click handler
-    conversationStarters.forEach(({ prompt: promptFromStarter, label }, index) => {
-      if (promptFromStarter && label) {
-        const button = document.createElement('button')
-        button.className = 'nlux-comp-conversationStarter'
-        button.addEventListener('click', () => {
-          // Record analytics event before sending the message
-          if (analyticsService) {
-            analyticsService.recordConversationStarterClick(label, index + 1, promptFromStarter).catch(error => {
-              console.warn('Analytics recording failed:', error)
-            })
-          }
-          send(promptFromStarter)
-        })
-
-        const span = document.createElement('span')
-        span.className = 'nlux-comp-conversationStarter-prompt'
-        span.textContent = label
-
-        button.appendChild(span)
-        innerContainer.appendChild(button)
-      }
-    })
-
-    // Assemble and append to DOM
-    startersContainer.appendChild(innerContainer)
-    if (conversationContainer.parentNode && conversationContainer.nextSibling && typeof conversationContainer.parentNode.insertBefore === 'function') {
-      conversationContainer.parentNode.insertBefore(
-        startersContainer,
-        conversationContainer.nextSibling
-      )
-    }
-
-    return
-  }
 }

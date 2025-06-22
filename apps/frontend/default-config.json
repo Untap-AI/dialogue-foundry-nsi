@@ -13,7 +13,7 @@
     }
   },
   "popupMessage": "Have questions? Click here for help! 💬",
-  "welcomeMessage": "Hi, I'm the Dialogue Foundry. I'm here to help you with your questions.",
+  "welcomeMessage": "Welcome! I'm the West Hills Vineyards Assistant. I can answer any questions about our wines, tasting experiences, live events, or wedding venues. To get started, just type a question into the chat and I’ll be happy to help. Looking for inspiration? Check out some suggested topics below!",
   "conversationStarters": [
     {
       "label": "Wines",
@@ -30,10 +30,6 @@
     {
       "label": "Catering",
       "prompt": "I'm interested in learning more about your catering. Can you tell me more about them?"
-    },
-    {
-      "label": "Wine Tasting",
-      "prompt": "I'm interested in learning more about your wine tasting. Can you tell me more about them?"
     },
     {
       "label": "Wine Tasting",

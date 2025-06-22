@@ -1,12 +1,11 @@
 import OpenAI from 'openai'
 import dotenv from 'dotenv'
 import { MAX_MESSAGES_PER_CHAT } from '../db/messages'
-import { sendInquiryEmail } from './sendgrid-service'
 import type {
   ResponseCreateParams,
   ResponseFunctionToolCall
 } from 'openai/resources/responses/responses.mjs'
-import type { EmailData } from './sendgrid-service'
+import { randomUUID } from 'crypto'
 
 dotenv.config()
 
@@ -29,10 +28,11 @@ export type Message = {
 export type ChatSettings = {
   model: string
   temperature: number
-  systemPrompt: string // Add systemPrompt as an optional parameter
-  companyId: string // Company ID for context in function calls
-  enableEmailFunction?: boolean // Whether to enable the email function
-  timezone?: string // User's timezone
+  systemPrompt: string
+  companyId: string
+  enableEmailFunction?: boolean
+  timezone?: string
+  hasUserEmail?: boolean
 }
 
 // Default settings to use if none are provided
@@ -40,35 +40,6 @@ export const DEFAULT_SETTINGS: Pick<ChatSettings, 'model' | 'temperature'> = {
   model: 'gpt-4.1',
   temperature: 0.5
 }
-
-// Define the email tool for OpenAI function calling
-const emailTool = {
-  type: 'function',
-  name: 'send_email',
-  description:
-    'Send an email to the company with user contact information and conversation details. This should only be used if the user has explicitly consented to sending an email and provided their email address.',
-  parameters: {
-    type: 'object',
-    properties: {
-      subject: {
-        type: 'string',
-        description: 'The subject of the email'
-      },
-      userEmail: {
-        type: 'string',
-        description: 'The email address of the user to contact them'
-      },
-      conversationSummary: {
-        type: 'string',
-        description:
-          'A brief summary of what the user is looking for or needs help with'
-      }
-    },
-    required: ['userEmail', 'conversationSummary', 'subject'],
-    additionalProperties: false
-  },
-  strict: true
-} as const satisfies NonNullable<ResponseCreateParams['tools']>[number]
 
 /**
  * Limits the conversation context to the specified maximum number of messages
@@ -94,140 +65,15 @@ const limitMessagesContext = (
   return [...systemMessages, ...nonSystemMessages]
 }
 
-// Function to handle email function calls from OpenAI
-const handleFunctionCall = async (
-  functionCall: ResponseFunctionToolCall,
-  messages: Message[],
-  companyId: string
-  // TODO: Remove usage of any
-): Promise<{ success: boolean; details?: any }> => {
-  if (functionCall.name === 'send_email') {
-    try {
-      // Parse arguments with validation
-      if (!functionCall.arguments) {
-        console.error('Function arguments are empty')
-        return {
-          success: false,
-          // TODO: Make error codes type safe
-          details: { error: 'MISSING_ARGUMENTS' }
-        }
-      }
-
-      const args = JSON.parse(functionCall.arguments)
-
-      // Validate required fields
-      if (!args.userEmail) {
-        console.error('User email is required to send an email')
-        return {
-          success: false,
-          details: { error: 'MISSING_EMAIL' }
-        }
-      }
-
-      if (!args.conversationSummary) {
-        console.error('Conversation summary is required to send an email')
-        return {
-          success: false,
-          details: { error: 'MISSING_SUMMARY' }
-        }
-      }
-
-      // Get recent messages for context (limited to last 20 messages)
-      const recentMessages = messages
-        .slice(-20)
-        .filter(msg => msg.role !== 'system')
-
-      // Prepare email data
-      const emailData: EmailData = {
-        userEmail: args.userEmail,
-        subject: args.subject,
-        conversationSummary: args.subject
-          ? `${args.subject}: ${args.conversationSummary}`
-          : args.conversationSummary,
-        recentMessages,
-        companyId: companyId || 'default'
-      }
-
-      // Send the email
-      const emailSent = await sendInquiryEmail(emailData)
-
-      if (emailSent) {
-        return {
-          success: true,
-          details: { userEmail: args.userEmail }
-        }
-      } else {
-        console.error('Failed to send email via SendGrid')
-        return {
-          success: false,
-          details: { error: 'EMAIL_SERVICE_FAILURE' }
-        }
-      }
-    } catch (error) {
-      console.error('Error processing email function call:', error)
-      return {
-        success: false,
-        details: { error: 'PROCESSING_ERROR' }
-      }
-    }
-  }
-
-  return {
-    success: false,
-    details: { error: 'NO_FUNCTION_CALLS' }
-  }
-}
-
-// Helper function to generate a follow-up response after a function call
-const generateFollowUpResponse = (
-  functionName: string,
-  functionCallResult: { success: boolean; details?: any },
-  onChunk: (chunk: string) => void,
-  updateFullText: (text: string) => void
-): void => {
-  // Create a simple follow-up response based on the function call result
-  let responseText = ''
-
-  // Handle different function types - currently we only have email, but this makes it extensible
-  switch (functionName) {
-    case 'send_email':
-      // TODO: Make this dynamic with separate requests to the LLM
-      responseText = functionCallResult.success
-        ? `\n\nThank you! Your email has been sent. Someone from the team will get back to you soon. Is there anything else I can help you with in the meantime?`
-        : `\n\nI wasn't able to send your email at this time. You can reach out to the vineyard directly. Is there something else I can help you with today?`
-  }
-
-  // Stream the response back to the client by sending it in small chunks
-  const chunkSize = 10 // Characters per chunk
-  let startIndex = 0
-
-  // Function to stream text in chunks with a delay
-  const streamTextChunks = () => {
-    while (startIndex < responseText.length) {
-      const endIndex = Math.min(startIndex + chunkSize, responseText.length)
-      const chunk = responseText.substring(startIndex, endIndex)
-
-      // Send this chunk to the client
-      onChunk(chunk)
-
-      // Move to the next chunk
-      startIndex = endIndex
-    }
-  }
-
-  // Start streaming the text chunks
-  streamTextChunks()
-
-  // Add the full response text to the tracking variable
-  updateFullText(responseText)
-}
-
+/**
+ * Main streaming chat completion function - focuses purely on content generation
+ * without any tool calls
+ */
 export const generateStreamingChatCompletion = async (
   messages: Message[],
   settings: ChatSettings,
   onChunk: (chunk: string) => void
-) => {
-  // TODO: Implement token checking and context cutoff
+): Promise<string> => {
   try {
     // Limit the number of messages to avoid exceeding token limits
     const limitedMessages = limitMessagesContext(
@@ -235,7 +81,12 @@ export const generateStreamingChatCompletion = async (
       MAX_MESSAGES_PER_CHAT
     )
 
-    const systemPromptWithCurrentDate = `Respond using Markdown formatting for headings, lists, and emphasis for all answers.\n\n${settings.systemPrompt}\n\nThe current date and time is ${new Date().toLocaleString(
+    // Add email status information to system prompt if applicable
+    const emailStatusInfo = settings.hasUserEmail 
+      ? '\n\nIMPORTANT: The user has already provided their email address for this conversation. Do not ask for their email again or suggest providing contact information.'
+      : ''
+
+    const systemPromptWithCurrentDate = `Respond using Markdown formatting for headings, lists, and emphasis for all answers.\n\n${settings.systemPrompt}${emailStatusInfo}\n\nThe current date and time is ${new Date().toLocaleString(
       'en-US',
       {
         weekday: 'long',
@@ -248,7 +99,6 @@ export const generateStreamingChatCompletion = async (
       }
     )}.`
 
-    // Configure request options with tools if email function is enabled
     const requestOptions = {
       model: settings.model,
       input: limitedMessages,
@@ -259,63 +109,27 @@ export const generateStreamingChatCompletion = async (
         format: {
           type: 'text'
         }
-      },
-      ...(settings.enableEmailFunction ? { tools: [emailTool] } : {})
+      }
+      // Note: No tools are included here - this LLM focuses purely on content generation
     } as const satisfies ResponseCreateParams
 
     // Create the response with streaming enabled
     const response = await openai.responses.create(requestOptions)
 
     let fullText = ''
-    const functionCalls: ResponseFunctionToolCall[] = []
 
     try {
       for await (const chunk of response) {
         let text = ''
 
-        // Use our type guard function instead of checking the type directly
         if (chunk.type === 'response.output_text.delta') {
           text = 'delta' in chunk ? chunk.delta : ''
         }
 
-        // Check if this chunk contains function calls
-        if (
-          chunk.type === 'response.output_item.done' &&
-          chunk.item.type === 'function_call'
-        ) {
-          functionCalls.push(chunk.item)
-          // We'll handle function calls after streaming completes
-        }
-
         if (text.length > 0) {
-          // Add to full text and send immediately
           fullText += text
           onChunk(text)
         }
-      }
-
-      // Process function calls after streaming completes if detected
-      if (functionCalls.length > 0) {
-        await Promise.all(
-          functionCalls.map(async functionCall => {
-            // Process the function call
-            const result = await handleFunctionCall(
-              functionCall,
-              messages,
-              settings.companyId
-            )
-
-            // Generate and stream a simple follow-up response
-            generateFollowUpResponse(
-              functionCall.name,
-              result,
-              onChunk,
-              text => {
-                fullText += text
-              }
-            )
-          })
-        )
       }
 
       return fullText
@@ -326,5 +140,140 @@ export const generateStreamingChatCompletion = async (
   } catch (error) {
     console.error('Error generating streaming chat completion:', error)
     throw new Error(`Failed to generate streaming response: ${error}`)
+  }
+}
+
+// Function to handle email function calls from the email detection LLM
+const handleEmailDetectionFunctionCall = async (
+  functionCall: ResponseFunctionToolCall,
+  onSpecialEvent?: (event: any) => void
+): Promise<{ success: boolean; details?: any }> => {
+  if (functionCall.name === 'request_user_email') {
+    // Emit the special event to trigger email input UI
+    if (onSpecialEvent && functionCall.arguments) {
+      const args = JSON.parse(functionCall.arguments)
+      onSpecialEvent({
+        type: 'request_email',
+        details: args,
+        id: randomUUID()
+      })
+    }
+    return {
+      success: true,
+      details: { requested: true }
+    }
+  }
+
+  return {
+    success: false,
+    details: { error: 'UNKNOWN_FUNCTION_CALL' }
+  }
+}
+
+// Email detection model settings
+const EMAIL_DETECTION_MODEL = 'gpt-4.1-nano'
+const EMAIL_DETECTION_TEMPERATURE = 0.1
+
+// Tool definition for the email detection LLM
+const requestUserEmailTool = {
+  type: 'function',
+  name: 'request_user_email',
+  description:
+    'Analyze the assistant\'s response and recent conversation context to determine if the assistant is requesting the user\'s email address or contact information. If the assistant asked for or requested the user\'s email address or contact information you should call the request_user_email function.',
+  parameters: {
+    type: 'object',
+    properties: {
+      subject: {
+        type: 'string',
+        description: 'The subject or reason for requesting the email.'
+      },
+      conversationSummary: {
+        type: 'string',
+        description: 'A brief summary of what the user is looking for or needs help with.'
+      }
+    },
+    required: ['conversationSummary', 'subject'],
+    additionalProperties: false
+  },
+  strict: true
+} as const satisfies NonNullable<ResponseCreateParams['tools']>[number]
+
+/**
+ * Email detection function using a smaller, specialized LLM
+ * Analyzes the assistant's response to determine if it asked for user email
+ */
+export const detectEmailRequest = async (
+  assistantResponse: string,
+  conversationContext: Message[],
+  settings: ChatSettings,
+  onSpecialEvent?: (event: any) => void
+): Promise<void> => {
+  // Only proceed if email function is enabled
+  if (!settings.enableEmailFunction) {
+    return
+  }
+
+  // Early return if the assistant response doesn't contain the word "email"
+  // This avoids unnecessary LLM calls when email detection is clearly not needed
+  if (!assistantResponse.toLowerCase().includes('email')) {
+    return
+  }
+
+  try {
+    // Create a focused prompt for email detection
+    const emailDetectionPrompt = `You are an email request detection system. Your job is to analyze an assistant's response and determine if the assistant asked the user for their email address or contact information.
+
+Analyze the following assistant response and recent conversation context to determine if the assistant is requesting the user's email.
+
+Recent conversation context:
+${conversationContext
+  .slice(-5) // Last 5 messages for context
+  .map(msg => `${msg.role}: ${msg.content}`)
+  .join('\n')}
+
+Assistant's latest response:
+${assistantResponse}
+
+If the assistant asked for or requested the user's email address, contact information, or indicated they would follow up via email, you should call the request_user_email function.
+
+When calling the function, provide:
+- subject: A brief reason why the email is being requested
+- conversationSummary: A concise summary of what the user needs help with
+
+Only call the function if you are confident the assistant explicitly asked the user for email contact information.`
+
+    const requestOptions = {
+      model: EMAIL_DETECTION_MODEL,
+      input: [
+        {
+          role: 'user',
+          content: emailDetectionPrompt
+        }
+      ],
+      temperature: EMAIL_DETECTION_TEMPERATURE,
+      instructions: 'You are a precise email request detection system. Only call the function when you are certain the assistant requested contact information.',
+      tools: [requestUserEmailTool]
+    } as const satisfies ResponseCreateParams
+
+    // Create the response with streaming enabled for function call detection
+    const requestOptionsWithStream = {
+      ...requestOptions,
+      stream: true
+    } as const satisfies ResponseCreateParams
+
+    const response = await openai.responses.create(requestOptionsWithStream)
+
+    // Process the response to look for function calls
+    for await (const chunk of response) {
+      if (
+        chunk.type === 'response.output_item.done' &&
+        chunk.item.type === 'function_call'
+      ) {
+        await handleEmailDetectionFunctionCall(chunk.item, onSpecialEvent)
+      }
+    }
+  } catch (error) {
+    console.error('Error in email detection:', error)
+    // Don't throw - email detection failure shouldn't break the main flow
   }
 }

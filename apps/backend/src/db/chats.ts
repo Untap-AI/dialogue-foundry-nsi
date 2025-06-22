@@ -144,3 +144,33 @@ export const getChatsByCompanyId = async (companyId: string) => {
 
   return chats || []
 }
+
+/**
+ * Update a chat with the user's email (admin function to bypass RLS)
+ * @param chatId The chat ID to update
+ * @param userEmail The user's email address
+ * @returns The updated chat record
+ */
+export const updateChatUserEmailAdmin = async (chatId: string, userEmail: string) => {
+  if (!serviceSupabase) {
+    throw new Error(
+      'Service role client not initialized. Check your environment variables.'
+    )
+  }
+
+  const { data: updatedChat, error } = await serviceSupabase
+    .from('chats')
+    .update({ 
+      user_email: userEmail,
+      updated_at: new Date().toISOString()
+    })
+    .eq('id', chatId)
+    .select('*')
+    .single()
+
+  if (error) {
+    throw new Error(`Failed to update chat user email: ${error.message}`)
+  }
+
+  return updatedChat
+}

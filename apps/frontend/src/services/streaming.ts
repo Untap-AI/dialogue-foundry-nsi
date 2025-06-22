@@ -118,14 +118,10 @@ export class ChatStreamingService {
    * @param onComplete Callback for when the stream completes
    * @param onError Callback for when an error occurs
    * @param companyId Optional company ID for initializing a new chat if needed
+   * @param onSpecialEvent Optional callback for special events
    */
   async streamMessage(
-    userQuery: string,
-    onChunk: (chunk: string) => void,
-    onComplete: () => void,
-    onError: (error: Error) => void,
-    companyId?: string
-  ): Promise<void> {
+    userQuery: string, onChunk: (chunk: string) => void, onComplete: () => void, onError: (error: Error) => void, companyId?: string, onSpecialEvent?: (event: any) => void ): Promise<void> {
     // Reset reconnection counters if it's been a while
     this.checkAndResetReconnectCounters()
 
@@ -260,8 +256,6 @@ export class ChatStreamingService {
                 const content = data.content as string
                 fullText += content
 
-                console.log('onChunk', content)
-
                 onChunk(content)
 
                 // Start or restart the completion timeout after each chunk
@@ -269,7 +263,13 @@ export class ChatStreamingService {
               }
               break
           }
+
+          // For custom/special events like { type: 'request_email' }
+          if (onSpecialEvent) {
+            onSpecialEvent(data)
+          }
         } catch (error) {
+          console.log('error', error)
           const streamError =
             error instanceof StreamingError
               ? error

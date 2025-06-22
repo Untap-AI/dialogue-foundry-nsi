@@ -14,10 +14,11 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "clean": "rm -rf dist && rm -rf node_modules",
     "typecheck": "tsc --noEmit",
+    "unused-exports": "ts-unused-exports tsconfig.json",
     "publish-package": "node ../../packages/deploy-s3/dist/version-based-deploy.js --package ./package.json --source ./dist --bucket dialogue-foundry-frontend"
   },
   "dependencies": {
-    "@nlux/react": "^2",
+    "@nlux/core": "^2",
     "@nlux/themes": "^2",
     "@sentry/browser": "^9.12.0",
     "@sentry/react": "^9.12.0",
@@ -46,6 +47,7 @@
     "glob": "^10.3.10",
     "semver": "^7.5.4",
     "ts-node": "^10.9.2",
+    "ts-unused-exports": "^11.0.1",
     "typescript": "~5.3.3",
     "vite": "^6.2.0"
   }
