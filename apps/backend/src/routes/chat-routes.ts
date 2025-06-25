@@ -16,9 +16,12 @@ import {
 } from '../db/messages'
 import {
   generateStreamingChatCompletion,
-  detectEmailRequest,
   DEFAULT_SETTINGS
 } from '../services/openai-service'
+import { 
+  detectEmailRequest, 
+  processUserEmailInMessage 
+} from '../services/utils/email-detection'
 import { generateChatAccessToken } from '../lib/jwt-utils'
 import {
   authenticateChatAccess,
@@ -561,6 +564,26 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       })
       // Don't throw - email detection failure shouldn't break the main flow
     }
+
+    // Check if user provided email directly in their message (async, non-blocking)
+    setImmediate(async () => {
+      try {
+        await processUserEmailInMessage(
+          content,
+          chatId,
+          openaiMessages,
+          chatSettings,
+          chatConfig?.support_email || '',
+          Boolean(chat?.user_email)
+        )
+      } catch (userEmailProcessingError) {
+        logger.warn('Error in user email processing (non-critical)', {
+          error: userEmailProcessingError as Error,
+          chatId
+        })
+        // Don't throw - this is a non-critical feature
+      }
+    })
 
     // Send a completion message
     if (!res.writableEnded) {
