@@ -25,7 +25,7 @@ const openai = new OpenAI({
 })
 
 // Email detection model settings
-const EMAIL_DETECTION_MODEL = 'gpt-4.1'
+const EMAIL_DETECTION_MODEL = 'gpt-4.1-mini'
 const EMAIL_DETECTION_TEMPERATURE = 0.3
 
 // Tool definition for the email detection LLM
@@ -33,7 +33,7 @@ const requestUserEmailTool = {
   type: 'function',
   name: 'request_user_email',
   description:
-    'Call this function when the assistant is clearly asking for, requesting, or mentioning that they need the user\'s email address or contact information.',
+    'Request the user\'s email address when the assistant is asking for it.',
   parameters: {
     type: 'object',
     properties: {
@@ -95,23 +95,20 @@ export const detectUserEmailInMessage = (message: string): string | null => {
  * Function to handle email function calls from the email detection LLM
  */
 const handleEmailDetectionFunctionCall = async (
-  functionCall: ResponseFunctionToolCall,
-  onSpecialEvent?: (event: any) => void
+  functionCall: ResponseFunctionToolCall
 ): Promise<{ success: boolean; details?: any }> => {
-  if (functionCall.name === 'request_user_email') {
+  if (functionCall.name === 'request_user_email' && functionCall.arguments) {
     // Emit the special event to trigger email input UI
-    if (onSpecialEvent && functionCall.arguments) {
-      const args = JSON.parse(functionCall.arguments)
-      onSpecialEvent({
-        type: 'request_email',
-        details: args,
-        id: randomUUID()
-      })
-    }
-    return {
-      success: true,
-      details: { requested: true }
-    }
+    const args = JSON.parse(functionCall.arguments)
+
+      return {
+        success: true,
+        details: {
+          type: 'request_email',
+          details: args,
+          id: randomUUID()
+        }
+      }
   }
 
   return {
@@ -126,9 +123,9 @@ const handleEmailDetectionFunctionCall = async (
  */
 export const detectEmailRequest = async (
   assistantResponse: string,
+  conversationHistory: Message[],
   settings: ChatSettings,
-  onSpecialEvent?: (event: any) => void
-): Promise<void> => {
+) => {
   // Only proceed if email function is enabled
   if (!settings.enableEmailFunction) {
     return
@@ -156,28 +153,31 @@ export const detectEmailRequest = async (
 
   try {
     // Create a focused prompt for email detection with clear examples
-    const emailDetectionPrompt = `Analyze the following assistant response to determine if the assistant is asking for or requesting the user's email address or contact information.
+    const systemPrompt = `You are an expert at detecting when an AI assistant asks for a user's email address.
+Your primary task is to analyze the latest "ASSISTANT RESPONSE" and determine if it contains a request for the user's email.
 
-Assistant's response:
-"${assistantResponse}"
+- If the "ASSISTANT RESPONSE" is asking for an email, you MUST call the \`request_user_email\` function.
+- When you call the function, use the "CONVERSATION HISTORY" to generate a concise subject and a summary of the user's needs.
+- If the "ASSISTANT RESPONSE" does NOT ask for an email, do NOT call any function.
 
-The assistant is requesting email/contact if they:
-- Directly ask for email address ("What's your email?", "Can you provide your email?", "would you like to share your email?")
-- Ask for contact information from the user in any form
+Do NOT call the function if:
+- Email is mentioned in a generic context without a request to the user.`
 
-IMPORTANT: Only call the function if the assistant is clearly requesting the user's email or contact information. Do not call if they're just mentioning email in general terms or talking about someone else's email or mentioning that they sent an email already.
-
-If the assistant IS requesting the user's email/contact information, call the request_user_email function with appropriate details.`
+    const conversationHistoryString = conversationHistory.slice(-5).map(msg => `${msg.role}: ${msg.content}`).join('\n')
 
     const requestOptions = {
       model: EMAIL_DETECTION_MODEL,
       input: [
         {
+          role: 'system',
+          content: systemPrompt
+        },
+        {
           role: 'user',
-          content: emailDetectionPrompt
+          content: `CONVERSATION HISTORY:\n${conversationHistoryString}\n\nASSISTANT RESPONSE:\n"${assistantResponse}"`
         }
       ],
-      temperature: EMAIL_DETECTION_TEMPERATURE,
+      temperature: 0,
       tools: [requestUserEmailTool]
     } as const satisfies ResponseCreateParams
 
@@ -195,7 +195,7 @@ If the assistant IS requesting the user's email/contact information, call the re
         chunk.type === 'response.output_item.done' &&
         chunk.item.type === 'function_call'
       ) {
-        await handleEmailDetectionFunctionCall(chunk.item, onSpecialEvent)
+        return handleEmailDetectionFunctionCall(chunk.item)
       }
     }
   } catch (error) {

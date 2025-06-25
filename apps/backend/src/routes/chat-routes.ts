@@ -546,16 +546,18 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     // After main streaming is complete, run email detection using smaller LLM
     try {
       if (aiResponseContent) {
-        await detectEmailRequest(
+        const emailDetectionResult = await detectEmailRequest(
           aiResponseContent,
-          chatSettings,
-          event => {
+          openaiMessages,
+          chatSettings
+        )
+
+        if (emailDetectionResult?.success) {
             if (!res.writableEnded) {
-              res.write(`data: ${JSON.stringify(event)}\n\n`)
+              res.write(`data: ${JSON.stringify(emailDetectionResult.details)}\n\n`)
               res.flushHeaders()
             }
-          }
-        )
+        }
       }
     } catch (emailDetectionError) {
       logger.warn('Error in email detection (non-critical)', {
