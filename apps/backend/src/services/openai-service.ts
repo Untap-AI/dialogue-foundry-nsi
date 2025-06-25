@@ -241,7 +241,7 @@ Assistant's response:
 "${assistantResponse}"
 
 The assistant is requesting email/contact if they:
-- Directly ask for email address ("What's your email?", "Can you provide your email?")
+- Directly ask for email address ("What's your email?", "Can you provide your email?", "would you like to share your email?")
 - Mention following up or contacting later ("I'd like to follow up", "Let me get back to you")
 - Offer to send information ("I can send you details", "I'll email you the information")
 - Ask for contact information in any form
