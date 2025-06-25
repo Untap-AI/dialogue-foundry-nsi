@@ -169,14 +169,6 @@ IMPORTANT: Only call the function if the assistant is clearly requesting the use
 
 If the assistant IS requesting the user's email/contact information, call the request_user_email function with appropriate details.`
 
-    // Debug logging
-    console.log('EMAIL DETECTION: Analyzing response:', {
-      response: assistantResponse.substring(0, 200) + (assistantResponse.length > 200 ? '...' : ''),
-      hasEmailIndicator,
-      matchedPatterns: emailPatterns.filter(pattern => responseText.includes(pattern)),
-      companyId: settings.companyId
-    })
-
     const requestOptions = {
       model: EMAIL_DETECTION_MODEL,
       input: [
@@ -197,29 +189,14 @@ If the assistant IS requesting the user's email/contact information, call the re
 
     const response = await openai.responses.create(requestOptionsWithStream)
 
-    let functionCalled = false
     // Process the response to look for function calls
     for await (const chunk of response) {
       if (
         chunk.type === 'response.output_item.done' &&
         chunk.item.type === 'function_call'
       ) {
-        functionCalled = true
-        console.log('EMAIL DETECTION: Function called!', {
-          functionName: chunk.item.name,
-          arguments: chunk.item.arguments,
-          companyId: settings.companyId
-        })
         await handleEmailDetectionFunctionCall(chunk.item, onSpecialEvent)
       }
-    }
-
-    // Debug log when no function was called
-    if (!functionCalled) {
-      console.log('EMAIL DETECTION: No function called', {
-        response: assistantResponse.substring(0, 200) + (assistantResponse.length > 200 ? '...' : ''),
-        companyId: settings.companyId
-      })
     }
   } catch (error) {
     console.error('Error in email detection:', error)
