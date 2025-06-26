@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.3.3
+
+### Patch Changes
+
+- Fix email propmt
+
 ## 0.3.2
 
 ### Patch Changes

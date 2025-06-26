@@ -258,7 +258,8 @@ export const ChatInterface = ({
       conversationStarters
     },
     messageOptions: {
-      markdownLinkTarget: 'self' as 'self'
+      markdownLinkTarget: 'self' as 'self',
+      waitTimeBeforeStreamCompletion: 10000
     },
     personaOptions: {
       assistant: personaOptions?.assistant as AssistantPersona

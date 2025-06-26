@@ -185,9 +185,6 @@ export class ChatStreamingService {
     // Close any existing EventSource
     this.cancelStream()
 
-    // Initialize timeout state
-    this.clearCompletionTimeout()
-
     // Create the URL with query parameters for token and content
     const url = new URL(`${this.apiBaseUrl}/chats/${chatId}/stream`)
     url.searchParams.append('content', userQuery)
@@ -257,10 +254,10 @@ export class ChatStreamingService {
                 fullText += content
 
                 onChunk(content)
-
-                // Start or restart the completion timeout after each chunk
-                this.startCompletionTimeout(onComplete, fullText)
               }
+              break
+            case 'done':
+              onComplete()
               break
           }
 
@@ -732,9 +729,6 @@ export class ChatStreamingService {
       // Set flag before any operations that might trigger events
       this.isClosingConnection = true
 
-      // Clear any pending completion timeout
-      this.clearCompletionTimeout()
-
       // Remove all event listeners before closing
       // eslint-disable-next-line no-null/no-null
       this.eventSource.onmessage = null
@@ -778,37 +772,5 @@ export class ChatStreamingService {
     this.isClosingConnection = true
     this.closeEventSource()
     this.reconnectAttempts = 0
-  }
-
-  private clearCompletionTimeout(): void {
-    if (this.completionTimeout) {
-      clearTimeout(this.completionTimeout)
-      this.completionTimeout = undefined
-    }
-  }
-
-  /**
-   * Start or restart the completion timeout
-   */
-  private startCompletionTimeout(onComplete: () => void, fullText: string): void {
-    // Clear any existing timeout
-    this.clearCompletionTimeout()
-
-    // Start timeout after each chunk
-    this.completionTimeout = setTimeout(() => {
-      if (!this.isClosingConnection) {
-        // Mark that we're intentionally closing before invoking callbacks
-        this.isClosingConnection = true
-
-        this.closeEventSource()
-
-        console.log('fullText', fullText)
-        
-        // Process the completion
-        onComplete()
-
-        console.log('onComplete called')
-      }
-    }, 2000)
   }
 }
