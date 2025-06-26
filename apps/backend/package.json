@@ -37,10 +37,16 @@
     "install:prod": "pnpm install --production"
   },
   "dependencies": {
+    "@dialogue-foundry/tsconfig": "workspace:*",
     "@pinecone-database/pinecone": "^5.1.1",
     "@sendgrid/mail": "^8.1.5",
     "@sentry/node": "^9.12.0",
     "@supabase/supabase-js": "^2.49.1",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/jsonwebtoken": "^9.0.9",
+    "@types/node": "^20.17.24",
+    "@types/uuid": "^9.0.8",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
     "express": "^4.21.2",
@@ -48,24 +54,18 @@
     "jsonwebtoken": "^9.0.2",
     "node-cache": "^5.1.2",
     "openai": "^4.93.0",
+    "tsc": "^2.0.4",
+    "typescript": "^5.3.3",
     "uuid": "^9.0.1",
     "zod": "^3.24.2"
   },
   "devDependencies": {
-    "@dialogue-foundry/tsconfig": "workspace:*",
     "@dialogue-foundry/eslint-config": "workspace:*",
-    "@types/cors": "^2.8.17",
-    "@types/express": "^4.17.21",
-    "@types/jsonwebtoken": "^9.0.9",
-    "@types/node": "^20.17.24",
-    "@types/uuid": "^9.0.8",
     "eslint": "^8.57.1",
     "globals": "^16.0.0",
     "supabase": "^2.20.5",
     "ts-node": "^10.9.2",
-    "ts-node-dev": "^2.0.0",
-    "tsc": "^2.0.4",
-    "typescript": "^5.3.3"
+    "ts-node-dev": "^2.0.0"
   },
   "files": [
     "dist/**/*"
