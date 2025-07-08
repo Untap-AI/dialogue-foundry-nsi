@@ -23,11 +23,27 @@ type RetrievedDocument = {
 }
 
 /**
+ * Extracts f-codes from a query string
+ * F-codes are the letter 'f' followed by 5-7 digits
+ * @param query The query string to search for f-codes
+ * @returns Array of unique f-codes found in the query
+ */
+const extractFCodes = (query: string): string[] => {
+  const fCodeRegex = /f\d{5,7}/gi
+  const matches = query.match(fCodeRegex)
+  if (!matches) return []
+  
+  // Return unique f-codes in lowercase for consistent matching
+  return [...new Set(matches.map(code => code.toLowerCase()))]
+}
+
+/**
  * Retrieves documents from Pinecone index based on the query
+ * Automatically detects f-codes in the query and adds them as metadata filters
  * @param companyId The company ID to determine which index to use
  * @param query The user's query to find similar documents
  * @param topK Number of documents to retrieve (default: 5)
- * @param filter Optional metadata filter
+ * @param filter Optional metadata filter (will be merged with auto-detected f-code filters)
  * @returns Array of retrieved documents with similarity scores
  */
 export const retrieveDocuments = async (
@@ -45,13 +61,36 @@ export const retrieveDocuments = async (
       cacheService.setPineconeIndex(indexName, index)
     }
 
+    // Extract f-codes from the query
+    const fCodes = extractFCodes(query)
+    
+    // Build the complete filter by merging existing filter with f-code filters
+    let completeFilter = filter || {}
+    
+    if (fCodes.length > 0) {
+      logger.info(`Detected f-codes in query: ${fCodes.join(', ')}`)
+      
+      // If multiple f-codes are found, use $or to match any of them
+      if (fCodes.length === 1) {
+        completeFilter = {
+          ...completeFilter,
+          f_code: fCodes[0]
+        }
+      } else {
+        completeFilter = {
+          ...completeFilter,
+          $or: fCodes.map(code => ({ f_code: code }))
+        }
+      }
+    }
+
     // Query the Pinecone index with the text query feature
     // This uses serverless Pinecone with auto-embedding
     const queryResponse = await index.searchRecords({
       query: {
         topK,
         inputs: { text: query },
-        filter
+        filter: Object.keys(completeFilter).length > 0 ? completeFilter : undefined
         // TODO: Add reranking
       },
       fields: ['chunk_text'] // Only request chunk_text and url
