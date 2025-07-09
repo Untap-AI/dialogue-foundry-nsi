@@ -84,6 +84,9 @@ export const retrieveDocuments = async (
       }
     }
 
+    console.log('completeFilter', completeFilter)
+    console.log('fCodes', fCodes)
+
     // Query the Pinecone index with the text query feature
     // This uses serverless Pinecone with auto-embedding
     const queryResponse = await index.searchRecords({
@@ -107,6 +110,8 @@ export const retrieveDocuments = async (
         }
       })
       .filter((doc) => doc !== undefined)
+
+    console.log('documents', documents)
 
     return documents
   } catch (error) {
