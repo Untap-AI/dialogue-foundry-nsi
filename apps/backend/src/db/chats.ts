@@ -98,53 +98,6 @@ export const createChatAdmin = async (
   return createdChat
 }
 
-export const updateChat = async (
-  chatId: string,
-  chat: TablesUpdate<'chats'>
-) => {
-  const { data: updatedChat, error } = await supabase
-    .from('chats')
-    .update(chat)
-    .eq('id', chatId)
-    .select('*')
-    .single()
-
-  if (error) {
-    throw new Error(error.message)
-  }
-
-  return updatedChat
-}
-
-export const deleteChat = async (chatId: string) => {
-  const { error } = await supabase.from('chats').delete().eq('id', chatId)
-
-  if (error) {
-    throw new Error(error.message)
-  }
-
-  return true
-}
-
-/**
- * Get all chats for a specific company
- * @param companyId The company ID to filter by
- * @returns Array of chats for the company
- */
-export const getChatsByCompanyId = async (companyId: string) => {
-  const { data: chats, error } = await supabase
-    .from('chats')
-    .select('*')
-    .eq('company_id', companyId)
-    .order('created_at', { ascending: false })
-
-  if (error) {
-    throw new Error(`Failed to get chats by company ID: ${error.message}`)
-  }
-
-  return chats || []
-}
-
 /**
  * Update a chat with the user's email (admin function to bypass RLS)
  * @param chatId The chat ID to update

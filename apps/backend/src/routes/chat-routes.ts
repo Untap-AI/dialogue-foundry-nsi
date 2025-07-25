@@ -2,11 +2,7 @@ import express from 'express'
 import { v4 as uuidv4 } from 'uuid'
 import {
   getChatById,
-  getChatsByUserId,
-  updateChat,
-  deleteChat,
   createChatAdmin,
-  getChatsByCompanyId,
   updateChatUserEmailAdmin
 } from '../db/chats'
 import {
@@ -25,49 +21,19 @@ import {
 import { generateChatAccessToken } from '../lib/jwt-utils'
 import {
   authenticateChatAccess,
-  authenticateUser
 } from '../middleware/auth-middleware'
 import { getChatConfigByCompanyId } from '../db/chat-configs'
 import {
   retrieveDocuments,
   formatDocumentsAsContext
 } from '../services/pinecone-service'
-import { cacheService } from '../services/cache-service'
+
 import { logger } from '../lib/logger'
 import type { CustomRequest } from '../middleware/auth-middleware'
 import type { Message, ChatSettings } from '../services/openai-service'
 import { sendInquiryEmail } from '../services/sendgrid-service'
 
 const router = express.Router()
-
-// Get all chats for a user (requires user authentication)
-router.get(
-  '/user/:userId',
-  authenticateUser,
-  async (req: CustomRequest, res) => {
-    try {
-      // Ensure the requesting user can only access their own chats
-      const { userId } = req.params
-
-      // Ensure userId is a string
-      if (!userId) {
-        return res.status(400).json({ error: 'User ID is required' })
-      }
-
-      // Check if the authenticated user is requesting their own chats
-      if (req.user?.userId !== userId) {
-        return res
-          .status(403)
-          .json({ error: 'You can only access your own chats' })
-      }
-
-      const chats = await getChatsByUserId(userId)
-      return res.json(chats)
-    } catch (error) {
-      return res.status(500).json({ error })
-    }
-  }
-)
 
 // Get a chat by ID with its messages (requires chat-specific authentication)
 router.get('/:chatId', authenticateChatAccess, async (req, res) => {
@@ -78,17 +44,8 @@ router.get('/:chatId', authenticateChatAccess, async (req, res) => {
       return res.status(400).json({ error: 'Chat ID is required' })
     }
 
-    // Check cache first
-    let chat = cacheService.getChat(chatId)
-    if (!chat) {
-      const dbChat = await getChatById(chatId)
-      if (dbChat) {
-        cacheService.setChat(chatId, dbChat)
-        chat = dbChat
-      } else {
-        chat = undefined
-      }
-    }
+    // Get chat from database
+    const chat = await getChatById(chatId)
 
     if (!chat) {
       return res.status(404).json({ error: 'Chat not found' })
@@ -126,18 +83,12 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Company ID is required' })
     }
 
-    let chatConfig = cacheService.getChatConfig(companyId)
+    const chatConfig = await getChatConfigByCompanyId(companyId)
     if (!chatConfig) {
-      const dbConfig = await getChatConfigByCompanyId(companyId)
-      if (dbConfig) {
-        chatConfig = dbConfig
-        cacheService.setChatConfig(companyId, dbConfig)
-      } else {
-        logger.error('Chat config not found', {
-          userId: req.body.userId
-        })
-        return res.status(400).json({ error: 'Chat config not found' })
-      }
+      logger.error('Chat config not found', {
+        userId: req.body.userId
+      })
+      return res.status(400).json({ error: 'Chat config not found' })
     }
 
     const userId = userIdParam === 'undefined' || userIdParam === undefined ? uuidv4() : userIdParam
@@ -181,74 +132,6 @@ router.post('/', async (req, res) => {
   }
 })
 
-// Get all chats for a specific company
-router.get('/company/:companyId', async (req, res) => {
-  try {
-    const { companyId } = req.params
-
-    if (!companyId) {
-      return res.status(400).json({ error: 'Company ID is required' })
-    }
-
-    const chats = await getChatsByCompanyId(companyId)
-
-    return res.json({ chats })
-  } catch (error) {
-    logger.error('Error getting company chats', {
-      error: error as Error,
-      companyId: req.params.companyId
-    })
-    return res.status(500).json({ error: 'Failed to get company chats' })
-  }
-})
-
-// Update a chat (requires chat-specific authentication)
-router.put('/:chatId', authenticateChatAccess, async (req, res) => {
-  try {
-    const { chatId } = req.params
-
-    if (!chatId) {
-      return res.status(400).json({ error: 'Chat ID is required' })
-    }
-
-    const { name: chatName } = req.body
-
-    const updatedChat = await updateChat(chatId, {
-      name: chatName,
-      updated_at: new Date().toISOString()
-    })
-
-    // Update the cache with the new data
-    if (updatedChat) {
-      cacheService.setChat(chatId, updatedChat)
-    }
-
-    return res.json(updatedChat)
-  } catch (error) {
-    return res.status(500).json({ error })
-  }
-})
-
-// Delete a chat (requires chat-specific authentication)
-router.delete('/:chatId', authenticateChatAccess, async (req, res) => {
-  try {
-    const { chatId } = req.params
-
-    if (!chatId) {
-      return res.status(400).json({ error: 'Chat ID is required' })
-    }
-
-    await deleteChat(chatId)
-
-    // Remove from cache
-    cacheService.deleteChat(chatId)
-
-    return res.json({ success: true })
-  } catch (error) {
-    return res.status(500).json({ error })
-  }
-})
-
 // Add after other endpoints
 router.post('/:chatId/send-email', authenticateChatAccess, async (req, res) => {
   try {
@@ -260,13 +143,7 @@ router.post('/:chatId/send-email', authenticateChatAccess, async (req, res) => {
     }
 
     // Get chat and companyId
-    let chat = cacheService.getChat(chatId)
-    if (!chat) {
-      chat = (await getChatById(chatId)) ?? undefined
-      if (chat) {
-        cacheService.setChat(chatId, chat)
-      }
-    }
+    const chat = await getChatById(chatId)
 
     if (!chat) {
       return res.status(404).json({ error: 'Chat not found' })
@@ -292,11 +169,8 @@ router.post('/:chatId/send-email', authenticateChatAccess, async (req, res) => {
     if (emailSent) {
       // Store the user's email in the chat record for future reference
       try {
-        const updatedChat = await updateChatUserEmailAdmin(chatId, userEmail)
-        // Update the cached chat with the new email
-        if (updatedChat) {
-          cacheService.setChat(chatId, updatedChat)
-        }
+        await updateChatUserEmailAdmin(chatId, userEmail)
+        // Chat updated in database with email
       } catch (emailUpdateError) {
         // Log the error but don't fail the request since the email was sent successfully
         logger.error('Error updating chat with user email', {
@@ -376,19 +250,8 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       return
     }
 
-    // Check cache first before database query
-    let chat = cacheService.getChat(chatId)
-
-    if (!chat) {
-      const dbChat = await getChatById(chatId)
-
-      if (dbChat) {
-        cacheService.setChat(chatId, dbChat)
-        chat = dbChat
-      } else {
-        chat = undefined
-      }
-    }
+    // Get chat from database
+    const chat = await getChatById(chatId)
 
     if (!chat) {
       sendErrorEvent('Chat not found', 'NOT_FOUND')
@@ -407,21 +270,14 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       return
     }
 
-    // Try to get config from cache first
-    // TODO: Make this reusable for other routes
-    let chatConfig = cacheService.getChatConfig(companyId)
+    // Get config from database
+    const chatConfig = await getChatConfigByCompanyId(companyId)
     if (!chatConfig) {
-      const dbConfig = await getChatConfigByCompanyId(companyId)
-      if (dbConfig) {
-        chatConfig = dbConfig
-        cacheService.setChatConfig(companyId, dbConfig)
-      } else {
-        sendErrorEvent(
-          'The company associated with this chat is not available. Please create a chat with a valid company ID.',
-          'INVALID_COMPANY'
-        )
-        return
-      }
+      sendErrorEvent(
+        'The company associated with this chat is not available. Please create a chat with a valid company ID.',
+        'INVALID_COMPANY'
+      )
+      return
     }
 
     // Get chat settings - using request parameters, chat config, or defaults

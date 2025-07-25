@@ -1,6 +1,5 @@
 import { Pinecone } from '@pinecone-database/pinecone'
 import dotenv from 'dotenv'
-import { cacheService } from './cache-service'
 import { logger } from '../lib/logger'
 
 dotenv.config()
@@ -37,13 +36,8 @@ export const retrieveDocuments = async (
   filter?: Record<string, unknown>
 ) => {
   try {
-    // Get the index from centralized cache or initialize it
-    let index = cacheService.getPineconeIndex(indexName)
-    if (!index) {
-      // TODO: Remove this once we have a namespace for each company
-      index = pinecone.index(indexName).namespace('')
-      cacheService.setPineconeIndex(indexName, index)
-    }
+    // Get the index directly without caching
+    const index = pinecone.index(indexName).namespace('')
 
     // Query the Pinecone index with the text query feature
     // This uses serverless Pinecone with auto-embedding

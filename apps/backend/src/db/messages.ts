@@ -23,20 +23,6 @@ const serviceSupabase =
       })
     : undefined
 
-export const getMessageById = async (messageId: string) => {
-  const { data: message, error } = await supabase
-    .from('messages')
-    .select('*')
-    .eq('id', messageId)
-    .single()
-
-  if (error) {
-    throw new Error(error.message)
-  }
-
-  return message
-}
-
 export const getMessagesByChatId = async (chatId: string) => {
   // Use serviceSupabase to bypass RLS if available, otherwise fall back to regular client
   const client = serviceSupabase || supabase
@@ -52,20 +38,6 @@ export const getMessagesByChatId = async (chatId: string) => {
   }
 
   return messages || []
-}
-
-export const createMessage = async (message: TablesInsert<'messages'>) => {
-  const { data: createdMessage, error } = await supabase
-    .from('messages')
-    .insert([message])
-    .select('*')
-    .single()
-
-  if (error) {
-    throw new Error(error.message)
-  }
-
-  return createdMessage
 }
 
 /**
@@ -162,91 +134,6 @@ export const createMessageAdmin = async (
   }
 
   return createdMessage
-}
-
-export const createMessages = async (messages: TablesInsert<'messages'>[]) => {
-  const { data: createdMessages, error } = await supabase
-    .from('messages')
-    .insert(messages)
-    .select('*')
-
-  if (error) {
-    throw new Error(error.message)
-  }
-
-  return createdMessages
-}
-
-/**
- * Create multiple messages with admin privileges (bypasses RLS)
- * Use this when creating messages on behalf of users
- */
-export const createMessagesAdmin = async (
-  messages: Omit<TablesInsert<'messages'>, 'id'>[]
-) => {
-  if (!serviceSupabase) {
-    throw new Error(
-      'Service role client not initialized. Check your environment variables.'
-    )
-  }
-
-  if (messages.length === 0) {
-    return []
-  }
-
-  // Assuming all messages are for the same chat_id (which is typical usage)
-  const chatId = messages[0].chat_id
-
-  // Clean up old messages before creating new ones
-  if (chatId) {
-    await cleanupOldMessages(chatId)
-  }
-
-  const messagesWithDefaults = messages.map(message => ({
-    id: uuidv4(),
-    ...message,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  }))
-
-  const { data: createdMessages, error } = await serviceSupabase
-    .from('messages')
-    .insert(messagesWithDefaults)
-    .select('*')
-
-  if (error) {
-    throw new Error(`Failed to create messages: ${error.message}`)
-  }
-
-  return createdMessages
-}
-
-export const updateMessage = async (
-  messageId: string,
-  message: TablesUpdate<'messages'>
-) => {
-  const { data: updatedMessage, error } = await supabase
-    .from('messages')
-    .update(message)
-    .eq('id', messageId)
-    .select('*')
-    .single()
-
-  if (error) {
-    throw new Error(error.message)
-  }
-
-  return updatedMessage
-}
-
-export const deleteMessage = async (messageId: string) => {
-  const { error } = await supabase.from('messages').delete().eq('id', messageId)
-
-  if (error) {
-    throw new Error(error.message)
-  }
-
-  return true
 }
 
 export const getLatestSequenceNumber = async (chatId: string) => {

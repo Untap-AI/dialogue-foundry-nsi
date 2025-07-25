@@ -9,7 +9,6 @@ import type { Message, ChatSettings } from '../openai-service'
 import { sendInquiryEmail } from '../sendgrid-service'
 import { updateChatUserEmailAdmin } from '../../db/chats'
 import { getMessagesByChatId } from '../../db/messages'
-import { cacheService } from '../cache-service'
 import { logger } from '../../lib/logger'
 
 dotenv.config()
@@ -337,12 +336,11 @@ export const processUserEmailInMessage = async (
       try {
         const updatedChat = await updateChatUserEmailAdmin(chatId, userEmail)
         if (updatedChat) {
-          cacheService.setChat(chatId, updatedChat)
+          logger.info('Successfully processed user email from message', {
+            chatId,
+            subject: emailSummary.subject
+          })
         }
-        logger.info('Successfully processed user email from message', {
-          chatId,
-          subject: emailSummary.subject
-        })
       } catch (emailUpdateError) {
         logger.error('Error updating chat with user email (non-critical)', {
           error: emailUpdateError as Error,
