@@ -43,8 +43,13 @@ export const ChatInterface = ({
     conversationStarters,
     chatConfig,
     theme = 'light',
-    personaOptions
+    personaOptions,
+    poweredBy
   } = useConfig()
+
+  const showPoweredBy = poweredBy?.show ?? true
+  const poweredByText = poweredBy?.text ?? 'Untap AI'
+  const poweredByUrl = poweredBy?.url ?? 'https://untap-ai.com'
 
   // Add ref for the chat interface container
   const chatInterfaceRef = useRef<HTMLDivElement>(null)
@@ -348,16 +353,18 @@ export const ChatInterface = ({
           }
         })()}
       </div>
-      <div className="df-powered-by">
-        Powered by{' '}
-        <a
-          href="https://untap-ai.com"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Untap AI
-        </a>
-      </div>
+      {showPoweredBy && (
+        <div className="df-powered-by">
+          Powered by{' '}
+          <a
+            href={poweredByUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            {poweredByText}
+          </a>
+        </div>
+      )}
     </div>
   )
 }
