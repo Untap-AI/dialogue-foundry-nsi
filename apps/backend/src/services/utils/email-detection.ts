@@ -177,6 +177,10 @@ Do NOT call the function if:
         }
       ],
       temperature: 0,
+      reasoning: {
+        effort: "minimal"
+      },
+      service_tier: "priority",
       tools: [requestUserEmailTool]
     } as const satisfies ResponseCreateParams
 

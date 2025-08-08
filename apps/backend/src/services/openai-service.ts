@@ -100,15 +100,18 @@ export const generateStreamingChatCompletion = async (
     const requestOptions = {
       model: settings.model,
       input: limitedMessages,
-      verbosity: "low",
-      temperature: settings.temperature,
       instructions: systemPromptWithCurrentDate,
+      // verbosity: "low",
+      reasoning: {
+        effort: "minimal"
+      },
       stream: true,
       text: {
         format: {
           type: 'text'
-        }
-      }
+        },
+      },
+      service_tier: "priority"
       // Note: No tools are included here - this LLM focuses purely on content generation
     } as const satisfies ResponseCreateParams
 
