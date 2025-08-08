@@ -176,7 +176,6 @@ Do NOT call the function if:
           content: `CONVERSATION HISTORY:\n${conversationHistoryString}\n\nASSISTANT RESPONSE:\n"${assistantResponse}"`
         }
       ],
-      temperature: 0,
       reasoning: {
         effort: "minimal"
       },
