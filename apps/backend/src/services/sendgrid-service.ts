@@ -2,7 +2,6 @@ import sgMail from '@sendgrid/mail'
 import dotenv from 'dotenv'
 import { getChatConfigByCompanyId } from '../db/chat-configs'
 import { logger } from '../lib/logger'
-import { cacheService } from './cache-service'
 import type { MailDataRequired } from '@sendgrid/mail'
 
 dotenv.config()
@@ -83,9 +82,7 @@ export const sendInquiryEmail = async (
 ): Promise<boolean> => {
   try {
     // Get company configuration to check for custom template ID
-    const companyConfig =
-      cacheService.getChatConfig(emailData.companyId) ??
-      (await getChatConfigByCompanyId(emailData.companyId))
+    const companyConfig = await getChatConfigByCompanyId(emailData.companyId)
 
     if (!companyConfig) {
       logger.error(

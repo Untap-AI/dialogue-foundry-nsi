@@ -9,7 +9,6 @@ import type { Message, ChatSettings } from '../openai-service'
 import { sendInquiryEmail } from '../sendgrid-service'
 import { updateChatUserEmailAdmin } from '../../db/chats'
 import { getMessagesByChatId } from '../../db/messages'
-import { cacheService } from '../cache-service'
 import { logger } from '../../lib/logger'
 
 dotenv.config()
@@ -25,7 +24,7 @@ const openai = new OpenAI({
 })
 
 // Email detection model settings
-const EMAIL_DETECTION_MODEL = 'gpt-4.1-mini'
+const EMAIL_DETECTION_MODEL = 'gpt-5-mini'
 const EMAIL_DETECTION_TEMPERATURE = 0.3
 
 // Tool definition for the email detection LLM
@@ -178,6 +177,10 @@ Do NOT call the function if:
         }
       ],
       temperature: 0,
+      reasoning: {
+        effort: "minimal"
+      },
+      service_tier: "priority",
       tools: [requestUserEmailTool]
     } as const satisfies ResponseCreateParams
 
@@ -337,12 +340,11 @@ export const processUserEmailInMessage = async (
       try {
         const updatedChat = await updateChatUserEmailAdmin(chatId, userEmail)
         if (updatedChat) {
-          cacheService.setChat(chatId, updatedChat)
+          logger.info('Successfully processed user email from message', {
+            chatId,
+            subject: emailSummary.subject
+          })
         }
-        logger.info('Successfully processed user email from message', {
-          chatId,
-          subject: emailSummary.subject
-        })
       } catch (emailUpdateError) {
         logger.error('Error updating chat with user email (non-critical)', {
           error: emailUpdateError as Error,

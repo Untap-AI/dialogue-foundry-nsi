@@ -35,7 +35,7 @@ export type ChatSettings = {
 
 // Default settings to use if none are provided
 export const DEFAULT_SETTINGS: Pick<ChatSettings, 'model' | 'temperature'> = {
-  model: 'gpt-4.1',
+  model: 'gpt-5',
   temperature: 0.5
 }
 
@@ -100,14 +100,18 @@ export const generateStreamingChatCompletion = async (
     const requestOptions = {
       model: settings.model,
       input: limitedMessages,
-      temperature: settings.temperature,
       instructions: systemPromptWithCurrentDate,
+      // verbosity: "low",
+      reasoning: {
+        effort: "minimal"
+      },
       stream: true,
       text: {
         format: {
           type: 'text'
-        }
-      }
+        },
+      },
+      service_tier: "priority"
       // Note: No tools are included here - this LLM focuses purely on content generation
     } as const satisfies ResponseCreateParams
 

@@ -3,9 +3,6 @@ import cors from 'cors'
 import dotenv from 'dotenv'
 import rateLimit from 'express-rate-limit'
 import chatRoutes from './routes/chat-routes'
-import chatConfigRoutes from './routes/chat-config-routes'
-import cacheRoutes from './routes/cache-routes'
-import adminRoutes from './routes/admin-routes'
 import analyticsRoutes from './routes/analytics-routes'
 import { logger } from './lib/logger'
 import { setupExpressErrorHandler } from '@sentry/node'
@@ -103,9 +100,6 @@ app.use(
 
 // API routes
 app.use('/api/chats', chatRoutes)
-app.use('/api/chat-configs', chatConfigRoutes)
-app.use('/api/cache', cacheRoutes)
-app.use('/api/admin', adminRoutes)
 app.use('/api/analytics', analyticsRoutes)
 app.use('/api/events', analyticsRoutes)
 
