@@ -4,6 +4,7 @@ import { MAX_MESSAGES_PER_CHAT } from '../db/messages'
 import type {
   ResponseCreateParams
 } from 'openai/resources/responses/responses.mjs'
+import { Stream } from 'openai/core/streaming.js'
 
 dotenv.config()
 
@@ -101,7 +102,6 @@ export const generateStreamingChatCompletion = async (
       model: settings.model,
       input: limitedMessages,
       instructions: systemPromptWithCurrentDate,
-      // verbosity: "low",
       reasoning: {
         effort: "minimal"
       },
@@ -110,13 +110,16 @@ export const generateStreamingChatCompletion = async (
         format: {
           type: 'text'
         },
+        verbosity: "low",
       },
       service_tier: "priority"
       // Note: No tools are included here - this LLM focuses purely on content generation
-    } as const satisfies ResponseCreateParams
+    } as ResponseCreateParams
 
     // Create the response with streaming enabled
-    const response = await openai.responses.create(requestOptions)
+    const response = await openai.responses.create(requestOptions) as unknown as Stream<OpenAI.Responses.ResponseStreamEvent> & {
+      _request_id?: string | null;
+    }
 
     let fullText = ''
 
