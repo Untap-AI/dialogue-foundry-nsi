@@ -229,8 +229,6 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
 
     // Get content from body (POST) or query params (GET)
     const content = req.body.content || req.query.content
-    const model = req.body.model || req.query.model
-    const temperature = req.body.temperature || req.query.temperature
     const timezone = req.body.timezone || req.query.timezone || 'UTC'
 
     if (!chatId) {

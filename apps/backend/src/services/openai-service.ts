@@ -26,7 +26,6 @@ export type Message = {
 
 export type ChatSettings = {
   model: string
-  temperature: number
   systemPrompt: string
   companyId: string
   enableEmailFunction?: boolean
@@ -35,9 +34,8 @@ export type ChatSettings = {
 }
 
 // Default settings to use if none are provided
-export const DEFAULT_SETTINGS: Pick<ChatSettings, 'model' | 'temperature'> = {
+export const DEFAULT_SETTINGS: Pick<ChatSettings, 'model'> = {
   model: 'gpt-5',
-  temperature: 0.5
 }
 
 /**
