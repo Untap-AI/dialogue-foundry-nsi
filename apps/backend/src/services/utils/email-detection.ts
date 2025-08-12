@@ -25,7 +25,6 @@ const openai = new OpenAI({
 
 // Email detection model settings
 const EMAIL_DETECTION_MODEL = 'gpt-5-mini'
-const EMAIL_DETECTION_TEMPERATURE = 0.3
 
 // Tool definition for the email detection LLM
 const requestUserEmailTool = {
@@ -239,7 +238,6 @@ Call the generate_email_summary function with:
           content: prompt
         }
       ],
-      temperature: EMAIL_DETECTION_TEMPERATURE,
       tools: [generateEmailSummaryTool]
     } as const satisfies ResponseCreateParams
 
