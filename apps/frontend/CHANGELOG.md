@@ -1,5 +1,29 @@
 # @dialogue-foundry/frontend
 
+## 0.3.8
+
+### Patch Changes
+
+- Last seq twice
+
+## 0.3.7
+
+### Patch Changes
+
+- warmup buffer
+
+## 0.3.6
+
+### Patch Changes
+
+- Debug true
+
+## 0.3.5
+
+### Patch Changes
+
+- Debug
+
 ## 0.3.4
 
 ### Patch Changes

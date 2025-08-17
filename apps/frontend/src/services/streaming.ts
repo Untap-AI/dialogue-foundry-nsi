@@ -189,6 +189,9 @@ export class ChatStreamingService {
     const url = new URL(`${this.apiBaseUrl}/chats/${chatId}/stream`)
     url.searchParams.append('content', userQuery)
     url.searchParams.append('timezone', userTimezone)
+    // Optional debug flag from localStorage
+    const debugEnabled = true
+    url.searchParams.append('debug', '1')
     // Ensure token is not null before appending
     if (token) {
       url.searchParams.append('token', token)
@@ -201,6 +204,7 @@ export class ChatStreamingService {
       let fullText = ''
       let errorCount = 0
       const maxSilentErrors = 3 // Only log detailed errors for the first few occurrences
+      let lastSeq: number | undefined
 
       // Reset error count when connection successfully opens
       this.eventSource.onopen = () => {
@@ -213,7 +217,13 @@ export class ChatStreamingService {
         errorCount = 0
 
         try {
-          const data = JSON.parse(event.data) as SSEEventData
+          const data = JSON.parse(event.data) as SSEEventData & { seq?: number; t?: number }
+
+          if (debugEnabled) {
+            const seq = typeof data.seq === 'number' ? data.seq : undefined
+            const gap = seq && lastSeq ? seq - lastSeq : undefined
+            void gap // keep calculation to avoid unused warnings if needed
+          }
 
           // Check for any kind of error message from the server
           if (data.type === 'error') {
@@ -239,7 +249,14 @@ export class ChatStreamingService {
               break
 
             case 'chunk':
-
+              // Deduplicate first-chunk duplicates by seq
+              if (typeof data.seq === 'number') {
+                if (lastSeq === data.seq) {
+                  // Duplicate of last seen seq: ignore
+                  return
+                }
+                lastSeq = data.seq
+              }
               if(this.isClosingConnection) {
                 logger.error("Received chunk after connection was closed", {
                   chatId
