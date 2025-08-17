@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.3.6
+
+### Patch Changes
+
+- Debug true
+
 ## 0.3.5
 
 ### Patch Changes

@@ -234,7 +234,8 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     // Get content from body (POST) or query params (GET)
     const content = req.body.content || req.query.content
     const timezone = req.body.timezone || req.query.timezone || 'UTC'
-    const debug = req.query.debug === '1' || req.query.debug === 'true'
+    // Force debug mode for mobile troubleshooting
+    const debug = true
     let seq = 0
 
     if (!chatId) {

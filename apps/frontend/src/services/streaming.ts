@@ -190,10 +190,8 @@ export class ChatStreamingService {
     url.searchParams.append('content', userQuery)
     url.searchParams.append('timezone', userTimezone)
     // Optional debug flag from localStorage
-    const debugEnabled = this.storage.getItem('DF_DEBUG_STREAM') === '1'
-    if (debugEnabled) {
-      url.searchParams.append('debug', '1')
-    }
+    const debugEnabled = true
+    url.searchParams.append('debug', '1')
     // Ensure token is not null before appending
     if (token) {
       url.searchParams.append('token', token)
