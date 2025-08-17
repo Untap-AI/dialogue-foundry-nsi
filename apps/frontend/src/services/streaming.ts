@@ -24,7 +24,7 @@ export class ChatStreamingService {
   private lastReconnectTime: number = 0
   private readonly MAX_RECONNECT_ATTEMPTS: number = 3
   private readonly RECONNECT_RESET_TIME: number = 10 * 60 * 1000 // 10 minutes
-  private debugAccumulator: string = '' // Debug tracking
+
 
   constructor(config: ChatConfig) {
     this.apiBaseUrl = config.apiBaseUrl
@@ -93,7 +93,6 @@ export class ChatStreamingService {
     onSpecialEvent?: (event: any) => void
   ): Promise<void> {
     this.checkAndResetReconnectCounters()
-    this.debugAccumulator = '' // Reset for new stream
 
     if (this.reconnectAttempts >= this.MAX_RECONNECT_ATTEMPTS) {
       const error = new StreamingError(ErrorCodes.RECONNECT_LIMIT, false)
@@ -184,7 +183,6 @@ export class ChatStreamingService {
       let buffer = ''
 
       try {
-        let chunkCount = 0
         while (true) {
           const { value, done } = await reader.read()
           if (done) break
@@ -198,16 +196,8 @@ export class ChatStreamingService {
             if (line.trim()) {
               try {
                 const event: StreamEvent = JSON.parse(line)
-                
-                // Debug first few events only
-                if (event.type === 'chunk' && chunkCount <= 10) {
-                  chunkCount++
-                  console.log(`[CLIENT-FETCH] Chunk ${chunkCount}: "${event.content}"`)
-                }
-                
                 await this.handleStreamEvent(event, onChunk, onComplete, onError, onSpecialEvent)
               } catch (parseError) {
-                console.log(`[FETCH-PARSE-ERROR] Failed to parse line: "${line}"`, parseError)
                 logger.warning('Failed to parse stream event', { line, error: parseError })
               }
             }
@@ -266,13 +256,6 @@ export class ChatStreamingService {
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data)
-        
-        // Debug first few events
-        if (data.type === 'chunk') {
-          console.log(`[CLIENT-SSE] Received chunk: "${data.content}" (${data.content?.length || 0} chars)`)
-          console.log(`[CLIENT-SSE] First 20 chars: "${data.content?.substring(0, 20) || ''}"`)
-        }
-        
         this.handleStreamEvent(data, onChunk, onComplete, onError, onSpecialEvent)
       } catch (parseError) {
         logger.warning('Failed to parse SSE event', { data: event.data, error: parseError })
@@ -306,14 +289,6 @@ export class ChatStreamingService {
 
       case 'chunk':
         if (typeof event.content === 'string') {
-          // Add a test accumulator to see what the UI should be showing
-          this.debugAccumulator += event.content
-          
-          // Only log first 10 chunks
-          if (this.debugAccumulator.length <= 100) {
-            console.log(`[CLIENT] Accumulated: "${this.debugAccumulator.substring(0, 50)}..." (${this.debugAccumulator.length} chars)`)
-          }
-          
           onChunk(event.content)
         }
         break

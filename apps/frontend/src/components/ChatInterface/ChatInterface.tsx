@@ -90,19 +90,10 @@ export const ChatInterface = ({
   // Adapter with special event support
   const adapter = useAsStreamAdapter(
     (userMessage: string, observer) => {
-      let nluxAccumulator = ''
       streamingService.streamMessage(
         userMessage,
-        chunk => {
-          nluxAccumulator += chunk
-          console.log(`[NLUX] Sending chunk to observer: "${chunk}"`)
-          console.log(`[NLUX] Accumulated for NLUX: "${nluxAccumulator.substring(0, 50)}..." (${nluxAccumulator.length} chars)`)
-          observer.next(chunk)
-        },
-        () => {
-          console.log(`[NLUX] Stream complete. Final NLUX content: "${nluxAccumulator.substring(0, 50)}..." (${nluxAccumulator.length} chars)`)
-          observer.complete()
-        },
+        chunk => observer.next(chunk),
+        () => observer.complete(),
         error => observer.error(error),
         chatConfig.companyId,
         event => {
