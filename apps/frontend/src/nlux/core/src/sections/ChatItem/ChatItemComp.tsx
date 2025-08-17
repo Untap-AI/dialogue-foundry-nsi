@@ -36,8 +36,17 @@ export const ChatItemComp: <AiMsg>(
   useImperativeHandle(
     ref,
     () => ({
-      streamChunk: (chunk: AiMsg) =>
-        setTimeout(() => streamContainer?.current?.streamChunk(chunk)),
+      streamChunk: (chunk: AiMsg) => {
+        console.log(`[CHAT-ITEM] streamChunk called: "${chunk}"`)
+        setTimeout(() => {
+          if (!streamContainer?.current) {
+            console.log(`[CHAT-ITEM] streamContainer.current is null for chunk: "${chunk}"`)
+            return
+          }
+          console.log(`[CHAT-ITEM] Calling streamContainer.streamChunk for: "${chunk}"`)
+          streamContainer.current.streamChunk(chunk)
+        })
+      },
       completeStream: () =>
         setTimeout(() => streamContainer?.current?.completeStream()),
       cancelStream: () => streamContainer?.current?.cancelStream()

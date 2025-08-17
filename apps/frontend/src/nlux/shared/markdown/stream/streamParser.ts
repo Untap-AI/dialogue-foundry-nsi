@@ -161,7 +161,10 @@ export const createMdStreamRenderer: StandardStreamParser = (
 
     return {
         next: (chunk: string) => {
+            console.log(`[STREAM-PARSER] next called: "${chunk}" (buffer length: ${buffer.length})`)
+            
             if (streamIsComplete) {
+                console.log(`[STREAM-PARSER] Stream already complete, ignoring chunk: "${chunk}"`)
                 warn('Stream is already complete. No more chunks can be added');
                 return;
             }
@@ -170,8 +173,10 @@ export const createMdStreamRenderer: StandardStreamParser = (
                 for (const char of chunk) {
                     buffer.push(char);
                 }
+                console.log(`[STREAM-PARSER] Added ${chunk.length} characters to buffer (new length: ${buffer.length})`)
             } else {
                 buffer.push(chunk);
+                console.log(`[STREAM-PARSER] Added chunk to buffer (new length: ${buffer.length})`)
             }
         },
         complete: () => {

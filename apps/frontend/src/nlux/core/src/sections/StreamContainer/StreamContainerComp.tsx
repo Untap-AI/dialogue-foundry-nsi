@@ -97,6 +97,8 @@ export const StreamContainerComp = function <AiMsg>(
     ref,
     () => ({
       streamChunk: (chunk: AiMsg) => {
+        console.log(`[STREAM-CONTAINER] streamChunk called: "${chunk}"`)
+        
         // This will append the chunk to the state
         const appendChunkToState = appendChunkToStateRef.current
         if (appendChunkToState) {
@@ -104,7 +106,12 @@ export const StreamContainerComp = function <AiMsg>(
         }
 
         if (typeof chunk === 'string') {
-          mdStreamParserRef.current?.next(chunk)
+          if (!mdStreamParserRef.current) {
+            console.log(`[STREAM-CONTAINER] mdStreamParserRef.current is null for chunk: "${chunk}"`)
+            return
+          }
+          console.log(`[STREAM-CONTAINER] Calling mdStreamParser.next for: "${chunk}"`)
+          mdStreamParserRef.current.next(chunk)
         }
       },
       completeStream: () => {

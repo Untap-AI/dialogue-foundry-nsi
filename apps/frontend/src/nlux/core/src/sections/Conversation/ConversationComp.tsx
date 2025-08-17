@@ -33,8 +33,14 @@ export const ConversationComp: ConversationCompType = function <AiMsg>(
     ref,
     () => ({
       streamChunk: (segmentId: string, messageId: string, chunk: AiMsg) => {
+        console.log(`[CONVERSATION] streamChunk called: "${chunk}" for segmentId: ${segmentId}, messageId: ${messageId}`)
         const chatSegment = segmentsController.get(segmentId)
-        chatSegment?.streamChunk(messageId, chunk)
+        if (!chatSegment) {
+          console.log(`[CONVERSATION] No chat segment found for segmentId: ${segmentId}`)
+          return
+        }
+        console.log(`[CONVERSATION] Calling chatSegment.streamChunk for: "${chunk}"`)
+        chatSegment.streamChunk(messageId, chunk)
       },
       completeStream: (segmentId: string, messageId: string) => {
         const chatSegment = segmentsController.get(segmentId)

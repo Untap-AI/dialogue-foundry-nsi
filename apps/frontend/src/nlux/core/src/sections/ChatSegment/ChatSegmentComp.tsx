@@ -74,18 +74,26 @@ export const ChatSegmentComp: <AiMsg>(
     ref,
     () => ({
       streamChunk: (chatItemId: string, chunk: AiMsg) => {
+        console.log(`[CHAT-SEGMENT] streamChunk called: "${chunk}" for chatItemId: ${chatItemId}`)
         const chatItemCompRef = chatItemsRef.get(chatItemId)
         if (chatItemCompRef?.current) {
+          console.log(`[CHAT-SEGMENT] Chat item ref found, streaming directly`)
           const streamChunk = chatItemCompRef.current.streamChunk
           const chatItemStreamingBuffer =
             chatItemsStreamingBuffer.get(chatItemId) ?? []
-          chatItemStreamingBuffer.forEach(bufferedChunk => {
-            streamChunk(bufferedChunk)
-          })
+          
+          // Flush buffered chunks first
+          if (chatItemStreamingBuffer.length > 0) {
+            console.log(`[CHAT-SEGMENT] Flushing ${chatItemStreamingBuffer.length} buffered chunks`)
+            chatItemStreamingBuffer.forEach(bufferedChunk => {
+              streamChunk(bufferedChunk)
+            })
+          }
 
           chatItemsStreamingBuffer.delete(chatItemId)
           streamChunk(chunk)
         } else {
+          console.log(`[CHAT-SEGMENT] Chat item ref not ready, buffering chunk: "${chunk}"`)
           // Buffer the chunk if the chat item is not rendered yet.
           const chatItemStreamingBuffer =
             chatItemsStreamingBuffer.get(chatItemId) ?? []
@@ -93,6 +101,7 @@ export const ChatSegmentComp: <AiMsg>(
             ...chatItemStreamingBuffer,
             chunk
           ])
+          console.log(`[CHAT-SEGMENT] Buffer now has ${chatItemStreamingBuffer.length + 1} chunks`)
         }
       },
       completeStream: (chatItemId: string) => {
