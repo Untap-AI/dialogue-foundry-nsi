@@ -190,27 +190,20 @@ export class ChatStreamingService {
           if (done) break
 
           const newData = decoder.decode(value, { stream: true })
-          console.log(`[FETCH-RAW] Read ${newData.length} bytes: "${newData}"`)
-          
           buffer += newData
-          console.log(`[FETCH-BUFFER] Buffer now: "${buffer}" (${buffer.length} chars)`)
-          
           const lines = buffer.split('\n')
           buffer = lines.pop() || '' // Keep incomplete line in buffer
-          
-          console.log(`[FETCH-LINES] Split into ${lines.length} lines, remaining buffer: "${buffer}"`)
 
           for (const line of lines) {
             if (line.trim()) {
-              console.log(`[FETCH-LINE] Processing line: "${line}"`)
               try {
                 const event: StreamEvent = JSON.parse(line)
                 
-                        // Debug first few events only
-        if (event.type === 'chunk' && chunkCount <= 3) {
-          chunkCount++
-          console.log(`[CLIENT-FETCH] Chunk ${chunkCount}: "${event.content}"`)
-        }
+                // Debug first few events only
+                if (event.type === 'chunk' && chunkCount <= 10) {
+                  chunkCount++
+                  console.log(`[CLIENT-FETCH] Chunk ${chunkCount}: "${event.content}"`)
+                }
                 
                 await this.handleStreamEvent(event, onChunk, onComplete, onError, onSpecialEvent)
               } catch (parseError) {
@@ -316,8 +309,8 @@ export class ChatStreamingService {
           // Add a test accumulator to see what the UI should be showing
           this.debugAccumulator += event.content
           
-          // Only log first few chunks and key milestones
-          if (this.debugAccumulator.length <= 50 || this.debugAccumulator.length % 100 === 0) {
+          // Only log first 10 chunks
+          if (this.debugAccumulator.length <= 100) {
             console.log(`[CLIENT] Accumulated: "${this.debugAccumulator.substring(0, 50)}..." (${this.debugAccumulator.length} chars)`)
           }
           
