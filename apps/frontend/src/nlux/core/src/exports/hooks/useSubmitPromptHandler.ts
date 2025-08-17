@@ -345,20 +345,11 @@ export const useSubmitPromptHandler = <AiMsg>(
     })
 
     chatSegmentObservable.on('aiChunkReceived', ({ messageId, chunk }) => {
-      console.log(`[PROMPT-HANDLER] aiChunkReceived: "${chunk}" for messageId: ${messageId}`)
-      
       if (domToReactRef.current?.cancelledMessageIds.includes(messageId)) {
-        console.log(`[PROMPT-HANDLER] Chunk cancelled for messageId: ${messageId}`)
         return
       }
 
-      if (!conversationRef.current) {
-        console.log(`[PROMPT-HANDLER] conversationRef.current is null when chunk arrived: "${chunk}"`)
-        return
-      }
-
-      console.log(`[PROMPT-HANDLER] Calling conversationRef.streamChunk for: "${chunk}"`)
-      conversationRef.current.streamChunk(chatSegment.uid, messageId, chunk)
+      conversationRef.current?.streamChunk(chatSegment.uid, messageId, chunk)
     })
 
     chatSegmentObservable.on('aiMessageStreamed', streamedMessage => {
