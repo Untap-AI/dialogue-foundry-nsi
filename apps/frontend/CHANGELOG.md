@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.3.14
+
+### Patch Changes
+
+- Remove previous html function
+
 ## 0.3.13
 
 ### Patch Changes

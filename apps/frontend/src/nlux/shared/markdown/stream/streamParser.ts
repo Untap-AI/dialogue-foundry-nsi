@@ -118,36 +118,12 @@ export const createMdStreamRenderer: StandardStreamParser = (
                 return;
             }
 
-            if (
-                parsingContext.previousHtml &&
-                parsedHtml.length > parsingContext.previousHtml.length &&
-                parsedHtml.startsWith(parsingContext.previousHtml)
-            ) {
-                // Case 1: No changes to the previous HTML — And new HTML added on top of it
-                // Which means the new chunk added new HTML content outside the last parsed markdown
-                // Which means that the last parsed markdown is complete and should be committed to the DOM
-                // Commit the last parsed content to the DOM
+            // Always render the complete accumulated markdown to avoid losing content
+            wipContainer.innerHTML = options?.htmlSanitizer ? options.htmlSanitizer(parsedHtml) : parsedHtml;
 
-                commitWipContent();
-
-                // Extract new HTML and insert it into WIP container
-                const currentHtml = parsedHtml.slice(parsingContext.previousHtml.length).trim();
-                wipContainer.innerHTML = options?.htmlSanitizer ? options.htmlSanitizer(currentHtml) : currentHtml;
-
-                // Focus on everything that is new
-                parsingContext.currentMarkdown = chunk;
-                parsingContext.previousHtml = undefined;
-            } else {
-                // Case 2: Changes to the previous HTML
-                // This means that new chunk goes inside previous HTML and no root level changes
-
-                // Append the new chunk to the current markdown
-                wipContainer.innerHTML = options?.htmlSanitizer ? options.htmlSanitizer(parsedHtml) : parsedHtml;
-
-                // Update the current markdown and previous HTML for the next iteration
-                parsingContext.currentMarkdown = markdownToParse;
-                parsingContext.previousHtml = parsedHtml;
-            }
+            // Update the current markdown and previous HTML for the next iteration
+            parsingContext.currentMarkdown = markdownToParse;
+            parsingContext.previousHtml = parsedHtml;
         });
     }, delayBetweenBufferChecks) as unknown as number;
 
