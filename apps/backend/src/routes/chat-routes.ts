@@ -375,7 +375,7 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     }, 15000)
 
     // Small delay to ensure client handlers are attached on flaky/mobile browsers
-    await new Promise(resolve => setTimeout(resolve, 50))
+    await new Promise(resolve => setTimeout(resolve, 200))
 
     // Initial coalescing to avoid tiny first chunk getting dropped on mobile
     let isCoalescing = true
@@ -395,9 +395,19 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     // Define SSE-formatted chunk sender with initial coalescing
     const onChunk = (chunk: string) => {
       if (isCoalescing) {
+        const isFirstChunk = coalesceBuffer.length === 0
         coalesceBuffer += chunk
+        // Start the coalescing timer only after first bytes arrive
+        if (isFirstChunk && !coalesceTimeout) {
+          coalesceTimeout = setTimeout(() => {
+            if (isCoalescing) {
+              isCoalescing = false
+              flushCoalesceBuffer()
+            }
+          }, 300)
+        }
         // Flush early if we have enough text to be robust
-        if (coalesceBuffer.length >= 128) {
+        if (coalesceBuffer.length >= 256) {
           isCoalescing = false
           if (coalesceTimeout) clearTimeout(coalesceTimeout)
           flushCoalesceBuffer()
