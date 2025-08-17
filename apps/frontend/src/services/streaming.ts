@@ -223,12 +223,7 @@ export class ChatStreamingService {
             const seq = typeof data.seq === 'number' ? data.seq : undefined
             const gap = seq && lastSeq ? seq - lastSeq : undefined
             lastSeq = seq
-            logger.info('[SSE in]', {
-              type: data.type,
-              seq,
-              gap,
-              len: typeof data.content === 'string' ? data.content.length : undefined,
-            })
+            void gap // keep calculation to avoid unused warnings if needed
           }
 
           // Check for any kind of error message from the server

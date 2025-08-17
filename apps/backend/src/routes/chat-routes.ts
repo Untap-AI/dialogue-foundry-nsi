@@ -363,9 +363,6 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     {
       const payload = { type: 'connected' } as Record<string, unknown>
       const data = debug ? { ...payload, seq: ++seq, t: Date.now() } : payload
-      if (debug) {
-        logger.info('SSE out', { chatId, type: 'connected', seq })
-      }
       res.write(`data: ${JSON.stringify(data)}\n\n`)
     }
     res.flushHeaders()
@@ -380,22 +377,53 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     // Small delay to ensure client handlers are attached on flaky/mobile browsers
     await new Promise(resolve => setTimeout(resolve, 50))
 
-    // Define SSE-formatted chunk sender
+    // Initial coalescing to avoid tiny first chunk getting dropped on mobile
+    let isCoalescing = true
+    let coalesceBuffer = ''
+    let coalesceTimeout: NodeJS.Timeout | undefined
+
+    const flushCoalesceBuffer = () => {
+      if (coalesceBuffer && !res.writableEnded) {
+        const payload = { type: 'chunk', content: coalesceBuffer } as Record<string, unknown>
+        const data = debug ? { ...payload, seq: ++seq, t: Date.now() } : payload
+        res.write(`data: ${JSON.stringify(data)}\n\n`)
+        res.flushHeaders()
+        coalesceBuffer = ''
+      }
+    }
+
+    // Define SSE-formatted chunk sender with initial coalescing
     const onChunk = (chunk: string) => {
+      if (isCoalescing) {
+        coalesceBuffer += chunk
+        // Flush early if we have enough text to be robust
+        if (coalesceBuffer.length >= 128) {
+          isCoalescing = false
+          if (coalesceTimeout) clearTimeout(coalesceTimeout)
+          flushCoalesceBuffer()
+        }
+        return
+      }
+
       // Ensure the response is still writable
       if (!res.writableEnded) {
         // Format the chunk as a Server-Sent Event
         const payload = { type: 'chunk', content: chunk } as Record<string, unknown>
         const data = debug ? { ...payload, seq: ++seq, t: Date.now() } : payload
-        if (debug) {
-          logger.info('SSE out', { chatId, type: 'chunk', seq, len: chunk.length })
-        }
         res.write(`data: ${JSON.stringify(data)}\n\n`)
 
         // Force immediate sending of the chunk
         res.flushHeaders()
       }
     }
+
+    // Stop coalescing after a short window and flush any buffered text
+    coalesceTimeout = setTimeout(() => {
+      if (isCoalescing) {
+        isCoalescing = false
+        flushCoalesceBuffer()
+      }
+    }, 150)
 
     // Generate streaming response from OpenAI (main content generation)
     let aiResponseContent
@@ -437,9 +465,6 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
             if (!res.writableEnded) {
               const details = emailDetectionResult.details as Record<string, unknown>
               const data = debug ? { ...details, seq: ++seq, t: Date.now() } : details
-              if (debug) {
-                logger.info('SSE out', { chatId, type: (details as any)?.type || 'special', seq })
-              }
               res.write(`data: ${JSON.stringify(data)}\n\n`)
               res.flushHeaders()
             }
@@ -476,12 +501,15 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     // Send a completion message
     if (!res.writableEnded) {
       try {
+        // Ensure any coalesced text is flushed before completing
+        if (isCoalescing) {
+          isCoalescing = false
+          if (coalesceTimeout) clearTimeout(coalesceTimeout)
+          flushCoalesceBuffer()
+        }
         {
           const payload = { type: 'done', fullContent: aiResponseContent } as Record<string, unknown>
           const data = debug ? { ...payload, seq: ++seq, t: Date.now() } : payload
-          if (debug) {
-            logger.info('SSE out', { chatId, type: 'done', seq })
-          }
           res.write(`data: ${JSON.stringify(data)}\n\n`)
         }
 
@@ -491,6 +519,7 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
         // Send a clean termination signal
         res.write(':\n\n')
         if (heartbeat) clearInterval(heartbeat)
+        if (coalesceTimeout) clearTimeout(coalesceTimeout)
         res.end()
       } catch (responseError) {
         logger.error('Error sending completion event', {
@@ -504,6 +533,7 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     return req.on('close', () => {
       if (!res.writableEnded) {
         if (heartbeat) clearInterval(heartbeat)
+        if (coalesceTimeout) clearTimeout(coalesceTimeout)
         // Ensure full stream
         setTimeout(() => {
           res.end()

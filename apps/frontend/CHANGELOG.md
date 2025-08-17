@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.3.7
+
+### Patch Changes
+
+- warmup buffer
+
 ## 0.3.6
 
 ### Patch Changes
