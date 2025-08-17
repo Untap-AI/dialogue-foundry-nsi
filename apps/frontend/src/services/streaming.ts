@@ -24,6 +24,7 @@ export class ChatStreamingService {
   private lastReconnectTime: number = 0
   private readonly MAX_RECONNECT_ATTEMPTS: number = 3
   private readonly RECONNECT_RESET_TIME: number = 10 * 60 * 1000 // 10 minutes
+  private debugAccumulator: string = '' // Debug tracking
 
   constructor(config: ChatConfig) {
     this.apiBaseUrl = config.apiBaseUrl
@@ -92,6 +93,7 @@ export class ChatStreamingService {
     onSpecialEvent?: (event: any) => void
   ): Promise<void> {
     this.checkAndResetReconnectCounters()
+    this.debugAccumulator = '' // Reset for new stream
 
     if (this.reconnectAttempts >= this.MAX_RECONNECT_ATTEMPTS) {
       const error = new StreamingError(ErrorCodes.RECONNECT_LIMIT, false)
@@ -204,12 +206,11 @@ export class ChatStreamingService {
               try {
                 const event: StreamEvent = JSON.parse(line)
                 
-                // Debug first few events
-                if (event.type === 'chunk') {
-                  chunkCount++
-                  console.log(`[CLIENT-FETCH] Received chunk ${chunkCount}: "${event.content}" (${event.content?.length || 0} chars)`)
-                  console.log(`[CLIENT-FETCH] First 20 chars: "${event.content?.substring(0, 20) || ''}"`)
-                }
+                        // Debug first few events only
+        if (event.type === 'chunk' && chunkCount <= 3) {
+          chunkCount++
+          console.log(`[CLIENT-FETCH] Chunk ${chunkCount}: "${event.content}"`)
+        }
                 
                 await this.handleStreamEvent(event, onChunk, onComplete, onError, onSpecialEvent)
               } catch (parseError) {
@@ -312,8 +313,14 @@ export class ChatStreamingService {
 
       case 'chunk':
         if (typeof event.content === 'string') {
-          console.log(`[CLIENT] Calling onChunk with: "${event.content}" (${event.content.length} chars)`)
-          console.log(`[CLIENT] First 20 chars: "${event.content.substring(0, 20)}"`)
+          // Add a test accumulator to see what the UI should be showing
+          this.debugAccumulator += event.content
+          
+          // Only log first few chunks and key milestones
+          if (this.debugAccumulator.length <= 50 || this.debugAccumulator.length % 100 === 0) {
+            console.log(`[CLIENT] Accumulated: "${this.debugAccumulator.substring(0, 50)}..." (${this.debugAccumulator.length} chars)`)
+          }
+          
           onChunk(event.content)
         }
         break

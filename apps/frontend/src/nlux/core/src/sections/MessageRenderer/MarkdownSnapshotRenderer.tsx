@@ -26,6 +26,12 @@ const MarkdownSnapshotRendererImpl = (props: MarkdownSnapshotRendererProps) => {
       return ''
     }
 
+    // Debug markdown content changes (first few updates only)
+    if (props.content.length <= 100) {
+      console.log(`[MARKDOWN] Rendering content: "${props.content}" (${props.content.length} chars)`)
+      console.log(`[MARKDOWN] Starts with: "${props.content.substring(0, 20)}..."`)
+    }
+
     return parseMdSnapshot(props.content, {
       syntaxHighlighter: markdownOptions?.syntaxHighlighter,
       htmlSanitizer: markdownOptions?.htmlSanitizer,

@@ -120,6 +120,7 @@ export const generateStreamingChatCompletion = async (
     }
 
     let fullText = ''
+    let openaiChunkCount = 0
 
     try {
       for await (const chunk of response) {
@@ -130,10 +131,23 @@ export const generateStreamingChatCompletion = async (
         }
 
         if (text.length > 0) {
+          openaiChunkCount++
           fullText += text
+          
+          // Debug first few chunks from OpenAI
+          if (openaiChunkCount <= 5) {
+            console.log(`[OPENAI] Raw chunk ${openaiChunkCount}: "${text}" (${text.length} chars)`)
+            console.log(`[OPENAI] First 20 chars: "${text.substring(0, 20)}"`)
+          }
+          
           onChunk(text)
         }
       }
+      
+      console.log(`[OPENAI] Stream completed: ${openaiChunkCount} chunks`)
+      console.log(`[OPENAI] Full text first 50 chars: "${fullText.substring(0, 50)}"`)
+      console.log(`[OPENAI] Full text length: ${fullText.length}`)
+      console.log(`[OPENAI] Server callback received vs OpenAI total: Check if they match!`)
 
       return fullText
     } catch (streamError) {
