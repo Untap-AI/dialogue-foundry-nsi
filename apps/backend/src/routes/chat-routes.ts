@@ -196,10 +196,13 @@ router.post('/:chatId/send-email', authenticateChatAccess, async (req, res) => {
 // Shared handler function for stream requests
 async function handleStreamRequest(req: CustomRequest, res: express.Response) {
   // Set the proper headers for Server-Sent Events (SSE)
-  res.setHeader('Content-Type', 'text/event-stream')
-  res.setHeader('Cache-Control', 'no-cache')
+  res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
+  res.setHeader('Cache-Control', 'no-cache, no-transform')
   res.setHeader('Connection', 'keep-alive')
   res.setHeader('X-Accel-Buffering', 'no') // Disable buffering for Nginx
+
+  // Heartbeat to keep the connection alive through proxies/mobile networks
+  let heartbeat: NodeJS.Timeout | undefined
 
   // Helper function to send errors via SSE
   const sendErrorEvent = (
@@ -220,6 +223,7 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       res.write(`data: ${JSON.stringify(errorData)}\n\n`)
       // Send a clean termination signal
       res.write(':\n\n')
+      if (heartbeat) clearInterval(heartbeat)
       res.end()
     }
   }
@@ -349,9 +353,22 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       })
     }
 
-    // Send initial SSE message to confirm connection
+    // Anti-buffering prelude and initial SSE message to confirm connection
+    // Large comment line to prevent proxy buffering and help iOS start delivery quickly
+    res.write(':' + ' '.repeat(2048) + '\n')
+    res.write('\n')
     res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`)
     res.flushHeaders()
+
+    // Start heartbeat after connection is established
+    heartbeat = setInterval(() => {
+      if (!res.writableEnded) {
+        res.write(':\n\n')
+      }
+    }, 15000)
+
+    // Small delay to ensure client handlers are attached on flaky/mobile browsers
+    await new Promise(resolve => setTimeout(resolve, 50))
 
     // Define SSE-formatted chunk sender
     const onChunk = (chunk: string) => {
@@ -456,6 +473,8 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
 
         // Send a clean termination signal
         res.write(':\n\n')
+        if (heartbeat) clearInterval(heartbeat)
+        res.end()
       } catch (responseError) {
         logger.error('Error sending completion event', {
           error: responseError as Error,
@@ -467,6 +486,7 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     // Handle client disconnect
     return req.on('close', () => {
       if (!res.writableEnded) {
+        if (heartbeat) clearInterval(heartbeat)
         // Ensure full stream
         setTimeout(() => {
           res.end()
