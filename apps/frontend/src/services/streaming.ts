@@ -182,27 +182,38 @@ export class ChatStreamingService {
       let buffer = ''
 
       try {
+        let chunkCount = 0
         while (true) {
           const { value, done } = await reader.read()
           if (done) break
 
-          buffer += decoder.decode(value, { stream: true })
+          const newData = decoder.decode(value, { stream: true })
+          console.log(`[FETCH-RAW] Read ${newData.length} bytes: "${newData}"`)
+          
+          buffer += newData
+          console.log(`[FETCH-BUFFER] Buffer now: "${buffer}" (${buffer.length} chars)`)
+          
           const lines = buffer.split('\n')
           buffer = lines.pop() || '' // Keep incomplete line in buffer
+          
+          console.log(`[FETCH-LINES] Split into ${lines.length} lines, remaining buffer: "${buffer}"`)
 
           for (const line of lines) {
             if (line.trim()) {
+              console.log(`[FETCH-LINE] Processing line: "${line}"`)
               try {
                 const event: StreamEvent = JSON.parse(line)
                 
                 // Debug first few events
                 if (event.type === 'chunk') {
-                  console.log(`[CLIENT-FETCH] Received chunk: "${event.content}" (${event.content?.length || 0} chars)`)
+                  chunkCount++
+                  console.log(`[CLIENT-FETCH] Received chunk ${chunkCount}: "${event.content}" (${event.content?.length || 0} chars)`)
                   console.log(`[CLIENT-FETCH] First 20 chars: "${event.content?.substring(0, 20) || ''}"`)
                 }
                 
                 await this.handleStreamEvent(event, onChunk, onComplete, onError, onSpecialEvent)
               } catch (parseError) {
+                console.log(`[FETCH-PARSE-ERROR] Failed to parse line: "${line}"`, parseError)
                 logger.warning('Failed to parse stream event', { line, error: parseError })
               }
             }
