@@ -4,17 +4,13 @@ import { logger } from './logger'
 import type { ErrorCodeValue } from './errors'
 import type { ChatConfig } from './api'
 
-// Define the SSE event types for TypeScript
-interface SSEMessageEvent extends MessageEvent {
-  data: string
-}
-
-interface SSEEventData {
-  type: 'connected' | 'chunk' | 'done' | 'error'
+interface StreamEvent {
+  type: 'start' | 'chunk' | 'done' | 'error'
   content?: string
   fullContent?: string
   error?: string
   code?: string
+  [key: string]: any // For special events
 }
 
 export class ChatStreamingService {
@@ -23,37 +19,28 @@ export class ChatStreamingService {
   private tokenStorageKey: string
   private chatIdStorageKey: string
   private storage: Storage
-  private eventSource: EventSource | undefined = undefined
-  private isReconnecting: boolean = false
+  private abortController: AbortController | undefined = undefined
   private reconnectAttempts: number = 0
   private lastReconnectTime: number = 0
-  private tokenReconnectAttempts: number = 0 // Add counter specifically for token errors
   private readonly MAX_RECONNECT_ATTEMPTS: number = 3
-  private readonly MAX_TOKEN_RECONNECT_ATTEMPTS: number = 1 // Limit token reconnection to 1 attempt
-  private readonly RECONNECT_RESET_TIME: number = 10 * 60 * 1000 // 10 minutes in ms
-  private isClosingConnection: boolean = false
-  private completionTimeout: NodeJS.Timeout | undefined = undefined // Track completion timeout
+  private readonly RECONNECT_RESET_TIME: number = 10 * 60 * 1000 // 10 minutes
 
   constructor(config: ChatConfig) {
     this.apiBaseUrl = config.apiBaseUrl
     this.companyId = config.companyId
     this.tokenStorageKey = config.tokenStorageKey || DEFAULT_TOKEN_STORAGE_KEY
-    this.chatIdStorageKey =
-      config.chatIdStorageKey || DEFAULT_CHAT_ID_STORAGE_KEY
+    this.chatIdStorageKey = config.chatIdStorageKey || DEFAULT_CHAT_ID_STORAGE_KEY
     this.storage = localStorage
   }
 
   /**
    * Initialize a new chat session
-   * @returns Promise resolving to the new chat ID
    */
   async initializeNewChat(): Promise<string> {
     try {
       const response = await fetch(`${this.apiBaseUrl}/chats`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           name: 'New Chat',
           companyId: this.companyId
@@ -61,42 +48,26 @@ export class ChatStreamingService {
       })
 
       if (!response.ok) {
-        const error = new StreamingError(ErrorCodes.INITIALIZATION_ERROR, true)
-
-        logger.captureException(error, {
-          status: response.status,
-          statusText: response.statusText,
-          url: response.url
-        })
-
-        throw error
+        throw new StreamingError(ErrorCodes.INITIALIZATION_ERROR, true)
       }
 
       const data = await response.json()
-
-      // Store the new token and chat ID
       this.storage.setItem(this.tokenStorageKey, data.accessToken)
       this.storage.setItem(this.chatIdStorageKey, data.chat.id)
-
       return data.chat.id
     } catch (error) {
       logger.error('Failed to initialize new chat', { error })
-
-      if (error instanceof StreamingError) {
-        throw error
-      }
-
-      const initError = new StreamingError(
-        ErrorCodes.INITIALIZATION_ERROR,
-        true
-      )
-
-      logger.captureException(initError, {
-        originalError: error
-      })
-
-      throw initError
+      throw error instanceof StreamingError ? error : new StreamingError(ErrorCodes.INITIALIZATION_ERROR, true)
     }
+  }
+
+  /**
+   * Check if fetch streaming is supported
+   */
+  private isFetchStreamingSupported(): boolean {
+    return typeof ReadableStream !== 'undefined' && 
+           'getReader' in ReadableStream.prototype &&
+           typeof TextDecoder !== 'undefined'
   }
 
   /**
@@ -104,699 +75,361 @@ export class ChatStreamingService {
    */
   private checkAndResetReconnectCounters(): void {
     const now = Date.now()
-    // If it's been more than the reset time since the last reconnect attempt, reset counters
     if (now - this.lastReconnectTime > this.RECONNECT_RESET_TIME) {
       this.reconnectAttempts = 0
-      this.tokenReconnectAttempts = 0 // Also reset token reconnect attempts
     }
   }
 
   /**
-   * Stream a message to the chat using SSE (Server-Sent Events)
-   * @param content User message content
-   * @param onChunk Callback for each message chunk
-   * @param onComplete Callback for when the stream completes
-   * @param onError Callback for when an error occurs
-   * @param companyId Optional company ID for initializing a new chat if needed
-   * @param onSpecialEvent Optional callback for special events
+   * Stream a message using fetch streaming (primary) or SSE (fallback)
    */
   async streamMessage(
-    userQuery: string, onChunk: (chunk: string) => void, onComplete: () => void, onError: (error: Error) => void, companyId?: string, onSpecialEvent?: (event: any) => void ): Promise<void> {
-    // Reset reconnection counters if it's been a while
+    userQuery: string,
+    onChunk: (chunk: string) => void,
+    onComplete: () => void,
+    onError: (error: Error) => void,
+    _companyId?: string,
+    onSpecialEvent?: (event: any) => void
+  ): Promise<void> {
     this.checkAndResetReconnectCounters()
 
-    // Get user's timezone
-    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
-
-    // Check if we've exceeded maximum reconnection attempts
     if (this.reconnectAttempts >= this.MAX_RECONNECT_ATTEMPTS) {
-      const reconnectError = new StreamingError(
-        ErrorCodes.RECONNECT_LIMIT,
-        false
-      )
-
-      logger.captureException(reconnectError, {
-        reconnectAttempts: this.reconnectAttempts,
-        maxReconnectAttempts: this.MAX_RECONNECT_ATTEMPTS
-      })
-
-      onError(reconnectError)
+      const error = new StreamingError(ErrorCodes.RECONNECT_LIMIT, false)
+      logger.captureException(error, { reconnectAttempts: this.reconnectAttempts })
+      onError(error)
       return
     }
 
     let chatId = this.storage.getItem(this.chatIdStorageKey)
     let token = this.storage.getItem(this.tokenStorageKey)
 
-    // If we're missing the chat ID or token, try to initialize a new chat
+    // Initialize chat if needed
     if (!chatId || !token) {
       try {
-        if (!this.isReconnecting) {
-          await this.initializeNewChat()
-          chatId = this.storage.getItem(this.chatIdStorageKey)
-          token = this.storage.getItem(this.tokenStorageKey)
-        } else {
-          // We're already trying to reconnect but still no token/chatId
-          const initError = new StreamingError(
-            ErrorCodes.INITIALIZATION_ERROR,
-            false
-          )
-
-          logger.captureException(initError, {
-            isReconnecting: this.isReconnecting,
-            chatId: !!chatId,
-            token: !!token
-          })
-
-          onError(initError)
-          return
-        }
+        await this.initializeNewChat()
+        chatId = this.storage.getItem(this.chatIdStorageKey)
+        token = this.storage.getItem(this.tokenStorageKey)
       } catch (initError) {
-        const error = new StreamingError(ErrorCodes.INITIALIZATION_ERROR, true)
-
-        logger.captureException(error, {
-          originalError: initError
-        })
-
-        onError(error)
+        onError(initError instanceof StreamingError ? initError : new StreamingError(ErrorCodes.INITIALIZATION_ERROR, true))
         return
       }
     }
 
-    // Close any existing EventSource
-    this.cancelStream()
+    if (!chatId || !token) {
+      onError(new StreamingError(ErrorCodes.INITIALIZATION_ERROR, true))
+      return
+    }
 
-    // Create the URL with query parameters for token and content
+    // Try fetch streaming first, fall back to SSE
+    if (this.isFetchStreamingSupported()) {
+      try {
+        await this.fetchStream(chatId, token, userQuery, onChunk, onComplete, onError, onSpecialEvent)
+        return
+      } catch (fetchError) {
+        logger.warning('Fetch streaming failed, falling back to SSE', { error: fetchError })
+        // Continue to SSE fallback
+      }
+    }
+
+    // SSE fallback
+    await this.sseStream(chatId, token, userQuery, onChunk, onComplete, onError, onSpecialEvent)
+  }
+
+  /**
+   * Primary streaming method using fetch + ReadableStream
+   */
+  private async fetchStream(
+    chatId: string,
+    token: string,
+    userQuery: string,
+    onChunk: (chunk: string) => void,
+    onComplete: () => void,
+    onError: (error: Error) => void,
+    onSpecialEvent?: (event: any) => void
+  ): Promise<void> {
+    this.abortController = new AbortController()
+    
+    try {
+      const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
+      
+      const response = await fetch(`${this.apiBaseUrl}/chats/${chatId}/stream-fetch`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          content: userQuery,
+          timezone: userTimezone
+        }),
+        signal: this.abortController.signal
+      })
+
+      if (!response.ok) {
+        if (response.status === 401) {
+          await this.handleTokenError(userQuery, onChunk, onComplete, onError)
+          return
+        }
+        throw new StreamingError(ErrorCodes.CONNECTION_ERROR, true)
+      }
+
+      if (!response.body) {
+        throw new StreamingError(ErrorCodes.CONNECTION_ERROR, true)
+      }
+
+      const reader = response.body.getReader()
+      const decoder = new TextDecoder()
+      let buffer = ''
+
+      try {
+        while (true) {
+          const { value, done } = await reader.read()
+          if (done) break
+
+          buffer += decoder.decode(value, { stream: true })
+          const lines = buffer.split('\n')
+          buffer = lines.pop() || '' // Keep incomplete line in buffer
+
+          for (const line of lines) {
+            if (line.trim()) {
+              try {
+                const event: StreamEvent = JSON.parse(line)
+                await this.handleStreamEvent(event, onChunk, onComplete, onError, onSpecialEvent)
+              } catch (parseError) {
+                logger.warning('Failed to parse stream event', { line, error: parseError })
+              }
+            }
+          }
+        }
+
+        // Process any remaining data in buffer
+        if (buffer.trim()) {
+          try {
+            const event: StreamEvent = JSON.parse(buffer)
+            await this.handleStreamEvent(event, onChunk, onComplete, onError, onSpecialEvent)
+          } catch (parseError) {
+            logger.warning('Failed to parse final stream event', { buffer, error: parseError })
+          }
+        }
+
+      } finally {
+        reader.releaseLock()
+      }
+
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') {
+        return // Intentional cancellation
+      }
+      
+      logger.captureException(error, { chatId, method: 'fetch' })
+      
+      if (error instanceof StreamingError) {
+        onError(error)
+      } else {
+        onError(new StreamingError(ErrorCodes.CONNECTION_ERROR, true))
+      }
+    }
+  }
+
+  /**
+   * Fallback streaming method using SSE (simplified)
+   */
+  private async sseStream(
+    chatId: string,
+    token: string,
+    userQuery: string,
+    onChunk: (chunk: string) => void,
+    onComplete: () => void,
+    onError: (error: Error) => void,
+    onSpecialEvent?: (event: any) => void
+  ): Promise<void> {
+    const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone
     const url = new URL(`${this.apiBaseUrl}/chats/${chatId}/stream`)
     url.searchParams.append('content', userQuery)
     url.searchParams.append('timezone', userTimezone)
-    // Optional debug flag from localStorage
-    const debugEnabled = true
-    url.searchParams.append('debug', '1')
-    // Ensure token is not null before appending
-    if (token) {
-      url.searchParams.append('token', token)
+    url.searchParams.append('token', token)
+
+    const eventSource = new EventSource(url.toString())
+
+    eventSource.onmessage = (event) => {
+      try {
+        const data = JSON.parse(event.data)
+        this.handleStreamEvent(data, onChunk, onComplete, onError, onSpecialEvent)
+      } catch (parseError) {
+        logger.warning('Failed to parse SSE event', { data: event.data, error: parseError })
+      }
     }
 
-    try {
-      // Create a new EventSource connection
-      this.eventSource = new EventSource(url.toString())
-
-      let fullText = ''
-      let errorCount = 0
-      const maxSilentErrors = 3 // Only log detailed errors for the first few occurrences
-      let lastSeq: number | undefined
-
-      // Reset error count when connection successfully opens
-      this.eventSource.onopen = () => {
-        errorCount = 0
+    eventSource.onerror = () => {
+      eventSource.close()
+      if (eventSource.readyState === EventSource.CLOSED) {
+        onComplete() // Graceful completion
+      } else {
+        onError(new StreamingError(ErrorCodes.CONNECTION_ERROR, true))
       }
-
-      // Handle incoming messages
-      this.eventSource.onmessage = (event: SSEMessageEvent) => {
-        // Reset error count on successful message reception
-        errorCount = 0
-
-        try {
-          const data = JSON.parse(event.data) as SSEEventData & { seq?: number; t?: number }
-
-          if (debugEnabled) {
-            const seq = typeof data.seq === 'number' ? data.seq : undefined
-            const gap = seq && lastSeq ? seq - lastSeq : undefined
-            void gap // keep calculation to avoid unused warnings if needed
-          }
-
-          // Check for any kind of error message from the server
-          if (data.type === 'error') {
-            logger.warning('Received error in SSE message', {
-              errorMessage: data.error,
-              errorCode: data.code
-            })
-
-            this.handleServerError(
-              userQuery,
-              data,
-              onChunk,
-              onComplete,
-              onError,
-              companyId
-            )
-            return
-          }
-
-          // If not an error, process normal message types
-          switch (data.type) {
-            case 'connected':
-              break
-
-            case 'chunk':
-              // Deduplicate first-chunk duplicates by seq
-              if (typeof data.seq === 'number') {
-                if (lastSeq === data.seq) {
-                  // Duplicate of last seen seq: ignore
-                  return
-                }
-                lastSeq = data.seq
-              }
-              if(this.isClosingConnection) {
-                logger.error("Received chunk after connection was closed", {
-                  chatId
-                })
-                return
-              }
-
-              // Handle the content - we've verified it's a string
-              if (typeof data.content === 'string') {
-                // eslint-disable-next-line @typescript-eslint/no-shadow
-                const content = data.content as string
-                fullText += content
-
-                onChunk(content)
-              }
-              break
-            case 'done':
-              onComplete()
-              // Close the connection explicitly to avoid trailing or duplicate events
-              this.closeEventSource()
-              break
-          }
-
-          // For custom/special events like { type: 'request_email' }
-          if (onSpecialEvent) {
-            onSpecialEvent(data)
-          }
-        } catch (error) {
-          console.log('error', error)
-          const streamError =
-            error instanceof StreamingError
-              ? error
-              : new StreamingError(ErrorCodes.CONNECTION_ERROR, true)
-
-          logger.captureException(streamError, {
-            originalError: error,
-            chatId
-          })
-
-          onError(streamError)
-          this.closeEventSource()
-        }
-      }
-
-      // Implement error handler that distinguishes between expected and unexpected errors
-      this.eventSource.onerror = () => {
-        // Track if we're in the process of closing
-        const isClosing =
-          !this.eventSource ||
-          this.eventSource.readyState === 2 || // CLOSED
-          this.isClosingConnection
-
-        errorCount++
-
-        // If we're closing the connection, ignore the error as it's expected
-        if (isClosing) {
-          return
-        }
-
-        // Log only the first few errors to avoid console spam
-        if (errorCount <= maxSilentErrors) {
-          logger.warning(`EventSource error #${errorCount}`, {
-            readyState: this.eventSource?.readyState
-          })
-        }
-
-        // Don't react to reconnection attempts
-        if (this.eventSource?.readyState === 0) {
-          // CONNECTING
-          return
-        }
-
-        // If the browser closed the connection without an error and we have data, finalize gracefully
-        if (this.eventSource?.readyState === 2) { // CLOSED
-          onComplete()
-          this.closeEventSource()
-          return
-        }
-
-        // Only notify user after multiple consecutive errors (actual connection problems)
-        // Reduced from 5 to 3 errors to fail faster
-        if (errorCount > 3) {
-          const connectionError = new StreamingError(
-            ErrorCodes.CONNECTION_ERROR,
-            true
-          )
-
-          logger.captureException(connectionError, {
-            errorCount,
-            readyState: this.eventSource?.readyState
-          })
-
-          onError(connectionError)
-          this.closeEventSource()
-        }
-      }
-    } catch (error) {
-      const streamError =
-        error instanceof StreamingError
-          ? error
-          : new StreamingError(ErrorCodes.CONNECTION_ERROR, true)
-
-      logger.captureException(streamError, {
-        originalError: error,
-        chatId
-      })
-
-      onError(streamError)
-      this.closeEventSource()
     }
   }
 
   /**
-   * Process server-side error messages and take appropriate action
+   * Handle stream events from either fetch or SSE
    */
-  private handleServerError(
-    userQuery: string,
-    data: SSEEventData,
+  private async handleStreamEvent(
+    event: StreamEvent,
     onChunk: (chunk: string) => void,
     onComplete: () => void,
     onError: (error: Error) => void,
-    companyId?: string
-  ): void {
-    // Validate the error code and set a default if invalid
-    const errorCode =
-      data.code && isErrorCode(data.code) ? data.code : ErrorCodes.UNKNOWN_ERROR
-
-    // Handle different error codes
-    switch (errorCode) {
-      // Token expired (handled differently from invalid)
-      case ErrorCodes.TOKEN_EXPIRED:
-        this.handleTokenExpired(
-          userQuery,
-          onChunk,
-          onComplete,
-          onError,
-          companyId
-        )
+    onSpecialEvent?: (event: any) => void
+  ): Promise<void> {
+    switch (event.type) {
+      case 'start':
+        // Connection established
         break
 
-      // Other authentication errors - need to renew session and log the issue
+      case 'chunk':
+        if (typeof event.content === 'string') {
+          onChunk(event.content)
+        }
+        break
+
+      case 'done':
+        onComplete()
+        break
+
+      case 'error':
+        await this.handleServerError(event, onChunk, onComplete, onError)
+        break
+
+      default:
+        // Special events (email detection, etc.)
+        if (onSpecialEvent) {
+          onSpecialEvent(event)
+        }
+        break
+    }
+  }
+
+  /**
+   * Handle server-side errors with retry logic
+   */
+  private async handleServerError(
+    event: StreamEvent,
+    onChunk: (chunk: string) => void,
+    onComplete: () => void,
+    onError: (error: Error) => void
+  ): Promise<void> {
+    const errorCode = event.code && isErrorCode(event.code) ? event.code : ErrorCodes.UNKNOWN_ERROR
+
+    switch (errorCode) {
+      case ErrorCodes.TOKEN_EXPIRED:
       case ErrorCodes.TOKEN_INVALID:
       case ErrorCodes.TOKEN_MISSING:
-        logger.warning('Handling server error', {
-          errorCode,
-          errorMessage: data.error
-        })
-        this.handleTokenError(
-          userQuery,
-          onChunk,
-          onComplete,
-          onError,
-          companyId
-        )
+        await this.handleTokenError(event.content || '', onChunk, onComplete, onError)
         break
 
-      // Chat errors - create a new chat session
       case ErrorCodes.NOT_FOUND:
       case ErrorCodes.INVALID_CHAT:
       case ErrorCodes.INVALID_COMPANY:
-        logger.warning('Handling server error', {
-          errorCode,
-          errorMessage: data.error
-        })
-        this.handleChatError(
-          userQuery,
-          onChunk,
-          onComplete,
-          onError,
-          companyId,
-          errorCode
-        )
+        await this.handleChatError(event.content || '', onChunk, onComplete, onError, errorCode)
         break
 
-      // Request errors - can't recover without user changing input
-      case ErrorCodes.INVALID_REQUEST:
-        // eslint-disable-next-line no-case-declarations
-        const requestError = new StreamingError(
-          errorCode,
-          true // User can try again with a different message
-        )
-
-        logger.captureException(requestError, {
-          errorMessage: data.error
-        })
-
-        onError(requestError)
-        this.closeEventSource()
-        break
-
-      // All other errors
       default:
-        // eslint-disable-next-line no-case-declarations
-        const genericError = new StreamingError(errorCode, true)
-
-        logger.captureException(genericError, {
-          errorMessage: data.error
-        })
-
-        onError(genericError)
-        this.closeEventSource()
+        const error = new StreamingError(errorCode, true)
+        logger.captureException(error, { errorMessage: event.error })
+        onError(error)
         break
     }
   }
 
   /**
-   * Calculate exponential backoff time based on retry attempts
-   */
-  private getBackoffTime(): number {
-    return Math.min(1000 * Math.pow(2, this.reconnectAttempts), 10000) // Max 10 seconds
-  }
-
-  /**
-   * Handle token expiration by silently reinitializing the chat and retrying
-   * Similar to handleTokenError but without logging warnings
-   */
-  private async handleTokenExpired(
-    userQuery: string,
-    onChunk: (chunk: string) => void,
-    onComplete: () => void,
-    onError: (error: Error) => void,
-    companyId?: string
-  ): Promise<void> {
-    this.closeEventSource()
-
-    // Track reconnection attempt but do not increment tokenReconnectAttempts
-    // as we treat expiration differently from invalid tokens
-    this.reconnectAttempts++
-    this.lastReconnectTime = Date.now()
-
-    // Check if we've exceeded maximum reconnection attempts
-    if (this.reconnectAttempts > this.MAX_RECONNECT_ATTEMPTS) {
-      const reconnectError = new StreamingError(
-        ErrorCodes.RECONNECT_LIMIT,
-        false
-      )
-
-      logger.captureException(reconnectError, {
-        reconnectAttempts: this.reconnectAttempts,
-        maxReconnectAttempts: this.MAX_RECONNECT_ATTEMPTS
-      })
-
-      onError(reconnectError)
-      this.isReconnecting = false
-      return
-    }
-
-    if (this.isReconnecting) {
-      // Avoid nested reconnection loops
-      const nestingError = new StreamingError(ErrorCodes.TOKEN_EXPIRED, false)
-
-      logger.captureException(nestingError, {
-        message: 'Nested reconnection attempt prevented'
-      })
-
-      onError(nestingError)
-      this.isReconnecting = false
-      return
-    }
-
-    this.isReconnecting = true
-
-    try {
-      // For expired tokens, we don't need to wait for backoff time
-      // as expiration is expected, not an error condition
-
-      // Clear existing token and chat ID
-      this.storage.removeItem(this.tokenStorageKey)
-      this.storage.removeItem(this.chatIdStorageKey)
-
-      // Initialize a new chat
-      await this.initializeNewChat()
-
-      // Retry the streaming request
-      await this.streamMessage(
-        userQuery,
-        onChunk,
-        onComplete,
-        onError,
-        companyId
-      )
-      this.isReconnecting = false
-    } catch (error) {
-      const retryError = new StreamingError(ErrorCodes.TOKEN_EXPIRED, false)
-
-      logger.captureException(retryError, {
-        originalError: error
-      })
-
-      onError(retryError)
-      this.isReconnecting = false
-    }
-  }
-
-  /**
-   * Handle token errors by reinitializing the chat and retrying
+   * Handle token errors with retry
    */
   private async handleTokenError(
     userQuery: string,
     onChunk: (chunk: string) => void,
     onComplete: () => void,
-    onError: (error: Error) => void,
-    companyId?: string
+    onError: (error: Error) => void
   ): Promise<void> {
-    this.closeEventSource()
-
-    // Track reconnection attempt
     this.reconnectAttempts++
-    this.tokenReconnectAttempts++
     this.lastReconnectTime = Date.now()
 
-    // Check if we've exceeded maximum token reconnection attempts (limit to 1)
-    if (this.tokenReconnectAttempts > this.MAX_TOKEN_RECONNECT_ATTEMPTS) {
-      const tokenError = new StreamingError(ErrorCodes.TOKEN_INVALID, false)
-
-      logger.captureException(tokenError, {
-        tokenReconnectAttempts: this.tokenReconnectAttempts,
-        maxTokenReconnectAttempts: this.MAX_TOKEN_RECONNECT_ATTEMPTS
-      })
-
-      onError(tokenError)
-      this.isReconnecting = false
-      return
-    }
-
-    // Check if we've exceeded maximum reconnection attempts
     if (this.reconnectAttempts > this.MAX_RECONNECT_ATTEMPTS) {
-      const reconnectError = new StreamingError(
-        ErrorCodes.RECONNECT_LIMIT,
-        false
-      )
-
-      logger.captureException(reconnectError, {
-        reconnectAttempts: this.reconnectAttempts,
-        maxReconnectAttempts: this.MAX_RECONNECT_ATTEMPTS
-      })
-
-      onError(reconnectError)
-      this.isReconnecting = false
+      onError(new StreamingError(ErrorCodes.RECONNECT_LIMIT, false))
       return
     }
-
-    if (this.isReconnecting) {
-      // Avoid nested reconnection loops
-      const nestingError = new StreamingError(ErrorCodes.TOKEN_INVALID, false)
-
-      logger.captureException(nestingError, {
-        message: 'Nested reconnection attempt prevented'
-      })
-
-      onError(nestingError)
-      this.isReconnecting = false
-      return
-    }
-
-    this.isReconnecting = true
 
     try {
-      // Calculate backoff time for exponential retry
-      const backoffTime = this.getBackoffTime()
-
-      // Wait for backoff time before retrying
-      await new Promise(resolve => setTimeout(resolve, backoffTime))
-
-      // Clear existing token and chat ID
+      // Clear tokens and reinitialize
       this.storage.removeItem(this.tokenStorageKey)
       this.storage.removeItem(this.chatIdStorageKey)
-
-      // Initialize a new chat
+      
       await this.initializeNewChat()
-
-      // Retry the streaming request
-      await this.streamMessage(
-        userQuery,
-        onChunk,
-        onComplete,
-        onError,
-        companyId
-      )
-      this.isReconnecting = false
+      
+      // Retry with exponential backoff
+      const backoffTime = Math.min(1000 * Math.pow(2, this.reconnectAttempts - 1), 10000)
+      await new Promise(resolve => setTimeout(resolve, backoffTime))
+      
+      await this.streamMessage(userQuery, onChunk, onComplete, onError)
     } catch (error) {
-      const retryError = new StreamingError(ErrorCodes.TOKEN_INVALID, false)
-
-      logger.captureException(retryError, {
-        originalError: error
-      })
-
-      onError(retryError)
-      this.isReconnecting = false
+      onError(new StreamingError(ErrorCodes.TOKEN_INVALID, false))
     }
   }
 
   /**
-   * Handle chat-related errors by reinitializing the chat and retrying
-   * Used for NOT_FOUND, INVALID_CHAT, and INVALID_COMPANY errors
+   * Handle chat-related errors
    */
   private async handleChatError(
     userQuery: string,
     onChunk: (chunk: string) => void,
     onComplete: () => void,
     onError: (error: Error) => void,
-    companyId?: string,
-    errorCode: ErrorCodeValue = ErrorCodes.CONFIGURATION_ERROR
+    errorCode: ErrorCodeValue
   ): Promise<void> {
-    this.closeEventSource()
-
-    // Track reconnection attempt
     this.reconnectAttempts++
     this.lastReconnectTime = Date.now()
 
-    // Notify the user of the issue
-    const chatError = new StreamingError(
-      errorCode,
-      true // These errors are recoverable
-    )
-
+    const chatError = new StreamingError(errorCode, true)
     logger.captureException(chatError)
     onError(chatError)
 
-    // Check if we've exceeded maximum reconnection attempts
-    if (this.reconnectAttempts > this.MAX_RECONNECT_ATTEMPTS) {
-      const reconnectError = new StreamingError(
-        ErrorCodes.RECONNECT_LIMIT,
-        false
-      )
-
-      logger.captureException(reconnectError, {
-        reconnectAttempts: this.reconnectAttempts,
-        maxReconnectAttempts: this.MAX_RECONNECT_ATTEMPTS
-      })
-
-      onError(reconnectError)
-      this.isReconnecting = false
-      return
-    }
-
-    if (this.isReconnecting) {
-      // Avoid nested reconnection loops
-      const nestingError = new StreamingError(errorCode, false)
-
-      logger.captureException(nestingError, {
-        message: 'Nested reconnection attempt prevented',
-        errorCode
-      })
-
-      onError(nestingError)
-      this.isReconnecting = false
-      return
-    }
-
-    this.isReconnecting = true
-
-    try {
-      // Calculate backoff time for exponential retry
-      const backoffTime = this.getBackoffTime()
-
-      // Wait for backoff time before retrying
-      await new Promise(resolve => setTimeout(resolve, backoffTime))
-
-      // Clear existing token and chat ID
-      this.storage.removeItem(this.tokenStorageKey)
-      this.storage.removeItem(this.chatIdStorageKey)
-
-      // Initialize a new chat
-      await this.initializeNewChat()
-
-      // Retry the streaming request
-      await this.streamMessage(
-        userQuery,
-        onChunk,
-        onComplete,
-        onError,
-        companyId
-      )
-      this.isReconnecting = false
-    } catch (error) {
-      const initError = new StreamingError(
-        ErrorCodes.INITIALIZATION_ERROR,
-        false
-      )
-
-      logger.captureException(initError, {
-        originalError: error
-      })
-
-      onError(initError)
-      this.isReconnecting = false
+    if (this.reconnectAttempts <= this.MAX_RECONNECT_ATTEMPTS) {
+      try {
+        this.storage.removeItem(this.tokenStorageKey)
+        this.storage.removeItem(this.chatIdStorageKey)
+        
+        const backoffTime = Math.min(1000 * Math.pow(2, this.reconnectAttempts - 1), 10000)
+        await new Promise(resolve => setTimeout(resolve, backoffTime))
+        
+        await this.initializeNewChat()
+        await this.streamMessage(userQuery, onChunk, onComplete, onError)
+      } catch (error) {
+        onError(new StreamingError(ErrorCodes.INITIALIZATION_ERROR, false))
+      }
     }
   }
 
   /**
-   * Close the EventSource connection
-   */
-  private closeEventSource(): void {
-    if (this.eventSource) {
-      // Set flag before any operations that might trigger events
-      this.isClosingConnection = true
-
-      // Remove all event listeners before closing
-      // eslint-disable-next-line no-null/no-null
-      this.eventSource.onmessage = null
-      // eslint-disable-next-line no-null/no-null
-      this.eventSource.onerror = null
-      // eslint-disable-next-line no-null/no-null
-      this.eventSource.onopen = null
-
-      // Close the connection
-      this.eventSource.close()
-      this.eventSource = undefined
-    }
-
-    this.isClosingConnection = false
-  }
-
-  /**
-   * Cancel ongoing stream if one exists
+   * Cancel ongoing stream
    */
   cancelStream(): void {
-    this.isClosingConnection = true
-    this.closeEventSource()
+    if (this.abortController) {
+      this.abortController.abort()
+      this.abortController = undefined
+    }
   }
 
   /**
-   * Reset reconnection state and counters
-   * Call this when the user manually reloads or takes action to resolve issues
+   * Reset reconnection state
    */
   resetReconnectionState(): void {
     this.reconnectAttempts = 0
-    this.tokenReconnectAttempts = 0 // Also reset token reconnect attempts
     this.lastReconnectTime = 0
-    this.isReconnecting = false
   }
 
   /**
-   * Clean up all connections and prevent reconnects
-   * Call this when the component unmounts or the user navigates away
+   * Clean up resources
    */
   cleanup(): void {
-    this.isClosingConnection = true
-    this.closeEventSource()
+    this.cancelStream()
     this.reconnectAttempts = 0
   }
 }

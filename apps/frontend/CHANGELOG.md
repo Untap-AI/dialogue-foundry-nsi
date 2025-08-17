@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.3.9
+
+### Patch Changes
+
+- Simplified streaming
+
 ## 0.3.8
 
 ### Patch Changes
