@@ -193,389 +193,205 @@ router.post('/:chatId/send-email', authenticateChatAccess, async (req, res) => {
   }
 })
 
-// Shared handler function for stream requests
-async function handleStreamRequest(req: CustomRequest, res: express.Response) {
-  // Set the proper headers for Server-Sent Events (SSE)
+// Shared validation and setup logic
+async function setupStreamRequest(req: CustomRequest) {
+  const { chatId } = req.params
+  const { content, timezone = 'UTC' } = req.method === 'POST' ? req.body : req.query
+  const userId = req.user?.userId
+
+  if (!chatId || !content || !userId) {
+    throw new Error('Chat ID, content, and authentication are required')
+  }
+
+  // Get and validate chat
+  const chat = await getChatById(chatId)
+  if (!chat) throw new Error('Chat not found')
+
+  const companyId = chat.company_id
+  if (!companyId) throw new Error('Chat not associated with company')
+
+  // Get config
+  const chatConfig = await getChatConfigByCompanyId(companyId)
+  if (!chatConfig) throw new Error('Company configuration not found')
+
+  // Chat settings
+  const hasUserEmail = Boolean(chat.user_email)
+  const chatSettings: ChatSettings = {
+    ...DEFAULT_SETTINGS,
+    systemPrompt: chatConfig.system_prompt,
+    companyId,
+    enableEmailFunction: Boolean(chatConfig?.support_email) && !hasUserEmail,
+    timezone,
+    hasUserEmail
+  }
+
+  return { chatId, content, userId, chat, chatConfig, chatSettings }
+}
+
+// Shared streaming logic
+async function processStream(
+  setupData: Awaited<ReturnType<typeof setupStreamRequest>>,
+  onChunk: (chunk: string) => void,
+  onSpecialEvent?: (event: any) => void
+) {
+  const { chatId, content, userId, chat, chatConfig, chatSettings } = setupData
+
+  // Get previous messages and save user message
+  const previousMessages = await getMessagesByChatId(chatId)
+  const latestSequenceNumber = await getLatestSequenceNumber(chatId)
+  const nextSequenceNumber = latestSequenceNumber + 1
+
+  await createMessageAdmin({
+    chat_id: chatId,
+    user_id: userId,
+    content,
+    role: 'user',
+    sequence_number: nextSequenceNumber
+  })
+
+  // Prepare OpenAI messages
+  const openaiMessages: Message[] = [
+    ...previousMessages.map(msg => ({
+      role: msg.role as 'system' | 'user' | 'assistant',
+      content: msg.content
+    })),
+    { role: 'user', content }
+  ]
+
+  // Add Pinecone context if available
+  if (chatConfig?.pinecone_index_name) {
+    try {
+      const documents = await retrieveDocuments(chatConfig.pinecone_index_name, content)
+      if (documents && documents.length > 0) {
+        const contextFromDocs = formatDocumentsAsContext(documents)
+        openaiMessages.unshift({ role: 'system', content: contextFromDocs })
+      }
+    } catch (retrievalError) {
+      console.error('Error during document retrieval:', retrievalError)
+    }
+  }
+
+  // Stream from OpenAI
+  let fullResponse = ''
+  const wrappedOnChunk = (chunk: string) => {
+    fullResponse += chunk
+    onChunk(chunk)
+  }
+
+  await generateStreamingChatCompletion(openaiMessages, chatSettings, wrappedOnChunk)
+
+  // Save assistant message
+  await createMessageAdmin({
+    chat_id: chatId,
+    user_id: userId,
+    content: fullResponse || 'Sorry, I was unable to generate a response.',
+    role: 'assistant',
+    sequence_number: nextSequenceNumber + 1
+  })
+
+  // Email detection (send as special event if callback provided)
+  let emailDetectionResult = null
+  try {
+    if (fullResponse) {
+      const result = await detectEmailRequest(fullResponse, openaiMessages, chatSettings)
+      if (result?.success) {
+        emailDetectionResult = result.details
+        if (onSpecialEvent) {
+          onSpecialEvent(emailDetectionResult)
+        }
+      }
+    }
+  } catch (error) {
+    logger.warn('Error in email detection', { error: error as Error, chatId })
+  }
+
+  // User email processing (async, non-blocking)
+  setImmediate(async () => {
+    try {
+      await processUserEmailInMessage(
+        content,
+        chatId,
+        openaiMessages,
+        chatSettings,
+        chatConfig?.support_email || '',
+        Boolean(chat?.user_email)
+      )
+    } catch (error) {
+      logger.warn('Error in user email processing', { error: error as Error, chatId })
+    }
+  })
+
+  return { fullResponse, emailDetectionResult }
+}
+
+
+
+// Fetch streaming endpoint (primary)
+router.post('/:chatId/stream-fetch', authenticateChatAccess, async (req: CustomRequest, res) => {
+  res.setHeader('Content-Type', 'application/x-ndjson; charset=utf-8')
+  res.setHeader('Transfer-Encoding', 'chunked')
+  res.setHeader('Cache-Control', 'no-cache, no-transform')
+  res.setHeader('X-Accel-Buffering', 'no')
+
+  const sendEvent = (data: any) => {
+    if (!res.writableEnded) res.write(JSON.stringify(data) + '\n')
+  }
+
+  try {
+    const setupData = await setupStreamRequest(req)
+    sendEvent({ type: 'start' })
+    
+    const { fullResponse } = await processStream(
+      setupData, 
+      (chunk) => sendEvent({ type: 'chunk', content: chunk }),
+      (specialEvent) => sendEvent(specialEvent)
+    )
+    
+    sendEvent({ type: 'done', fullContent: fullResponse })
+    res.end()
+  } catch (error) {
+    logger.error('Error in fetch streaming', { error: error as Error, chatId: req.params.chatId })
+    sendEvent({ type: 'error', error: error instanceof Error ? error.message : 'Internal server error' })
+    res.end()
+  }
+})
+
+// SSE streaming endpoint (fallback)
+async function handleSSEStream(req: CustomRequest, res: express.Response) {
   res.setHeader('Content-Type', 'text/event-stream; charset=utf-8')
   res.setHeader('Cache-Control', 'no-cache, no-transform')
   res.setHeader('Connection', 'keep-alive')
-  res.setHeader('X-Accel-Buffering', 'no') // Disable buffering for Nginx
+  res.setHeader('X-Accel-Buffering', 'no')
 
-  // Heartbeat to keep the connection alive through proxies/mobile networks
-  let heartbeat: NodeJS.Timeout | undefined
-
-  // Helper function to send errors via SSE
-  const sendErrorEvent = (
-    errorMessage: string,
-    errorCode: string = 'STREAMING_ERROR'
-  ) => {
+  const sendEvent = (data: any) => {
     if (!res.writableEnded) {
-      const errorData = {
-        type: 'error',
-        error: errorMessage,
-        code: errorCode
-      }
-      logger.warn('Sending error event to client', {
-        errorCode,
-        errorMessage,
-        endpoint: req.originalUrl
-      })
-      res.write(`data: ${JSON.stringify(errorData)}\n\n`)
-      // Send a clean termination signal
-      res.write(':\n\n')
-      if (heartbeat) clearInterval(heartbeat)
-      res.end()
+      res.write(`data: ${JSON.stringify(data)}\n\n`)
+      res.flushHeaders()
     }
   }
 
   try {
-    const { chatId } = req.params
-
-    // Get content from body (POST) or query params (GET)
-    const content = req.body.content || req.query.content
-    const timezone = req.body.timezone || req.query.timezone || 'UTC'
-    // Force debug mode for mobile troubleshooting
-    const debug = true
-    let seq = 0
-
-    if (!chatId) {
-      sendErrorEvent('Chat ID is required', 'INVALID_REQUEST')
-      return
-    }
-
-    // Use the authenticated user's ID from the JWT token
-    // This is set by the authenticateChatAccess middleware
-    const userId = req.user?.userId
-
-    if (!userId || !content) {
-      sendErrorEvent(
-        'User authentication and message content are required',
-        'INVALID_REQUEST'
-      )
-      return
-    }
-
-    // Get chat from database
-    const chat = await getChatById(chatId)
-
-    if (!chat) {
-      sendErrorEvent('Chat not found', 'NOT_FOUND')
-      return
-    }
-
-    // Get the company ID from the chat
-    const companyId = chat.company_id
-
-    // If the chat doesn't have a company_id, return an error
-    if (!companyId) {
-      sendErrorEvent(
-        'This chat is not associated with any company. Please create a new chat with a company ID.',
-        'INVALID_CHAT'
-      )
-      return
-    }
-
-    // Get config from database
-    const chatConfig = await getChatConfigByCompanyId(companyId)
-    if (!chatConfig) {
-      sendErrorEvent(
-        'The company associated with this chat is not available. Please create a chat with a valid company ID.',
-        'INVALID_COMPANY'
-      )
-      return
-    }
-
-    // Get chat settings - using request parameters, chat config, or defaults
-    // Check if user has already provided their email to avoid requesting it again
-    const hasUserEmail = Boolean(chat.user_email)
+    const setupData = await setupStreamRequest(req)
+    sendEvent({ type: 'connected' })
     
-    const chatSettings: ChatSettings = {
-      ...DEFAULT_SETTINGS,
-      systemPrompt: chatConfig.system_prompt,
-      // Pass company ID and support email if available
-      companyId,
-      enableEmailFunction: Boolean(chatConfig?.support_email) && !hasUserEmail,
-      timezone,
-      hasUserEmail
-    }
-
-    // Get all previous messages in this chat
-    const previousMessages = await getMessagesByChatId(chatId)
-
-    // Get the next sequence number
-    const latestSequenceNumber = await getLatestSequenceNumber(chatId)
-    const nextSequenceNumber = latestSequenceNumber + 1
-
-    // Create both messages upfront but only insert the user message immediately
-    const userMessageData = {
-      chat_id: chatId,
-      user_id: userId,
-      content,
-      role: 'user',
-      sequence_number: nextSequenceNumber
-    }
-
-    // Save the user message using admin function to bypass RLS
-    await createMessageAdmin(userMessageData)
-
-    // Prepare messages for OpenAI API
-    const openaiMessages: Message[] = [
-      ...previousMessages.map(msg => ({
-        role: msg.role as 'system' | 'user' | 'assistant',
-        content: msg.content
-      })),
-      {
-        role: 'user',
-        content
-      }
-    ]
-
-    // Retrieve relevant documents from Pinecone if an index is configured
-    let contextFromDocs = ''
-    if (chatConfig?.pinecone_index_name) {
-      try {
-        const documents = await retrieveDocuments(
-          chatConfig.pinecone_index_name,
-          content
-        )
-        if (documents && documents.length > 0) {
-          contextFromDocs = formatDocumentsAsContext(documents)
-        }
-      } catch (retrievalError) {
-        console.error('Error during document retrieval:', retrievalError)
-        // Continue without document retrieval if it fails
-      }
-    }
-
-    // If we retrieved context, add it as a system message
-    if (contextFromDocs) {
-      // Change this to make first message a system message
-      openaiMessages.unshift({
-        role: 'system',
-        content: contextFromDocs
-      })
-    }
-
-    // Anti-buffering prelude and initial SSE message to confirm connection
-    // Large comment line to prevent proxy buffering and help iOS start delivery quickly
-    res.write(':' + ' '.repeat(2048) + '\n')
-    res.write('\n')
-    {
-      const payload = { type: 'connected' } as Record<string, unknown>
-      const data = debug ? { ...payload, seq: ++seq, t: Date.now() } : payload
-      res.write(`data: ${JSON.stringify(data)}\n\n`)
-    }
-    res.flushHeaders()
-
-    // Start heartbeat after connection is established
-    heartbeat = setInterval(() => {
-      if (!res.writableEnded) {
-        res.write(':\n\n')
-      }
-    }, 15000)
-
-    // Small delay to ensure client handlers are attached on flaky/mobile browsers
-    await new Promise(resolve => setTimeout(resolve, 200))
-
-    // Initial coalescing to avoid tiny first chunk getting dropped on mobile
-    let isCoalescing = true
-    let coalesceBuffer = ''
-    let coalesceTimeout: NodeJS.Timeout | undefined
-
-    const flushCoalesceBuffer = () => {
-      if (coalesceBuffer && !res.writableEnded) {
-        const payload = { type: 'chunk', content: coalesceBuffer } as Record<string, unknown>
-        // Prepare seq for first-chunk duplication
-        const firstSeq = debug ? seq + 1 : undefined
-        const data = debug ? { ...payload, seq: ++seq, t: Date.now() } : payload
-        res.write(`data: ${JSON.stringify(data)}\n\n`)
-        // Immediately send a duplicate of the first chunk with the same seq to mitigate first-event loss
-        if (debug && firstSeq !== undefined && !res.writableEnded) {
-          const dup = { ...payload, seq: firstSeq, t: Date.now() }
-          res.write(`data: ${JSON.stringify(dup)}\n\n`)
-        }
-        res.flushHeaders()
-        coalesceBuffer = ''
-      }
-    }
-
-    // Define SSE-formatted chunk sender with initial coalescing
-    const onChunk = (chunk: string) => {
-      if (isCoalescing) {
-        const isFirstChunk = coalesceBuffer.length === 0
-        coalesceBuffer += chunk
-        // Start the coalescing timer only after first bytes arrive
-        if (isFirstChunk && !coalesceTimeout) {
-          coalesceTimeout = setTimeout(() => {
-            if (isCoalescing) {
-              isCoalescing = false
-              flushCoalesceBuffer()
-            }
-          }, 300)
-        }
-        // Flush early if we have enough text to be robust
-        if (coalesceBuffer.length >= 256) {
-          isCoalescing = false
-          if (coalesceTimeout) clearTimeout(coalesceTimeout)
-          flushCoalesceBuffer()
-        }
-        return
-      }
-
-      // Ensure the response is still writable
-      if (!res.writableEnded) {
-        // Format the chunk as a Server-Sent Event
-        const payload = { type: 'chunk', content: chunk } as Record<string, unknown>
-        const data = debug ? { ...payload, seq: ++seq, t: Date.now() } : payload
-        res.write(`data: ${JSON.stringify(data)}\n\n`)
-
-        // Force immediate sending of the chunk
-        res.flushHeaders()
-      }
-    }
-
-    // Stop coalescing after a short window and flush any buffered text
-    coalesceTimeout = setTimeout(() => {
-      if (isCoalescing) {
-        isCoalescing = false
-        flushCoalesceBuffer()
-      }
-    }, 150)
-
-    // Generate streaming response from OpenAI (main content generation)
-    let aiResponseContent
-    try {
-      aiResponseContent = await generateStreamingChatCompletion(
-        openaiMessages,
-        chatSettings,
-        onChunk
-      )
-    } catch (streamError) {
-      logger.error('Error in streaming chat completion', {
-        error: streamError as Error,
-        chatId
-      })
-
-      throw streamError
-    }
-
-    // Save the assistant's response to the database
-    await createMessageAdmin({
-      chat_id: chatId,
-      user_id: userId,
-      content:
-        aiResponseContent || 'Sorry, I was unable to generate a response.',
-      role: 'assistant',
-      sequence_number: nextSequenceNumber + 1
-    })
-
-    // After main streaming is complete, run email detection using smaller LLM
-    try {
-      if (aiResponseContent) {
-        const emailDetectionResult = await detectEmailRequest(
-          aiResponseContent,
-          openaiMessages,
-          chatSettings
-        )
-
-        if (emailDetectionResult?.success) {
-            if (!res.writableEnded) {
-              const details = emailDetectionResult.details as Record<string, unknown>
-              const data = debug ? { ...details, seq: ++seq, t: Date.now() } : details
-              res.write(`data: ${JSON.stringify(data)}\n\n`)
-              res.flushHeaders()
-            }
-        }
-      }
-    } catch (emailDetectionError) {
-      logger.warn('Error in email detection (non-critical)', {
-        error: emailDetectionError as Error,
-        chatId
-      })
-      // Don't throw - email detection failure shouldn't break the main flow
-    }
-
-    // Check if user provided email directly in their message (async, non-blocking)
-    setImmediate(async () => {
-      try {
-        await processUserEmailInMessage(
-          content,
-          chatId,
-          openaiMessages,
-          chatSettings,
-          chatConfig?.support_email || '',
-          Boolean(chat?.user_email)
-        )
-      } catch (userEmailProcessingError) {
-        logger.warn('Error in user email processing (non-critical)', {
-          error: userEmailProcessingError as Error,
-          chatId
-        })
-        // Don't throw - this is a non-critical feature
-      }
-    })
-
-    // Send a completion message
-    if (!res.writableEnded) {
-      try {
-        // Ensure any coalesced text is flushed before completing
-        if (isCoalescing) {
-          isCoalescing = false
-          if (coalesceTimeout) clearTimeout(coalesceTimeout)
-          flushCoalesceBuffer()
-        }
-        {
-          const payload = { type: 'done', fullContent: aiResponseContent } as Record<string, unknown>
-          const data = debug ? { ...payload, seq: ++seq, t: Date.now() } : payload
-          res.write(`data: ${JSON.stringify(data)}\n\n`)
-        }
-
-        // Force flush to ensure all content is sent
-        res.flushHeaders()
-
-        // Send a clean termination signal
-        res.write(':\n\n')
-        if (heartbeat) clearInterval(heartbeat)
-        if (coalesceTimeout) clearTimeout(coalesceTimeout)
-        res.end()
-      } catch (responseError) {
-        logger.error('Error sending completion event', {
-          error: responseError as Error,
-          chatId
-        })
-      }
-    }
-
-    // Handle client disconnect
-    return req.on('close', () => {
-      if (!res.writableEnded) {
-        if (heartbeat) clearInterval(heartbeat)
-        if (coalesceTimeout) clearTimeout(coalesceTimeout)
-        // Ensure full stream
-        setTimeout(() => {
-          res.end()
-        }, 50)
-      }
-    })
-  } catch (error) {
-    logger.error('Error in streaming chat message endpoint', {
-      error: error as Error,
-      chatId: req.params.chatId,
-      userId: req.user?.userId
-    })
-
-    // Send appropriate error message based on the error type
-    sendErrorEvent(
-      error instanceof Error
-        ? error.message
-        : 'An error occurred processing your request'
+    const { fullResponse } = await processStream(
+      setupData, 
+      (chunk) => sendEvent({ type: 'chunk', content: chunk }),
+      (specialEvent) => sendEvent(specialEvent)
     )
-
-    return
+    
+    sendEvent({ type: 'done', fullContent: fullResponse })
+    res.write(':\n\n')
+    res.end()
+  } catch (error) {
+    logger.error('Error in SSE streaming', { error: error as Error, chatId: req.params.chatId })
+    sendEvent({ type: 'error', error: error instanceof Error ? error.message : 'Internal server error' })
+    res.write(':\n\n')
+    res.end()
   }
 }
 
-router.post('/:chatId/stream', authenticateChatAccess, handleStreamRequest)
-router.get('/:chatId/stream', authenticateChatAccess, handleStreamRequest)
+router.post('/:chatId/stream', authenticateChatAccess, handleSSEStream)
+router.get('/:chatId/stream', authenticateChatAccess, handleSSEStream)
 
 export default router
