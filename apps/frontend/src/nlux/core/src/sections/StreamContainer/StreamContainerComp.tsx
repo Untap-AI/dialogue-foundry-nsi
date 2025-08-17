@@ -1,4 +1,4 @@
-import { useEffect, useImperativeHandle, useRef, useState } from 'react'
+import { useEffect, useImperativeHandle, useLayoutEffect, useRef, useState } from 'react'
 import { className as compMessageClassName } from '../../../../shared/components/Message/create'
 import { directionClassName as compMessageDirectionClassName } from '../../../../shared/components/Message/utils/applyNewDirectionClassName'
 import { statusClassName as compMessageStatusClassName } from '../../../../shared/components/Message/utils/applyNewStatusClassName'
@@ -59,7 +59,7 @@ export const StreamContainerComp = function <AiMsg>(
   }, [setContent])
 
   // We update the stream parser when key options (markdownLinkTarget, syntaxHighlighter, etc.) change.
-  useEffect(() => {
+  useLayoutEffect(() => {
     const element = markdownContainersController.getStreamingDomElement(uid)
     mdStreamParserRef.current = createMdStreamRenderer(element, {
       syntaxHighlighter: markdownOptions?.syntaxHighlighter,
