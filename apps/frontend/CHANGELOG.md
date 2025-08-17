@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.3.8
+
+### Patch Changes
+
+- Last seq twice
+
 ## 0.3.7
 
 ### Patch Changes

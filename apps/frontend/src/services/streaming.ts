@@ -222,7 +222,6 @@ export class ChatStreamingService {
           if (debugEnabled) {
             const seq = typeof data.seq === 'number' ? data.seq : undefined
             const gap = seq && lastSeq ? seq - lastSeq : undefined
-            lastSeq = seq
             void gap // keep calculation to avoid unused warnings if needed
           }
 
@@ -250,7 +249,14 @@ export class ChatStreamingService {
               break
 
             case 'chunk':
-
+              // Deduplicate first-chunk duplicates by seq
+              if (typeof data.seq === 'number') {
+                if (lastSeq === data.seq) {
+                  // Duplicate of last seen seq: ignore
+                  return
+                }
+                lastSeq = data.seq
+              }
               if(this.isClosingConnection) {
                 logger.error("Received chunk after connection was closed", {
                   chatId

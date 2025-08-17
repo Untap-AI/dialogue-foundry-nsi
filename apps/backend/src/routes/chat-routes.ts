@@ -385,8 +385,15 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     const flushCoalesceBuffer = () => {
       if (coalesceBuffer && !res.writableEnded) {
         const payload = { type: 'chunk', content: coalesceBuffer } as Record<string, unknown>
+        // Prepare seq for first-chunk duplication
+        const firstSeq = debug ? seq + 1 : undefined
         const data = debug ? { ...payload, seq: ++seq, t: Date.now() } : payload
         res.write(`data: ${JSON.stringify(data)}\n\n`)
+        // Immediately send a duplicate of the first chunk with the same seq to mitigate first-event loss
+        if (debug && firstSeq !== undefined && !res.writableEnded) {
+          const dup = { ...payload, seq: firstSeq, t: Date.now() }
+          res.write(`data: ${JSON.stringify(dup)}\n\n`)
+        }
         res.flushHeaders()
         coalesceBuffer = ''
       }
