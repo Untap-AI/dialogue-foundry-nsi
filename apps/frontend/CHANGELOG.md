@@ -1,5 +1,12 @@
 # @dialogue-foundry/frontend
 
+## 0.3.4
+
+### Patch Changes
+
+- Streaming fixes
+- b183087: Powered By config
+
 ## 0.3.3
 
 ### Patch Changes

@@ -258,6 +258,8 @@ export class ChatStreamingService {
               break
             case 'done':
               onComplete()
+              // Close the connection explicitly to avoid trailing or duplicate events
+              this.closeEventSource()
               break
           }
 
@@ -307,6 +309,13 @@ export class ChatStreamingService {
         // Don't react to reconnection attempts
         if (this.eventSource?.readyState === 0) {
           // CONNECTING
+          return
+        }
+
+        // If the browser closed the connection without an error and we have data, finalize gracefully
+        if (this.eventSource?.readyState === 2) { // CLOSED
+          onComplete()
+          this.closeEventSource()
           return
         }
 
