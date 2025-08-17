@@ -349,7 +349,13 @@ export const useSubmitPromptHandler = <AiMsg>(
         return
       }
 
-      conversationRef.current?.streamChunk(chatSegment.uid, messageId, chunk)
+      // Debug: Check if conversationRef is null when chunks arrive
+      if (!conversationRef.current) {
+        console.log(`[NLUX-BUG] conversationRef.current is null when chunk arrived: "${chunk}"`)
+        return
+      }
+
+      conversationRef.current.streamChunk(chatSegment.uid, messageId, chunk)
     })
 
     chatSegmentObservable.on('aiMessageStreamed', streamedMessage => {
