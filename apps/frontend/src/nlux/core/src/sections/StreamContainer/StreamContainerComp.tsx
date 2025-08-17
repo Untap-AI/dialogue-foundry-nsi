@@ -106,12 +106,7 @@ export const StreamContainerComp = function <AiMsg>(
         }
 
         if (typeof chunk === 'string') {
-          if (!mdStreamParserRef.current) {
-            console.log(`[STREAM-CONTAINER] mdStreamParserRef.current is null for chunk: "${chunk}"`)
-            return
-          }
-          console.log(`[STREAM-CONTAINER] Calling mdStreamParser.next for: "${chunk}"`)
-          mdStreamParserRef.current.next(chunk)
+          mdStreamParserRef.current?.next(chunk)
         }
       },
       completeStream: () => {

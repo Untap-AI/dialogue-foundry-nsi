@@ -127,24 +127,15 @@ export const createMdStreamRenderer: StandardStreamParser = (
                 // Which means the new chunk added new HTML content outside the last parsed markdown
                 // Which means that the last parsed markdown is complete and should be committed to the DOM
                 
-                // Mobile fix: Don't commit WIP content immediately, let it accumulate more
-                if (parsingContext.currentMarkdown.length < 100) {
-                    // For small content, keep accumulating instead of committing early
-                    wipContainer.innerHTML = options?.htmlSanitizer ? options.htmlSanitizer(parsedHtml) : parsedHtml;
-                    parsingContext.currentMarkdown = markdownToParse;
-                    parsingContext.previousHtml = parsedHtml;
-                } else {
-                    // Original logic for larger content
-                    commitWipContent();
+                commitWipContent();
 
-                    // Extract new HTML and insert it into WIP container
-                    const currentHtml = parsedHtml.slice(parsingContext.previousHtml.length).trim();
-                    wipContainer.innerHTML = options?.htmlSanitizer ? options.htmlSanitizer(currentHtml) : currentHtml;
+                // Extract new HTML and insert it into WIP container
+                const currentHtml = parsedHtml.slice(parsingContext.previousHtml.length).trim();
+                wipContainer.innerHTML = options?.htmlSanitizer ? options.htmlSanitizer(currentHtml) : currentHtml;
 
-                    // Focus on everything that is new
-                    parsingContext.currentMarkdown = chunk;
-                    parsingContext.previousHtml = undefined;
-                }
+                // Focus on everything that is new
+                parsingContext.currentMarkdown = chunk;
+                parsingContext.previousHtml = undefined;
             } else {
                 // Case 2: Changes to the previous HTML
                 // This means that new chunk goes inside previous HTML and no root level changes
