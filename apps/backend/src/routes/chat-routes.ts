@@ -236,6 +236,10 @@ async function processStream(
 ) {
   const { chatId, content, userId, chat, chatConfig, chatSettings } = setupData
 
+  // Debug tracking
+  let chunkCount = 0
+  let totalChars = 0
+
   // Get previous messages and save user message
   const previousMessages = await getMessagesByChatId(chatId)
   const latestSequenceNumber = await getLatestSequenceNumber(chatId)
@@ -274,11 +278,23 @@ async function processStream(
   // Stream from OpenAI
   let fullResponse = ''
   const wrappedOnChunk = (chunk: string) => {
+    chunkCount++
+    totalChars += chunk.length
     fullResponse += chunk
+    
+    // Debug first few chunks
+    if (chunkCount <= 3) {
+      console.log(`[SERVER] Chunk ${chunkCount}: "${chunk}" (${chunk.length} chars)`)
+      console.log(`[SERVER] First 20 chars: "${chunk.substring(0, 20)}"`)
+    }
+    
     onChunk(chunk)
   }
 
   await generateStreamingChatCompletion(openaiMessages, chatSettings, wrappedOnChunk)
+
+  console.log(`[SERVER] Stream completed: ${chunkCount} chunks, ${totalChars} total chars`)
+  console.log(`[SERVER] Full response first 50 chars: "${fullResponse.substring(0, 50)}"`)
 
   // Save assistant message
   await createMessageAdmin({
@@ -333,8 +349,24 @@ router.post('/:chatId/stream-fetch', authenticateChatAccess, async (req: CustomR
   res.setHeader('Cache-Control', 'no-cache, no-transform')
   res.setHeader('X-Accel-Buffering', 'no')
 
+  console.log(`[FETCH] Endpoint hit for chat ${req.params.chatId}`)
+
+  let eventCount = 0
   const sendEvent = (data: any) => {
-    if (!res.writableEnded) res.write(JSON.stringify(data) + '\n')
+    if (!res.writableEnded) {
+      eventCount++
+      const jsonStr = JSON.stringify(data)
+      res.write(jsonStr + '\n')
+      
+      // Debug first few events
+      if (eventCount <= 5) {
+        console.log(`[FETCH] Event ${eventCount}: ${data.type}`)
+        if (data.type === 'chunk') {
+          console.log(`[FETCH] Content: "${data.content}" (${data.content?.length || 0} chars)`)
+          console.log(`[FETCH] First 20 chars: "${data.content?.substring(0, 20) || ''}"`)
+        }
+      }
+    }
   }
 
   try {
@@ -363,10 +395,23 @@ async function handleSSEStream(req: CustomRequest, res: express.Response) {
   res.setHeader('Connection', 'keep-alive')
   res.setHeader('X-Accel-Buffering', 'no')
 
+  console.log(`[SSE] Endpoint hit for chat ${req.params.chatId}`)
+
+  let eventCount = 0
   const sendEvent = (data: any) => {
     if (!res.writableEnded) {
+      eventCount++
       res.write(`data: ${JSON.stringify(data)}\n\n`)
       res.flushHeaders()
+      
+      // Debug first few events
+      if (eventCount <= 5) {
+        console.log(`[SSE] Event ${eventCount}: ${data.type}`)
+        if (data.type === 'chunk') {
+          console.log(`[SSE] Content: "${data.content}" (${data.content?.length || 0} chars)`)
+          console.log(`[SSE] First 20 chars: "${data.content?.substring(0, 20) || ''}"`)
+        }
+      }
     }
   }
 

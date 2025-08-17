@@ -194,6 +194,13 @@ export class ChatStreamingService {
             if (line.trim()) {
               try {
                 const event: StreamEvent = JSON.parse(line)
+                
+                // Debug first few events
+                if (event.type === 'chunk') {
+                  console.log(`[CLIENT-FETCH] Received chunk: "${event.content}" (${event.content?.length || 0} chars)`)
+                  console.log(`[CLIENT-FETCH] First 20 chars: "${event.content?.substring(0, 20) || ''}"`)
+                }
+                
                 await this.handleStreamEvent(event, onChunk, onComplete, onError, onSpecialEvent)
               } catch (parseError) {
                 logger.warning('Failed to parse stream event', { line, error: parseError })
@@ -254,6 +261,13 @@ export class ChatStreamingService {
     eventSource.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data)
+        
+        // Debug first few events
+        if (data.type === 'chunk') {
+          console.log(`[CLIENT-SSE] Received chunk: "${data.content}" (${data.content?.length || 0} chars)`)
+          console.log(`[CLIENT-SSE] First 20 chars: "${data.content?.substring(0, 20) || ''}"`)
+        }
+        
         this.handleStreamEvent(data, onChunk, onComplete, onError, onSpecialEvent)
       } catch (parseError) {
         logger.warning('Failed to parse SSE event', { data: event.data, error: parseError })
@@ -287,6 +301,8 @@ export class ChatStreamingService {
 
       case 'chunk':
         if (typeof event.content === 'string') {
+          console.log(`[CLIENT] Calling onChunk with: "${event.content}" (${event.content.length} chars)`)
+          console.log(`[CLIENT] First 20 chars: "${event.content.substring(0, 20)}"`)
           onChunk(event.content)
         }
         break
