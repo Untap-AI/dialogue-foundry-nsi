@@ -189,6 +189,11 @@ export class ChatStreamingService {
     const url = new URL(`${this.apiBaseUrl}/chats/${chatId}/stream`)
     url.searchParams.append('content', userQuery)
     url.searchParams.append('timezone', userTimezone)
+    // Optional debug flag from localStorage
+    const debugEnabled = this.storage.getItem('DF_DEBUG_STREAM') === '1'
+    if (debugEnabled) {
+      url.searchParams.append('debug', '1')
+    }
     // Ensure token is not null before appending
     if (token) {
       url.searchParams.append('token', token)
@@ -201,6 +206,7 @@ export class ChatStreamingService {
       let fullText = ''
       let errorCount = 0
       const maxSilentErrors = 3 // Only log detailed errors for the first few occurrences
+      let lastSeq: number | undefined
 
       // Reset error count when connection successfully opens
       this.eventSource.onopen = () => {
@@ -213,7 +219,19 @@ export class ChatStreamingService {
         errorCount = 0
 
         try {
-          const data = JSON.parse(event.data) as SSEEventData
+          const data = JSON.parse(event.data) as SSEEventData & { seq?: number; t?: number }
+
+          if (debugEnabled) {
+            const seq = typeof data.seq === 'number' ? data.seq : undefined
+            const gap = seq && lastSeq ? seq - lastSeq : undefined
+            lastSeq = seq
+            logger.info('[SSE in]', {
+              type: data.type,
+              seq,
+              gap,
+              len: typeof data.content === 'string' ? data.content.length : undefined,
+            })
+          }
 
           // Check for any kind of error message from the server
           if (data.type === 'error') {

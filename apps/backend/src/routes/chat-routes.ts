@@ -234,6 +234,8 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     // Get content from body (POST) or query params (GET)
     const content = req.body.content || req.query.content
     const timezone = req.body.timezone || req.query.timezone || 'UTC'
+    const debug = req.query.debug === '1' || req.query.debug === 'true'
+    let seq = 0
 
     if (!chatId) {
       sendErrorEvent('Chat ID is required', 'INVALID_REQUEST')
@@ -357,7 +359,14 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     // Large comment line to prevent proxy buffering and help iOS start delivery quickly
     res.write(':' + ' '.repeat(2048) + '\n')
     res.write('\n')
-    res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`)
+    {
+      const payload = { type: 'connected' } as Record<string, unknown>
+      const data = debug ? { ...payload, seq: ++seq, t: Date.now() } : payload
+      if (debug) {
+        logger.info('SSE out', { chatId, type: 'connected', seq })
+      }
+      res.write(`data: ${JSON.stringify(data)}\n\n`)
+    }
     res.flushHeaders()
 
     // Start heartbeat after connection is established
@@ -375,12 +384,12 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       // Ensure the response is still writable
       if (!res.writableEnded) {
         // Format the chunk as a Server-Sent Event
-        res.write(
-          `data: ${JSON.stringify({
-            type: 'chunk',
-            content: chunk
-          })}\n\n`
-        )
+        const payload = { type: 'chunk', content: chunk } as Record<string, unknown>
+        const data = debug ? { ...payload, seq: ++seq, t: Date.now() } : payload
+        if (debug) {
+          logger.info('SSE out', { chatId, type: 'chunk', seq, len: chunk.length })
+        }
+        res.write(`data: ${JSON.stringify(data)}\n\n`)
 
         // Force immediate sending of the chunk
         res.flushHeaders()
@@ -425,7 +434,12 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
 
         if (emailDetectionResult?.success) {
             if (!res.writableEnded) {
-              res.write(`data: ${JSON.stringify(emailDetectionResult.details)}\n\n`)
+              const details = emailDetectionResult.details as Record<string, unknown>
+              const data = debug ? { ...details, seq: ++seq, t: Date.now() } : details
+              if (debug) {
+                logger.info('SSE out', { chatId, type: (details as any)?.type || 'special', seq })
+              }
+              res.write(`data: ${JSON.stringify(data)}\n\n`)
               res.flushHeaders()
             }
         }
@@ -461,12 +475,14 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
     // Send a completion message
     if (!res.writableEnded) {
       try {
-        res.write(
-          `data: ${JSON.stringify({
-            type: 'done',
-            fullContent: aiResponseContent
-          })}\n\n`
-        )
+        {
+          const payload = { type: 'done', fullContent: aiResponseContent } as Record<string, unknown>
+          const data = debug ? { ...payload, seq: ++seq, t: Date.now() } : payload
+          if (debug) {
+            logger.info('SSE out', { chatId, type: 'done', seq })
+          }
+          res.write(`data: ${JSON.stringify(data)}\n\n`)
+        }
 
         // Force flush to ensure all content is sent
         res.flushHeaders()
