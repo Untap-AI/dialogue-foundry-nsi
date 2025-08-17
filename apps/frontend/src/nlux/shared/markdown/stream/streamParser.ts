@@ -126,8 +126,7 @@ export const createMdStreamRenderer: StandardStreamParser = (
                 // Case 1: No changes to the previous HTML — And new HTML added on top of it
                 // Which means the new chunk added new HTML content outside the last parsed markdown
                 // Which means that the last parsed markdown is complete and should be committed to the DOM
-                // Commit the last parsed content to the DOM
-
+                
                 commitWipContent();
 
                 // Extract new HTML and insert it into WIP container

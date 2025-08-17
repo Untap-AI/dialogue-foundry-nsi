@@ -25,6 +25,7 @@ export class ChatStreamingService {
   private readonly MAX_RECONNECT_ATTEMPTS: number = 3
   private readonly RECONNECT_RESET_TIME: number = 10 * 60 * 1000 // 10 minutes
 
+
   constructor(config: ChatConfig) {
     this.apiBaseUrl = config.apiBaseUrl
     this.companyId = config.companyId
@@ -186,7 +187,8 @@ export class ChatStreamingService {
           const { value, done } = await reader.read()
           if (done) break
 
-          buffer += decoder.decode(value, { stream: true })
+          const newData = decoder.decode(value, { stream: true })
+          buffer += newData
           const lines = buffer.split('\n')
           buffer = lines.pop() || '' // Keep incomplete line in buffer
 

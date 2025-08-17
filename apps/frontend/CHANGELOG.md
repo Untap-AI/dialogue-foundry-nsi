@@ -1,5 +1,83 @@
 # @dialogue-foundry/frontend
 
+## 0.3.22
+
+### Patch Changes
+
+- finalized
+
+## 0.3.21
+
+### Patch Changes
+
+- Remove logs
+
+## 0.3.20
+
+### Patch Changes
+
+- layout effect
+
+## 0.3.19
+
+### Patch Changes
+
+- Debug
+
+## 0.3.18
+
+### Patch Changes
+
+- a
+
+## 0.3.17
+
+### Patch Changes
+
+- revert
+
+## 0.3.16
+
+### Patch Changes
+
+- a
+
+## 0.3.15
+
+### Patch Changes
+
+- Remove logs
+
+## 0.3.14
+
+### Patch Changes
+
+- Remove previous html function
+
+## 0.3.13
+
+### Patch Changes
+
+- More
+
+## 0.3.12
+
+### Patch Changes
+
+- Debug
+
+## 0.3.11
+
+### Patch Changes
+
+- More debugging
+
+## 0.3.10
+
+### Patch Changes
+
+- Debugging
+
 ## 0.3.9
 
 ### Patch Changes
