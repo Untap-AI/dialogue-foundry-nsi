@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.3.23
+
+### Patch Changes
+
+- fullproof init
+
 ## 0.3.22
 
 ### Patch Changes

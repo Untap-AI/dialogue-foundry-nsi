@@ -35,6 +35,28 @@ export const StreamContainerComp = function <AiMsg>(
     null
   )
   const [streamContainer, setStreamContainer] = useState<HTMLDivElement>()
+  
+  // Helper function to initialize the markdown parser
+  const initializeParser = () => {
+    if (!mdStreamParserRef.current) {
+      const element = markdownContainersController.getStreamingDomElement(uid)
+      mdStreamParserRef.current = createMdStreamRenderer(element, {
+        syntaxHighlighter: markdownOptions?.syntaxHighlighter,
+        htmlSanitizer: markdownOptions?.htmlSanitizer,
+        markdownLinkTarget: markdownOptions?.markdownLinkTarget,
+        showCodeBlockCopyButton: markdownOptions?.showCodeBlockCopyButton,
+        skipStreamingAnimation: markdownOptions?.skipStreamingAnimation,
+        streamingAnimationSpeed: markdownOptions?.streamingAnimationSpeed,
+        waitTimeBeforeStreamCompletion:
+          markdownOptions?.waitTimeBeforeStreamCompletion,
+        onComplete: markdownOptions?.onStreamComplete
+      })
+
+      if (initialMarkdownMessage) {
+        mdStreamParserRef.current.next(initialMarkdownMessage)
+      }
+    }
+  }
 
   useEffect(() => {
     if (rootElRef.current !== rootElRefPreviousValue.current) {
@@ -58,31 +80,13 @@ export const StreamContainerComp = function <AiMsg>(
     }
   }, [setContent])
 
-  // We update the stream parser when key options (markdownLinkTarget, syntaxHighlighter, etc.) change.
+  // Initialize parser in useLayoutEffect (runs before paint)
   useLayoutEffect(() => {
-    const element = markdownContainersController.getStreamingDomElement(uid)
-    mdStreamParserRef.current = createMdStreamRenderer(element, {
-      syntaxHighlighter: markdownOptions?.syntaxHighlighter,
-      htmlSanitizer: markdownOptions?.htmlSanitizer,
-      markdownLinkTarget: markdownOptions?.markdownLinkTarget,
-      showCodeBlockCopyButton: markdownOptions?.showCodeBlockCopyButton,
-      skipStreamingAnimation: markdownOptions?.skipStreamingAnimation,
-      streamingAnimationSpeed: markdownOptions?.streamingAnimationSpeed,
-      waitTimeBeforeStreamCompletion:
-        markdownOptions?.waitTimeBeforeStreamCompletion,
-      onComplete: markdownOptions?.onStreamComplete
-    })
-
-    if (initialMarkdownMessage) {
-      mdStreamParserRef.current.next(initialMarkdownMessage)
-    }
-
+    initializeParser()
     return () => {
-      // Technical — The DOM element will be re-used if the same message (with the same UID)
-      // is re-rendered in the chat segment. This is handled by the createStreamingDomService.
       markdownContainersController.deleteStreamingDomElement(uid)
     }
-  }, []) // No dependencies, this effect should run only once.
+  }, []) // No dependencies - run once on mount
 
   useEffect(() => {
     return () => {
@@ -106,6 +110,10 @@ export const StreamContainerComp = function <AiMsg>(
         }
 
         if (typeof chunk === 'string') {
+          // Ensure parser is initialized before processing chunk (safety check)
+          if (!mdStreamParserRef.current) {
+            initializeParser()
+          }
           mdStreamParserRef.current?.next(chunk)
         }
       },
