@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.3.24
+
+### Patch Changes
+
+- Better stream errors
+
 ## 0.3.23
 
 ### Patch Changes

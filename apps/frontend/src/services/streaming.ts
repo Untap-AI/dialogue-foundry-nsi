@@ -107,9 +107,9 @@ export class ChatStreamingService {
     // Initialize chat if needed
     if (!chatId || !token) {
       try {
-        await this.initializeNewChat()
-        chatId = this.storage.getItem(this.chatIdStorageKey)
-        token = this.storage.getItem(this.tokenStorageKey)
+          await this.initializeNewChat()
+          chatId = this.storage.getItem(this.chatIdStorageKey)
+          token = this.storage.getItem(this.tokenStorageKey)
       } catch (initError) {
         onError(initError instanceof StreamingError ? initError : new StreamingError(ErrorCodes.INITIALIZATION_ERROR, true))
         return
@@ -169,8 +169,8 @@ export class ChatStreamingService {
       if (!response.ok) {
         if (response.status === 401) {
           await this.handleTokenError(userQuery, onChunk, onComplete, onError)
-          return
-        }
+            return
+          }
         throw new StreamingError(ErrorCodes.CONNECTION_ERROR, true)
       }
 
@@ -196,7 +196,7 @@ export class ChatStreamingService {
             if (line.trim()) {
               try {
                 const event: StreamEvent = JSON.parse(line)
-                await this.handleStreamEvent(event, onChunk, onComplete, onError, onSpecialEvent)
+                this.handleStreamEvent(event, onChunk, onComplete, onError, onSpecialEvent)
               } catch (parseError) {
                 logger.warning('Failed to parse stream event', { line, error: parseError })
               }
@@ -208,7 +208,7 @@ export class ChatStreamingService {
         if (buffer.trim()) {
           try {
             const event: StreamEvent = JSON.parse(buffer)
-            await this.handleStreamEvent(event, onChunk, onComplete, onError, onSpecialEvent)
+            this.handleStreamEvent(event, onChunk, onComplete, onError, onSpecialEvent)
           } catch (parseError) {
             logger.warning('Failed to parse final stream event', { buffer, error: parseError })
           }
@@ -275,13 +275,13 @@ export class ChatStreamingService {
   /**
    * Handle stream events from either fetch or SSE
    */
-  private async handleStreamEvent(
+  private handleStreamEvent(
     event: StreamEvent,
     onChunk: (chunk: string) => void,
     onComplete: () => void,
     onError: (error: Error) => void,
     onSpecialEvent?: (event: any) => void
-  ): Promise<void> {
+  ): void {
     switch (event.type) {
       case 'start':
         // Connection established
@@ -298,7 +298,10 @@ export class ChatStreamingService {
         break
 
       case 'error':
-        await this.handleServerError(event, onChunk, onComplete, onError)
+        this.handleServerError(event, onChunk, onComplete, onError).catch(err => {
+          logger.captureException(err, { event: event.type })
+          onError(err instanceof StreamingError ? err : new StreamingError(ErrorCodes.UNKNOWN_ERROR, true))
+        })
         break
 
       default:
@@ -363,9 +366,9 @@ export class ChatStreamingService {
       // Clear tokens and reinitialize
       this.storage.removeItem(this.tokenStorageKey)
       this.storage.removeItem(this.chatIdStorageKey)
-      
+
       await this.initializeNewChat()
-      
+
       // Retry with exponential backoff
       const backoffTime = Math.min(1000 * Math.pow(2, this.reconnectAttempts - 1), 10000)
       await new Promise(resolve => setTimeout(resolve, backoffTime))
@@ -395,15 +398,15 @@ export class ChatStreamingService {
 
     if (this.reconnectAttempts <= this.MAX_RECONNECT_ATTEMPTS) {
       try {
-        this.storage.removeItem(this.tokenStorageKey)
-        this.storage.removeItem(this.chatIdStorageKey)
-        
+      this.storage.removeItem(this.tokenStorageKey)
+      this.storage.removeItem(this.chatIdStorageKey)
+
         const backoffTime = Math.min(1000 * Math.pow(2, this.reconnectAttempts - 1), 10000)
         await new Promise(resolve => setTimeout(resolve, backoffTime))
         
-        await this.initializeNewChat()
+      await this.initializeNewChat()
         await this.streamMessage(userQuery, onChunk, onComplete, onError)
-      } catch (error) {
+    } catch (error) {
         onError(new StreamingError(ErrorCodes.INITIALIZATION_ERROR, false))
       }
     }
