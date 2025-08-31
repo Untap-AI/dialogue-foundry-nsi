@@ -30,7 +30,7 @@ export const ChatWindow = forwardRef<HTMLDivElement, ChatWindowProps>(
     return (
       <div ref={ref} className={className} aria-hidden={!isOpen}>
         <ChatHeader onClose={onClose} onNewChat={onNewChat} />
-        <ChatInterface {...propDrop} />
+        <ChatInterface />
       </div>
     )
   }

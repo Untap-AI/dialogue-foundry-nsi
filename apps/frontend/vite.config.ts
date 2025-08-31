@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
 import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js";
+import tailwindcss from '@tailwindcss/vite'
 import * as fs from 'fs'
 import * as path from 'path'
 
@@ -13,8 +14,15 @@ export default defineConfig(({ command, mode }) => {
     // Use relative paths for all assets
     base: './',
     
+    resolve: {
+      alias: {
+        "@": path.resolve(__dirname, "./src"),
+      },
+    },
+    
     plugins: [
       react(),
+      tailwindcss(),
       // Inject CSS into JS for library mode
       cssInjectedByJsPlugin(),
       // Custom plugin to copy index.html and inject config

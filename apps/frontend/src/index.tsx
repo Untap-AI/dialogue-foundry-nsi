@@ -1,7 +1,6 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-// Note: We don't need to import global CSS here as it's handled by the Vite plugin
-// Component CSS files are imported directly in their respective components
+import './index.css'
 import App from './App'
 import { ConfigProvider } from './contexts/ConfigContext'
 import { initLogger } from './services/logger'
