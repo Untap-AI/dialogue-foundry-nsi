@@ -1,0 +1,104 @@
+@import "tailwindcss";
+
+@theme {
+  /* Tailwind theme colors connected to our simplified variables */
+  --color-background: var(--df-color-background);
+  --color-foreground: var(--df-color-foreground);
+  --color-card: #f9fafb;
+  --color-card-foreground: #374151;
+  --color-popover: var(--df-color-background);
+  --color-popover-foreground: #374151;
+  --color-primary: var(--df-color-primary);
+  --color-primary-foreground: #ffffff;
+  --color-secondary: var(--df-color-secondary);
+  --color-secondary-foreground: #374151;
+  --color-muted: var(--df-color-muted);
+  --color-muted-foreground: #6b7280;
+  --color-accent: var(--df-color-accent);
+  --color-accent-foreground: #374151;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --color-border: #e5e7eb;
+  --color-input: var(--df-color-background);
+  --color-ring: var(--df-color-primary);
+  
+  /* Typography Scale */
+  --text-xs: 0.75rem;
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.25rem;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+
+  /* Spacing Scale */
+  --spacing-1: 0.25rem;
+  --spacing-2: 0.5rem;
+  --spacing-3: 0.75rem;
+  --spacing-4: 1rem;
+  --spacing-5: 1.25rem;
+  --spacing-6: 1.5rem;
+  --spacing-8: 2rem;
+
+  /* Border Radius */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-full: 100%;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  
+  /* Font Family */
+  --font-family-sans: var(--df-font-family);
+
+  /* Fixed Colors */
+  --color-white: #ffffff;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+
+  /* Status Colors */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+}
+
+/* Custom animations */
+@keyframes twist {
+  0%, 30%, 100% {
+    transform: rotate(0deg);
+  }
+  40% {
+    transform: rotate(-15deg) scale(1.08);
+  }
+  70% {
+    transform: rotate(15deg) scale(1.08);
+  }
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: translateY(15px) scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-5px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}

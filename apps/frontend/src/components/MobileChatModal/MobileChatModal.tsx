@@ -1,10 +1,10 @@
 import { useRef, useEffect } from 'react'
 import { ChatInterface } from '../ChatInterface/ChatInterface'
 import { ChatHeader } from '../ChatHeader/ChatHeader'
-import './MobileChatModal.css'
 import type { ChatItem } from '../../nlux'
 import type { ChatStatus } from '../ChatWidget/ChatWidget'
 import { useRouteChangeListener } from '../../hooks/useRouteChangeListener'
+import { cn } from '@/lib/utils'
 
 interface MobileChatModalProps {
   isOpen: boolean
@@ -46,7 +46,10 @@ export const MobileChatModal = ({
   return (
     <dialog
       ref={dialogRef}
-      className="mobile-chat-modal"
+      className={cn(
+        "w-screen max-w-screen h-screen max-h-screen m-0 p-0 border-none",
+        "z-[10000] overflow-hidden backdrop:bg-black/50"
+      )}
       onCancel={e => {
         e.preventDefault() // Prevent default close on ESC key
       }}
@@ -57,12 +60,11 @@ export const MobileChatModal = ({
         }
       }}
     >
-      <div className="mobile-chat-content">
+      <div className={cn(
+        "w-full h-screen flex flex-col overflow-hidden relative"
+      )}>
         <ChatHeader onClose={onClose} onNewChat={onNewChat} />
-        <ChatInterface
-          className="mobile-chat-interface mobile-chat-bubbles"
-          {...propDrop}
-        />
+        <ChatInterface />
       </div>
     </dialog>
   )

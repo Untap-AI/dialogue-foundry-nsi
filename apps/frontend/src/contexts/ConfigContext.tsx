@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+import { createContext, useContext, useState, useEffect, useLayoutEffect } from 'react'
 import type { ConversationStarter, DisplayOptions } from '../nlux'
 import type { ReactNode } from 'react'
 import type { ChatConfig } from '../services/api'
@@ -35,7 +35,26 @@ interface DialogueFoundryConfig {
     url?: string
     show?: boolean
   }
+
+  styles?: {
+    primaryColor?: string
+    secondaryColor?: string
+    mutedColor?: string
+    accentColor?: string
+    backgroundColor?: string
+    foregroundColor?: string
+    fontFamily?: string
+  }
 }
+
+const styleToVariableMap: Record<keyof DialogueFoundryConfig['styles'], string> = {
+  primaryColor: '--df-color-primary',
+  secondaryColor: '--df-color-secondary',
+  mutedColor: '--df-color-muted',
+  accentColor: '--df-color-accent',
+  backgroundColor: '--df-color-background',
+  foregroundColor: '--df-color-foreground',
+} as const
 
 // Default configuration
 const defaultConfig: DialogueFoundryConfig = {
@@ -73,7 +92,16 @@ const defaultConfig: DialogueFoundryConfig = {
       label: 'Contact',
       prompt: 'How can I contact Keystone Coachworks?'
     },
-  ]
+  ],
+  styles: {
+    primaryColor: '#2563eb',
+    secondaryColor: '#f3f4f6',
+    mutedColor: '#f3f4f6',
+    accentColor: '#f3f4f6',
+    backgroundColor: '#ffffff',
+    foregroundColor: '#1f2937',
+    fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  },
 }
 
 // Create the context with default values
@@ -155,13 +183,32 @@ export function ConfigProvider({ children }: ConfigProviderProps) {
     loadExternalConfig()
   }, [])
 
+  const finalConfig = config ?? defaultConfig
+
+  // Dynamically inject styles into CSS custom properties
+  useLayoutEffect(() => {
+    if (!finalConfig?.styles) return
+
+    const root = document.documentElement
+    Object.entries(finalConfig.styles).forEach(([style, value]) => {
+      const variable = styleToVariableMap[style as keyof DialogueFoundryConfig['styles']]
+      root.style.setProperty(variable, value)
+    })
+
+    // Cleanup function to reset styles when component unmounts
+    return () => {
+      Object.keys(finalConfig.styles ?? {}).forEach((style) => {
+        const variable = styleToVariableMap[style as keyof DialogueFoundryConfig['styles']]
+        root.style.removeProperty(variable)
+      })
+    }
+  }, [finalConfig?.styles])
+
   // Don't render children until config is loaded
   if (!configLoaded) {
     // eslint-disable-next-line no-null/no-null
     return null // Return null instead of undefined for React components
   }
-
-  const finalConfig = config ?? defaultConfig
 
   return (
     <ConfigContext.Provider value={{ ...finalConfig }}>

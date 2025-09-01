@@ -3,12 +3,12 @@ import { ChatButton } from '../ChatButton/ChatButton'
 import { ChatWindow } from '../ChatWindow/ChatWindow'
 import { MobileChatModal } from '../MobileChatModal/MobileChatModal'
 import { useResizeObserver } from '../../hooks/useResizeObserver'
-import './ChatWidget.css'
 import { useChatScroll } from '../../hooks/useChatScroll'
 import { useConfig } from '../../contexts/ConfigContext'
 import { ChatApiService } from '../../services/api'
 import type { ChatItem } from '../../nlux'
 import { useNavigationEvents } from '../../hooks/useNavigationEvents'
+import { cn } from '@/lib/utils'
 
 export type ChatStatus = 'uninitialized' | 'loading' | 'initialized' | 'error'
 
@@ -190,7 +190,11 @@ export const ChatWidget = () => {
   }, [isOpen, chatStatus, setupChat, chatConfig])
 
   return (
-    <div className="chat-widget">
+    <div className={cn(
+      "fixed z-[9999] right-5 bottom-5",
+      "[&_::-webkit-scrollbar-track]:bg-background [&_::-webkit-scrollbar-thumb]:bg-primary [&_::-webkit-scrollbar-thumb]:rounded",
+      "[&_*]:scrollbar-thin [&_*]:scrollbar-track-background [&_*]:scrollbar-thumb-primary"
+    )}>
       {/* Render either the desktop chat window or mobile modal based on screen size */}
       {isMobile ? (
         <MobileChatModal

@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react'
-import './PopupMessage.css'
 import { useConfig } from '../../contexts/ConfigContext'
+import { cn } from '@/lib/utils'
 
 interface PopupMessageProps {
   buttonRef: React.RefObject<HTMLButtonElement | null>
@@ -25,9 +25,16 @@ export const PopupMessage: React.FC<PopupMessageProps> = ({ buttonRef }) => {
   }, [buttonRef])
 
   return (
-    <div className="chat-popup-message" style={{ ...getPosition() }}>
+    <div 
+      className={cn(
+        "fixed animate-[popIn_0.5s_cubic-bezier(0.175,0.885,0.32,1.275)] drop-shadow-md",
+        "text-base bg-primary text-primary-foreground rounded-[10px] px-5 py-4",
+        "shadow-[0_6px_16px_rgba(0,0,0,0.18)] max-w-80 md:max-w-[80vw]"
+      )}
+      style={{ ...getPosition() }}
+    >
       <div>{popupMessage}</div>
-      <div className="chat-popup-arrow"></div>
+      <div className="absolute w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[10px] border-t-primary -bottom-[10px] right-5"></div>
     </div>
   )
 }

@@ -22,6 +22,8 @@ import {
 import { Loader } from '@/components/loader';
 import { DefaultChatTransport } from 'ai';
 import { useConfig } from '@/contexts/ConfigContext';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { cn } from '@/lib/utils';
 
 export const ChatInterface = () => {
   const { chatConfig, poweredBy } = useConfig()
@@ -54,32 +56,34 @@ export const ChatInterface = () => {
 
   return (
     <>
-        <Conversation className="overflow-y-auto">
-          <ConversationContent>
-            {messages.map((message) => (
-              <div key={message.id}>
-                <Message from={message.role} key={message.id}>
-                  <MessageContent>
-                    {message.parts.map((part, i) => {
-                      switch (part.type) {
-                        case 'text':
-                          return (
-                            <Response key={`${message.id}-${i}`}>
-                              {part.text}
-                            </Response>
-                          );
-                        default:
-                          return null;
-                      }
-                    })}
-                  </MessageContent>
-                </Message>
-              </div>
-            ))}
-            {status === 'submitted' && <Loader />}
-          </ConversationContent>
-          <ConversationScrollButton />
-        </Conversation>
+        <ScrollArea className="flex-1">
+          <Conversation className="h-full">
+            <ConversationContent>
+              {messages.map((message) => (
+                <div key={message.id}>
+                  <Message from={message.role} key={message.id}>
+                    <MessageContent>
+                      {message.parts.map((part, i) => {
+                        switch (part.type) {
+                          case 'text':
+                            return (
+                              <Response key={`${message.id}-${i}`}>
+                                {part.text}
+                              </Response>
+                            );
+                          default:
+                            return null;
+                        }
+                      })}
+                    </MessageContent>
+                  </Message>
+                </div>
+              ))}
+              {status === 'submitted' && <Loader />}
+            </ConversationContent>
+            <ConversationScrollButton />
+          </Conversation>
+        </ScrollArea>
         
         <div className="p-4">
           <PromptInput onSubmit={handleSubmit} className="flex items-center pr-3">
@@ -92,7 +96,9 @@ export const ChatInterface = () => {
         </div>
 
         {showPoweredBy && (
-        <div className="text-center text-[11px] leading-[11px] text-[var(--df-text-contrast-color)] py-[3px] px-0 bg-[var(--df-primary-color)]">
+        <div className={cn(
+          "text-center text-[11px] leading-[11px] text-primary-foreground py-[3px] px-0 bg-primary"
+        )}>
           Powered by{' '}
           <a
             href={poweredByUrl}
