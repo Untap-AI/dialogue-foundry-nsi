@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.1
+
+### Patch Changes
+
+- 49fb0a3: Fix mobile height
+
 ## 0.4.0
 
 ### Minor Changes
