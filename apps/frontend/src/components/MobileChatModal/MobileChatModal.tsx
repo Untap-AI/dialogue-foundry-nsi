@@ -1,8 +1,7 @@
 import { useRef, useEffect } from 'react'
-import { ChatInterface } from '../ChatInterface/ChatInterface'
+import { ChatInterface, type ChatInterfaceRef } from '../ChatInterface/ChatInterface'
 import { ChatHeader } from '../ChatHeader/ChatHeader'
-import type { ChatItem } from '../../nlux'
-import type { ChatStatus } from '../ChatWidget/ChatWidget'
+import type { ChatStatus } from '../../hooks/useChatPersistence'
 import { useRouteChangeListener } from '../../hooks/useRouteChangeListener'
 import { cn } from '@/lib/utils'
 
@@ -10,19 +9,24 @@ interface MobileChatModalProps {
   isOpen: boolean
   onClose: () => void
   onNewChat: () => void
-  chatId: string | undefined
-  initialConversation: ChatItem[] | undefined
-  chatStatus: ChatStatus
+  onChatStatusChange?: (status: ChatStatus) => void
 }
 
 export const MobileChatModal = ({
   isOpen,
   onClose,
   onNewChat,
-  ...propDrop
+  onChatStatusChange
 }: MobileChatModalProps) => {
   // eslint-disable-next-line no-null/no-null
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const chatInterfaceRef = useRef<ChatInterfaceRef>(null)
+
+  // Handle new chat creation from header
+  const handleNewChat = async () => {
+    await chatInterfaceRef.current?.createNewChat()
+    onNewChat()
+  }
 
   useEffect(() => {
     const dialog = dialogRef.current
@@ -63,8 +67,12 @@ export const MobileChatModal = ({
       <div className={cn(
         "w-full h-screen flex flex-col overflow-hidden relative"
       )}>
-        <ChatHeader onClose={onClose} onNewChat={onNewChat} />
-        <ChatInterface />
+        <ChatHeader onClose={onClose} onNewChat={handleNewChat} />
+        <ChatInterface 
+          ref={chatInterfaceRef}
+          onNewChatRequest={onNewChat}
+          onChatStatusChange={onChatStatusChange}
+        />
       </div>
     </dialog>
   )

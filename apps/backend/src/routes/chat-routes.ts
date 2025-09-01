@@ -55,7 +55,19 @@ router.get('/:chatId', authenticateChatAccess, async (req, res) => {
 
     const messages = await getMessagesByChatId(chatId)
 
-    return res.json({ chat, messages })
+    // Convert messages to AI SDK compatible format
+    const aiSdkMessages = messages.map(msg => ({
+      id: msg.id,
+      role: msg.role,
+      content: msg.content,
+      createdAt: msg.created_at
+    }))
+
+    return res.json({
+      chat,
+      messages: aiSdkMessages,
+      originalMessages: messages // Keep original for backward compatibility
+    })
   } catch (error) {
     return res.status(500).json({ error })
   }
@@ -121,9 +133,21 @@ router.post('/', async (req, res) => {
     // Generate a JWT token for chat access
     const accessToken = generateChatAccessToken(chat.id, userId)
 
+    // Get any messages that were created (like welcome message)
+    const messages = await getMessagesByChatId(chat.id)
+
+    // Convert messages to AI SDK compatible format
+    const aiSdkMessages = messages.map(msg => ({
+      id: msg.id,
+      role: msg.role,
+      content: msg.content,
+      createdAt: msg.created_at
+    }))
+
     return res.status(201).json({
       chat,
-      accessToken
+      accessToken,
+      messages: aiSdkMessages
     })
   } catch (error) {
     logger.error('Error creating chat', {
@@ -396,7 +420,7 @@ async function handleSSEStream(req: CustomRequest, res: express.Response) {
 router.post('/:chatId/stream', authenticateChatAccess, handleSSEStream)
 router.get('/:chatId/stream', authenticateChatAccess, handleSSEStream)
 
-// Simplified AI SDK streaming endpoint for testing
+// AI SDK streaming endpoint for chat interface
 router.post('/stream', async (req, res) => {
   try {
     const { messages } = req.body;
@@ -428,6 +452,112 @@ router.post('/stream', async (req, res) => {
     return result.pipeUIMessageStreamToResponse(res);
   } catch (error) {
     logger.error('Error in AI SDK streaming', { error: error as Error });
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
+
+// Add a dedicated endpoint for authenticated chat streaming that works with the AI SDK
+// TODO: Reconcile this to the old endpoint once migrated
+router.post('/stream-ai-sdk', authenticateChatAccess, async (req: CustomRequest, res) => {
+  try {
+    const { id: chatId, messages, messageId } = req.body;
+    const userId = req.user?.userId;
+
+    if (!chatId || !userId) {
+      return res.status(400).json({ error: 'Chat ID and authentication are required' });
+    }
+
+    // Get chat and configuration
+    const chat = await getChatById(chatId);
+    if (!chat) {
+      return res.status(404).json({ error: 'Chat not found' });
+    }
+
+    const companyId = chat.company_id;
+    const chatConfig = await getChatConfigByCompanyId(companyId as string);
+    if (!chatConfig) {
+      return res.status(400).json({ error: 'Company configuration not found' });
+    }
+
+    console.log('messages', messages);
+    console.log('messageId', messageId);
+    console.log('chatId', chatId);
+
+    // Save the user's message to the database asynchronously (non-blocking)
+    if (messages) {
+      const targetMessage = messages[messages.length - 1];
+      if (targetMessage && targetMessage.role === 'user') {
+        // Extract content from AI SDK message format
+        let content = '';
+        if (targetMessage.content) {
+          // Standard format with content field
+          content = targetMessage.content;
+        } else if (targetMessage.parts && targetMessage.parts.length > 0) {
+          // AI SDK format with parts array
+          content = targetMessage.parts
+            .filter((part: any) => part.type === 'text')
+            .map((part: any) => part.text)
+            .join('');
+        }
+
+        console.log('content', content);
+        
+        if (content) {
+          // Save user message asynchronously to avoid blocking the stream
+          setImmediate(async () => {
+            try {
+              const latestSequenceNumber = await getLatestSequenceNumber(chatId);
+              await createMessageAdmin({
+                chat_id: chatId,
+                user_id: userId,
+                content: content,
+                role: 'user',
+                sequence_number: latestSequenceNumber + 1
+              });
+            } catch (error) {
+              logger.error('Error saving user message to database', { 
+                error: error as Error, 
+                chatId, 
+                userId 
+              });
+            }
+          });
+        }
+      }
+    }
+
+    // Use the chat config's system prompt
+    const systemPrompt = chatConfig.system_prompt || 'You are a helpful assistant.';
+
+    const result = streamText({
+      model: openai('gpt-5'),
+      system: systemPrompt,
+      messages: convertToModelMessages(messages),
+      providerOptions: {
+        openai: {
+          reasoningEffort: "minimal",
+          textVerbosity: "low",
+          serviceTier: "priority"
+        }
+      },
+      onFinish: async ({ text }) => {
+        // Save the assistant's response to the database
+        if (text) {
+          const latestSequenceNumber = await getLatestSequenceNumber(chatId);
+          await createMessageAdmin({
+            chat_id: chatId,
+            user_id: userId,
+            content: text,
+            role: 'assistant',
+            sequence_number: latestSequenceNumber + 1
+          });
+        }
+      }
+    });
+
+    return result.pipeUIMessageStreamToResponse(res);
+  } catch (error) {
+    logger.error('Error in authenticated AI SDK streaming', { error: error as Error, chatId: req.params.chatId });
     return res.status(500).json({ error: 'Internal server error' });
   }
 });

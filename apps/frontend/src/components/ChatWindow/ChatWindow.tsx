@@ -1,21 +1,25 @@
-import { forwardRef, useMemo } from 'react'
+import { forwardRef, useMemo, useRef } from 'react'
 import { ChatHeader } from '../ChatHeader/ChatHeader'
-import { ChatInterface } from '../ChatInterface/ChatInterface'
-import type { ChatStatus } from '../ChatWidget/ChatWidget'
-import type { ChatItem } from '../../nlux'
+import { ChatInterface, type ChatInterfaceRef } from '../ChatInterface/ChatInterface'
+import type { ChatStatus } from '../../hooks/useChatPersistence'
 import { cn } from '@/lib/utils'
 
 interface ChatWindowProps {
   isOpen: boolean
   onClose: () => void
   onNewChat: () => void
-  chatId: string | undefined
-  initialConversation: ChatItem[] | undefined
-  chatStatus: ChatStatus
+  onChatStatusChange?: (status: ChatStatus) => void
 }
 
 export const ChatWindow = forwardRef<HTMLDivElement, ChatWindowProps>(
-  ({ isOpen, onClose, onNewChat, ...propDrop }, ref) => {
+  ({ isOpen, onClose, onNewChat, onChatStatusChange }, ref) => {
+    const chatInterfaceRef = useRef<ChatInterfaceRef>(null)
+
+    // Handle new chat creation from header
+    const handleNewChat = async () => {
+      await chatInterfaceRef.current?.createNewChat()
+      onNewChat()
+    }
     // Generate CSS class names based on component state
     const className = useMemo(() => {
       const baseClasses = cn(
@@ -34,8 +38,12 @@ export const ChatWindow = forwardRef<HTMLDivElement, ChatWindowProps>(
 
     return (
       <div ref={ref} className={className} aria-hidden={!isOpen}>
-        <ChatHeader onClose={onClose} onNewChat={onNewChat} />
-        <ChatInterface />
+        <ChatHeader onClose={onClose} onNewChat={handleNewChat} />
+        <ChatInterface 
+          ref={chatInterfaceRef}
+          onNewChatRequest={onNewChat}
+          onChatStatusChange={onChatStatusChange}
+        />
       </div>
     )
   }

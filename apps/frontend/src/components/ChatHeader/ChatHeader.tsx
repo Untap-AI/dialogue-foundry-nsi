@@ -74,7 +74,7 @@ export const ChatHeader = ({ onClose, onNewChat }: ChatHeaderProps) => {
 
       {/* Controls */}
       <div className="flex gap-[10px]">
-        <Button
+        {/* <Button
           ref={buttonRef}
           variant="ghost"
           size="icon"
@@ -88,7 +88,7 @@ export const ChatHeader = ({ onClose, onNewChat }: ChatHeaderProps) => {
           <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className="fill-primary-foreground">
             <path d="M14 8H8V14H6V8H0V6H6V0H8V6H14V8Z" />
           </svg>
-        </Button>
+        </Button> */}
         <Button
           variant="ghost"
           size="icon"
