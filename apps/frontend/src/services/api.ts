@@ -3,7 +3,7 @@ import { ApiError, ErrorCodes as ServiceErrorCodes } from './errors'
 import { logger } from './logger'
 import type { ErrorCodeValue } from './errors'
 import type { AxiosError } from 'axios'
-import type { ChatItem } from '../nlux'
+import { UIMessage } from '@ai-sdk/react'
 
 // Default config values (can be overridden)
 export const DEFAULT_TOKEN_STORAGE_KEY = 'dialogue_foundry_token'
@@ -80,7 +80,7 @@ interface Message {
 
 interface ChatInit {
   chatId: string
-  messages: ChatItem[]
+  messages: UIMessage[]
 }
 
 export class ChatApiService {
@@ -240,7 +240,7 @@ export class ChatApiService {
 
         return {
           chatId: storedChatId,
-          messages: this.mapMessagesToNluxFormat(response.data.messages || [])
+          messages: this.mapMessagesToUIFormat(response.data.messages || [])
         }
       } catch (error) {
         // Check if this is a token expiration
@@ -296,7 +296,7 @@ export class ChatApiService {
 
       return {
         chatId: response.data.chat.id,
-        messages: [] // New chat has no messages yet
+        messages: this.mapMessagesToUIFormat(response.data.messages || [])
       }
     } catch (error) {
       logger.error('Error creating new chat', { error })
@@ -365,28 +365,21 @@ export class ChatApiService {
   }
 
   /**
-   * Map backend message format to NLUX format
+   * Map backend message format to UI format
    * @param messages - Backend messages
    */
-  private mapMessagesToNluxFormat(messages: Message[]): ChatItem[] {
-    return messages.map(message => {
-      if (message.role === 'user') {
-        return {
-          id: message.id,
-          message: message.content,
-          role: 'user' as const,
-          timestamp: new Date(message.created_at).getTime()
-        }
-      } else {
-        return {
-          id: message.id,
-          message: message.content,
-          role: 'assistant' as const,
-          type: 'text' as const,
-          timestamp: new Date(message.created_at).getTime()
-        }
-      }
-    })
+  private mapMessagesToUIFormat(messages: Message[]): UIMessage[] {
+    return messages.map((msg: any) => ({
+              id: msg.id,
+              role: msg.role as 'user' | 'assistant' | 'system',
+              parts: [
+                {
+                  type: 'text',
+                  text: msg.content
+                }
+              ],
+              createdAt: new Date(msg.createdAt)
+            }))
   }
 
   /**

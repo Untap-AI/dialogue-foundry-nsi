@@ -1,8 +1,9 @@
-import './ChatHeader.css'
 import { useState, useCallback, useEffect, useRef } from 'react'
 import { useResizeObserver } from '../../hooks/useResizeObserver'
 import { useConfig } from '../../contexts/ConfigContext'
 import { Portal } from '../Portal/Portal'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 interface ChatHeaderProps {
   onClose: () => void
@@ -62,32 +63,46 @@ export const ChatHeader = ({ onClose, onNewChat }: ChatHeaderProps) => {
   const isMobile = width < 768
 
   return (
-    <div ref={headerRef} className="chat-header">
+    <div ref={headerRef} className="flex items-center justify-between p-[15px] bg-primary text-primary-foreground font-sans">
       {/* Branding section */}
-      <div className="chat-header-branding">
+      <div className="flex items-center flex-grow">
         {logoUrl && (
-          <img src={logoUrl} alt="Brand Logo" className="chat-header-logo" />
+          <img src={logoUrl} alt="Brand Logo" className="h-[30px] mr-[10px]" />
         )}
-        <div className="chat-header-title">{title}</div>
+        <div className="font-bold text-base leading-[30px] font-sans">{title}</div>
       </div>
 
       {/* Controls */}
-      <div className="chat-header-controls">
-        <span
+      <div className="flex gap-[10px]">
+        {/* <Button
           ref={buttonRef}
-          className="chat-header-button icon-button"
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "w-[28px] h-[28px] text-primary-foreground bg-white/20 rounded-sm",
+            "hover:bg-white/30 hover:text-primary-foreground font-sans"
+          )}
           onClick={toggleMenu}
           data-chat-button
         >
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className="fill-primary-foreground">
             <path d="M14 8H8V14H6V8H0V6H6V0H8V6H14V8Z" />
           </svg>
-        </span>
-        <span className="chat-header-button icon-button" onClick={onClose} data-chat-button>
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        </Button> */}
+        <Button
+          variant="ghost"
+          size="icon"
+          className={cn(
+            "w-[28px] h-[28px] text-primary-foreground bg-white/20 rounded-sm",
+            "hover:bg-white/30 hover:text-primary-foreground font-sans"
+          )}
+          onClick={onClose}
+          data-chat-button
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor" xmlns="http://www.w3.org/2000/svg" className="fill-primary-foreground">
             <path d="M14 1.41L12.59 0L7 5.59L1.41 0L0 1.41L5.59 7L0 12.59L1.41 14L7 8.41L12.59 14L14 12.59L8.41 7L14 1.41Z" />
           </svg>
-        </span>
+        </Button>
       </div>
 
       {/* Menu dropdown */}
@@ -95,7 +110,10 @@ export const ChatHeader = ({ onClose, onNewChat }: ChatHeaderProps) => {
         <Portal containerSelector={isMobile ? '.mobile-chat-modal' : undefined}>
           <div
             ref={menuRef}
-            className="chat-header-menu"
+            className={cn(
+              "fixed bg-primary rounded-[5px] border border-border shadow-xl",
+              "scale-100 transition-all duration-300 ease-out delay-[50ms] z-[10000000] font-sans"
+            )}
             onClick={handleMenuClick}
             style={{
               top: `${menuPosition.top}px`,
@@ -103,8 +121,13 @@ export const ChatHeader = ({ onClose, onNewChat }: ChatHeaderProps) => {
             }}
             data-chat-button
           >
-            <div
-              className="chat-header-menu-item"
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full justify-start py-[10px] px-[15px] text-primary-foreground text-sm",
+                "hover:bg-white/30 hover:text-primary-foreground first:rounded-t-[5px] last:rounded-b-[5px]",
+                "h-auto font-sans"
+              )}
               onClick={e => {
                 e.preventDefault()
                 e.stopPropagation()
@@ -114,7 +137,7 @@ export const ChatHeader = ({ onClose, onNewChat }: ChatHeaderProps) => {
               data-chat-button
             >
               New Chat
-            </div>
+            </Button>
           </div>
         </Portal>
       )}

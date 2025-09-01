@@ -1,5 +1,5 @@
-import { ChatWidget } from './components/ChatWidget/ChatWidget'
+import { ChatWidget } from "./components/ChatWidget/ChatWidget";
 
 export default function App() {
-  return <ChatWidget />
+  return <ChatWidget />  
 }

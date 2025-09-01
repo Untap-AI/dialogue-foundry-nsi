@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import debounce from 'lodash/debounce'
+import debounce from 'lodash.debounce'
 
 /**
  * Custom hook to track window dimensions and respond to resize events

@@ -1,10 +1,14 @@
-import { createContext, useContext, useState, useEffect } from 'react'
-import type { ConversationStarter, DisplayOptions } from '../nlux'
+import { createContext, useContext, useState, useEffect, useLayoutEffect } from 'react'
 import type { ReactNode } from 'react'
 import type { ChatConfig } from '../services/api'
 
+type Suggestion = {
+  label?: string
+  prompt: string
+}
+
 // Define the Config type that extends ChatConfig and includes any other app-wide settings
-interface DialogueFoundryConfig {
+export interface DialogueFoundryConfig {
   // Chat interface customization
   personaOptions?: {
     assistant: {
@@ -13,8 +17,7 @@ interface DialogueFoundryConfig {
       avatar?: string
     }
   }
-  theme?: DisplayOptions['colorScheme']
-  conversationStarters?: ConversationStarter[]
+  suggestions?: Suggestion[]
 
   // Chat Config
   chatConfig: ChatConfig
@@ -35,7 +38,26 @@ interface DialogueFoundryConfig {
     url?: string
     show?: boolean
   }
+
+  styles?: {
+    primaryColor?: string
+    secondaryColor?: string
+    mutedColor?: string
+    accentColor?: string
+    backgroundColor?: string
+    foregroundColor?: string
+    fontFamily?: string
+  }
 }
+
+const styleToVariableMap: Record<keyof DialogueFoundryConfig['styles'], string> = {
+  primaryColor: '--df-color-primary',
+  secondaryColor: '--df-color-secondary',
+  mutedColor: '--df-color-muted',
+  accentColor: '--df-color-accent',
+  backgroundColor: '--df-color-background',
+  foregroundColor: '--df-color-foreground',
+} as const
 
 // Default configuration
 const defaultConfig: DialogueFoundryConfig = {
@@ -43,37 +65,37 @@ const defaultConfig: DialogueFoundryConfig = {
     apiBaseUrl: 'http://localhost:3000/api',
     companyId: 'west-hills-vineyards'
   },
-  personaOptions: {
-    assistant: {
-      name: 'Keystone Coachworks Assistant',
-      tagline: 'Ask me anything about Keystone Coachworks'
-    }
-  },
   logoUrl: "https://keystonecoachworks.net/wp-content/uploads//2017/06/Keystone-logo-wht-grey-no-outline-header.png",
   popupMessage: "Have questions? Click here for help!",
   openOnLoad: "desktop-only",
   welcomeMessage: "Welcome to Keystone Coach Works!\n\nReady to hit the road in style? Whether you're looking to rent, buy, or customize a luxury camper van, I'm here to help.\n\nHave a question? Just ask, or click one of the quick topics below to get started on your next adventure!",
   poweredBy: {},
-  conversationStarters: [
+  suggestions: [
     {
-      label: 'Customization',
       prompt:
-        'What customization options are available for camper vans at Keystone Coach Works?'
+        'What customization options are available?'
     },
     {
-      label: 'Rent',
-      prompt: 'How can I rent a camper van and what are the rental rates?'
+      prompt: 'How can I rent a camper van and what are the rates?'
     },
     {
-      label: 'Buy',
       prompt:
-        'Do you have any camper vans available for sale, and what models do you offer?'
+        'Do you have any camper vans available for sale?'
     },
     {
-      label: 'Contact',
+      // No label - will display the prompt and wrap to two lines
       prompt: 'How can I contact Keystone Coachworks?'
     },
-  ]
+  ],
+  styles: {
+    primaryColor: '#2563eb',
+    secondaryColor: '#f3f4f6',
+    mutedColor: '#f3f4f6',
+    accentColor: '#f3f4f6',
+    backgroundColor: '#ffffff',
+    foregroundColor: '#1f2937',
+    fontFamily: 'Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
+  },
 }
 
 // Create the context with default values
@@ -155,13 +177,32 @@ export function ConfigProvider({ children }: ConfigProviderProps) {
     loadExternalConfig()
   }, [])
 
+  const finalConfig = config ?? defaultConfig
+
+  // Dynamically inject styles into CSS custom properties
+  useLayoutEffect(() => {
+    if (!finalConfig?.styles) return
+
+    const root = document.documentElement
+    Object.entries(finalConfig.styles).forEach(([style, value]) => {
+      const variable = styleToVariableMap[style as keyof DialogueFoundryConfig['styles']]
+      root.style.setProperty(variable, value)
+    })
+
+    // Cleanup function to reset styles when component unmounts
+    return () => {
+      Object.keys(finalConfig.styles ?? {}).forEach((style) => {
+        const variable = styleToVariableMap[style as keyof DialogueFoundryConfig['styles']]
+        root.style.removeProperty(variable)
+      })
+    }
+  }, [finalConfig?.styles])
+
   // Don't render children until config is loaded
   if (!configLoaded) {
     // eslint-disable-next-line no-null/no-null
     return null // Return null instead of undefined for React components
   }
-
-  const finalConfig = config ?? defaultConfig
 
   return (
     <ConfigContext.Provider value={{ ...finalConfig }}>

@@ -87,7 +87,7 @@ router.post('/events', async (req, res) => {
       return res.status(400).json({
         success: false,
         error: 'Validation error',
-        details: error.errors
+        details: error.message
       })
     }
 
@@ -135,7 +135,7 @@ router.post('/', async (req, res) => {
       return res.status(400).json({
         success: false,
         error: 'Validation error',
-        details: error.errors
+        details: error.message
       })
     }
 
