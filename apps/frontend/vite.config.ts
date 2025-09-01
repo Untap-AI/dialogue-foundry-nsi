@@ -3,7 +3,6 @@ import react from '@vitejs/plugin-react'
 import { resolve } from 'path'
 import cssInjectedByJsPlugin from "vite-plugin-css-injected-by-js"
 import tailwindcss from '@tailwindcss/vite'
-import { visualizer } from 'rollup-plugin-visualizer'
 
 export default defineConfig(({ command }) => {
   const isProd = command === 'build'
@@ -25,12 +24,6 @@ export default defineConfig(({ command }) => {
       react(),
       tailwindcss(),
       cssInjectedByJsPlugin(),
-      visualizer({
-        filename: 'bundle-analysis.html',
-        open: true,
-        gzipSize: true,
-        brotliSize: true,
-      }),
     ],
     
     server: { port: 3001 },
