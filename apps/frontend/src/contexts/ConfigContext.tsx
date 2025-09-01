@@ -8,7 +8,7 @@ type Suggestion = {
 }
 
 // Define the Config type that extends ChatConfig and includes any other app-wide settings
-interface DialogueFoundryConfig {
+export interface DialogueFoundryConfig {
   // Chat interface customization
   personaOptions?: {
     assistant: {

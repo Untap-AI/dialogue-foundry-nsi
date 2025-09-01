@@ -571,9 +571,7 @@ router.post('/stream-ai-sdk', authenticateChatAccess, async (req: CustomRequest,
     )}.`
 
     const modelMessages = convertToModelMessages(messages)
-    messages.unshift({ role: 'system', content: docsContext })
-
-    console.log(shouldEnableEmailTool)
+    modelMessages.unshift({ role: 'system', content: docsContext })
 
     const result = streamText({
       model: openai('gpt-5'),

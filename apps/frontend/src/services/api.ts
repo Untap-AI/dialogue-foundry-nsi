@@ -3,7 +3,6 @@ import { ApiError, ErrorCodes as ServiceErrorCodes } from './errors'
 import { logger } from './logger'
 import type { ErrorCodeValue } from './errors'
 import type { AxiosError } from 'axios'
-import type { ChatItem } from '../nlux'
 import { UIMessage } from '@ai-sdk/react'
 
 // Default config values (can be overridden)
@@ -81,7 +80,7 @@ interface Message {
 
 interface ChatInit {
   chatId: string
-  messages: ChatItem[]
+  messages: UIMessage[]
 }
 
 export class ChatApiService {

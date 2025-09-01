@@ -159,9 +159,9 @@ export function useChatPersistence() {
   }, [chatService])
 
   const recordConversationStarterClick = useCallback(async (
-    label: string | undefined,
+    label: string,
     position: number,
-    prompt?: string
+    prompt: string
   ) => {
     await chatService.recordConversationStarterClick(label, position, prompt)
   }, [chatService])

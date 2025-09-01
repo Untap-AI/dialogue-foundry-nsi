@@ -1,5 +1,4 @@
 @import "tailwindcss";
-@source "../../../node_modules/streamdown/dist/index.js";
 
 @theme {
   /* Tailwind theme colors connected to our simplified variables */

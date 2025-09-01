@@ -14,7 +14,6 @@ import { Response } from '@/components/response';
 
 import { Loader } from '@/components/loader';
 import { useConfig } from '@/contexts/ConfigContext';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { cn } from '@/lib/utils';
 import { useChatPersistence } from '../../hooks/useChatPersistence';
 import type { ChatStatus } from '../../hooks/useChatPersistence';
@@ -272,7 +271,7 @@ export const ChatInterface = React.forwardRef<ChatInterfaceRef, ChatInterfacePro
                 suggestion={suggestion.label || suggestion.prompt}
                 analyticsLabel={suggestion.label}
                 analyticsPosition={index}
-                onAnalyticsClick={recordConversationStarterClick}
+                onAnalyticsClick={() => recordConversationStarterClick(suggestion.label || suggestion.prompt, index, suggestion.prompt)}
                 onClick={() => handleSuggestionClick(suggestion.prompt)}
               />
             ))}

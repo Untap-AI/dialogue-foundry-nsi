@@ -2,18 +2,35 @@
 
 import { cn } from '@/lib/utils';
 import { type ComponentProps, memo, useEffect, useRef } from 'react';
-import { Streamdown } from 'streamdown';
+import { Streamdown } from '@/components/streamdown';
 
 type ResponseProps = ComponentProps<typeof Streamdown> & {
   messageId?: string;
   onLinkClick?: (url: string, linkText?: string, messageId?: string) => Promise<void>;
 };
 
+// Custom link component for Streamdown
+const CustomLink = ({ node, children, className, href, ...props }: any) => (
+  <a
+    className={cn(
+      'font-medium text-primary underline break-words break-all hyphens-auto inline-block max-w-full',
+      className
+    )}
+    data-streamdown="link"
+    href={href}
+    rel="noreferrer"
+    {...props}
+    target="_self"
+  >
+    {children}
+  </a>
+);
+
 export const Response = memo(
   ({ className, messageId, onLinkClick, ...props }: ResponseProps) => {
     const containerRef = useRef<HTMLDivElement>(null);
 
-    // Set up link click tracking after content renders
+    // Set up link click tracking
     useEffect(() => {
       const container = containerRef.current;
       if (!container || !onLinkClick) return;
@@ -53,6 +70,9 @@ export const Response = memo(
             'size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0',
             className
           )}
+          components={{
+            a: CustomLink,
+          }}
           {...props}
         />
       </div>
