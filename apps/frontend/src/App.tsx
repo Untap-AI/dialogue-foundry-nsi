@@ -1,11 +1,5 @@
-import { ChatWidget } from './components/ChatWidget/ChatWidget'
-import { ShadcnTest } from './components/ShadcnTest'
+import { ChatWidget } from "./components/ChatWidget/ChatWidget";
 
 export default function App() {
-  return (
-    <div>
-      <ShadcnTest />
-      <ChatWidget />
-    </div>
-  )
+  return <ChatWidget />  
 }

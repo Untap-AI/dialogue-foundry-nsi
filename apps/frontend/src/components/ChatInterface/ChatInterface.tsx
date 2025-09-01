@@ -18,54 +18,46 @@ import {
   SourcesContent,
   SourcesTrigger,
 } from '@/components/sources';
-import {
-  Reasoning,
-  ReasoningContent,
-  ReasoningTrigger,
-} from '@/components/reasoning';
+
 import { Loader } from '@/components/loader';
+import { DefaultChatTransport } from 'ai';
+import { useConfig } from '@/contexts/ConfigContext';
 
 export const ChatInterface = () => {
+  const { chatConfig, poweredBy } = useConfig()
   const [input, setInput] = useState('');
-  const { messages, sendMessage, status } = useChat();
+
+  const { apiBaseUrl } = chatConfig
+  const showPoweredBy = poweredBy?.show ?? true
+  const poweredByText = poweredBy?.text ?? 'Untap AI'
+  const poweredByUrl = poweredBy?.url ?? 'https://untap-ai.com'
+  
+  // Configure useChat with your backend endpoint
+  const { messages, sendMessage, status } = useChat({
+    transport: new DefaultChatTransport({ 
+      api: `${apiBaseUrl}/chats/stream`,
+    }),
+    onError: (error) => {
+      console.error('Chat error:', error);
+    },
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (input.trim()) {
-      sendMessage(
-        { text: input }
-      );
+      sendMessage({
+        text: input,
+      });
       setInput('');
     }
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6 relative size-full h-screen">
-      <div className="flex flex-col h-full">
-        <Conversation className="h-full">
+    <>
+        <Conversation className="overflow-y-auto">
           <ConversationContent>
             {messages.map((message) => (
               <div key={message.id}>
-                {message.role === 'assistant' && (
-                  <Sources>
-                    <SourcesTrigger
-                      count={
-                        message.parts.filter(
-                          (part) => part.type === 'source-url',
-                        ).length
-                      }
-                    />
-                    {message.parts.filter((part) => part.type === 'source-url').map((part, i) => (
-                      <SourcesContent key={`${message.id}-${i}`}>
-                        <Source
-                          key={`${message.id}-${i}`}
-                          href={part.url}
-                          title={part.url}
-                        />
-                      </SourcesContent>
-                    ))}
-                  </Sources>
-                )}
                 <Message from={message.role} key={message.id}>
                   <MessageContent>
                     {message.parts.map((part, i) => {
@@ -75,17 +67,6 @@ export const ChatInterface = () => {
                             <Response key={`${message.id}-${i}`}>
                               {part.text}
                             </Response>
-                          );
-                        case 'reasoning':
-                          return (
-                            <Reasoning
-                              key={`${message.id}-${i}`}
-                              className="w-full"
-                              isStreaming={status === 'streaming'}
-                            >
-                              <ReasoningTrigger />
-                              <ReasoningContent>{part.text}</ReasoningContent>
-                            </Reasoning>
                           );
                         default:
                           return null;
@@ -99,15 +80,30 @@ export const ChatInterface = () => {
           </ConversationContent>
           <ConversationScrollButton />
         </Conversation>
+        
+        <div className="p-4">
+          <PromptInput onSubmit={handleSubmit} className="flex items-center pr-3">
+            <PromptInputTextarea
+              onChange={(e) => setInput(e.target.value)}
+              value={input}
+            />
+            <PromptInputSubmit disabled={!input} status={status} />
+          </PromptInput>
+        </div>
 
-        <PromptInput onSubmit={handleSubmit} className="mt-4 flex items-center pr-3">
-          <PromptInputTextarea
-            onChange={(e) => setInput(e.target.value)}
-            value={input}
-          />
-          <PromptInputSubmit disabled={!input} status={status} />
-        </PromptInput>
-      </div>
-    </div>
+        {showPoweredBy && (
+        <div className="text-center text-[11px] leading-[11px] text-[var(--df-text-contrast-color)] py-[3px] px-0 bg-[var(--df-primary-color)]">
+          Powered by{' '}
+          <a
+            href={poweredByUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-inherit underline"
+          >
+            {poweredByText}
+          </a>
+        </div>
+      )}
+      </>
   );
 };

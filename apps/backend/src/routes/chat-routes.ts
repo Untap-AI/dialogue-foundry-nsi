@@ -1,5 +1,7 @@
 import express from 'express'
 import { v4 as uuidv4 } from 'uuid'
+import { streamText, convertToModelMessages } from 'ai'
+import { openai } from '@ai-sdk/openai'
 import {
   getChatById,
   createChatAdmin,
@@ -393,5 +395,41 @@ async function handleSSEStream(req: CustomRequest, res: express.Response) {
 
 router.post('/:chatId/stream', authenticateChatAccess, handleSSEStream)
 router.get('/:chatId/stream', authenticateChatAccess, handleSSEStream)
+
+// Simplified AI SDK streaming endpoint for testing
+router.post('/stream', async (req, res) => {
+  try {
+    const { messages } = req.body;
+
+    // For now, use a simple system prompt
+    const systemPrompt = 'You are a helpful assistant. Respond using Markdown formatting.';
+
+    const result = streamText({
+      model: openai('gpt-4'),
+      system: systemPrompt,
+      messages: convertToModelMessages(messages),
+      providerOptions: {
+        openai: {
+          reasoning: {
+            effort: "minimal"
+          },
+          stream: true,
+          text: {
+            format: {
+              type: 'text'
+            },
+            verbosity: "low",
+          },
+          service_tier: "priority"
+        }
+      }
+    });
+
+    return result.pipeUIMessageStreamToResponse(res);
+  } catch (error) {
+    logger.error('Error in AI SDK streaming', { error: error as Error });
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 export default router

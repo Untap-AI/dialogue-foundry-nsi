@@ -26,6 +26,9 @@ importers:
 
   apps/backend:
     dependencies:
+      '@ai-sdk/openai':
+        specifier: ^2.0.23
+        version: 2.0.23(zod@4.1.5)
       '@dialogue-foundry/tsconfig':
         specifier: workspace:*
         version: link:../../packages/tsconfig
@@ -56,6 +59,9 @@ importers:
       '@types/uuid':
         specifier: ^9.0.8
         version: 9.0.8
+      ai:
+        specifier: ^5.0.28
+        version: 5.0.28(zod@4.1.5)
       cors:
         specifier: ^2.8.5
         version: 2.8.5
@@ -76,7 +82,7 @@ importers:
         version: 5.1.2
       openai:
         specifier: ^5.12.1
-        version: 5.12.1(ws@8.18.1)(zod@3.24.2)
+        version: 5.12.1(ws@8.18.1)(zod@4.1.5)
       tsc:
         specifier: ^2.0.4
         version: 2.0.4
@@ -87,8 +93,8 @@ importers:
         specifier: ^9.0.1
         version: 9.0.1
       zod:
-        specifier: ^3.24.2
-        version: 3.24.2
+        specifier: ^4.1.5
+        version: 4.1.5
     devDependencies:
       '@dialogue-foundry/eslint-config':
         specifier: workspace:*
@@ -380,6 +386,12 @@ packages:
 
   '@ai-sdk/gateway@1.0.15':
     resolution: {integrity: sha512-xySXoQ29+KbGuGfmDnABx+O6vc7Gj7qugmj1kGpn0rW0rQNn6UKUuvscKMzWyv1Uv05GyC1vqHq8ZhEOLfXscQ==}
+    engines: {node: '>=18'}
+    peerDependencies:
+      zod: ^3.25.76 || ^4
+
+  '@ai-sdk/openai@2.0.23':
+    resolution: {integrity: sha512-uOXk8HzmMUoCmD0JMX/Y1HC/ABOR/Jza2Z2rkCaJISDYz3fp5pnb6eNjcPRL48JSMzRAGp9UP5p0OpxS06IJZg==}
     engines: {node: '>=18'}
     peerDependencies:
       zod: ^3.25.76 || ^4
@@ -6009,6 +6021,12 @@ snapshots:
       '@ai-sdk/provider-utils': 3.0.7(zod@4.1.5)
       zod: 4.1.5
 
+  '@ai-sdk/openai@2.0.23(zod@4.1.5)':
+    dependencies:
+      '@ai-sdk/provider': 2.0.0
+      '@ai-sdk/provider-utils': 3.0.7(zod@4.1.5)
+      zod: 4.1.5
+
   '@ai-sdk/provider-utils@3.0.7(zod@4.1.5)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
@@ -11084,10 +11102,10 @@ snapshots:
       regex: 6.0.1
       regex-recursion: 6.0.2
 
-  openai@5.12.1(ws@8.18.1)(zod@3.24.2):
+  openai@5.12.1(ws@8.18.1)(zod@4.1.5):
     optionalDependencies:
       ws: 8.18.1
-      zod: 3.24.2
+      zod: 4.1.5
 
   optionator@0.9.4:
     dependencies:
