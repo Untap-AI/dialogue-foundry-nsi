@@ -1,7 +1,8 @@
 import express from 'express'
 import { v4 as uuidv4 } from 'uuid'
-import { streamText, convertToModelMessages } from 'ai'
+import { streamText, convertToModelMessages, tool, stepCountIs } from 'ai'
 import { openai } from '@ai-sdk/openai'
+import { z } from 'zod'
 import {
   getChatById,
   createChatAdmin,
@@ -18,7 +19,7 @@ import {
 } from '../services/openai-service'
 import { 
   detectEmailRequest, 
-  processUserEmailInMessage 
+  processUserEmailInMessage,
 } from '../services/utils/email-detection'
 import { generateChatAccessToken } from '../lib/jwt-utils'
 import {
@@ -456,11 +457,24 @@ router.post('/stream', async (req, res) => {
   }
 });
 
+// Define email capture tools for AI SDK
+const requestUserEmailTool = tool({
+  description: 'Provide an email capture form to the user when you want to follow up with them or send them information. Only use this when you are actively asking for their email.',
+  inputSchema: z.object({
+    subject: z.string().describe('The subject or reason why the email is being requested (e.g., "follow up", "send information", "contact later")'),
+    conversationSummary: z.string().describe('A brief summary of what the user is looking for or needs help with based on the conversation context')
+  }),
+  execute: async ({ subject, conversationSummary }) => ({
+    subject,
+    conversationSummary
+  })
+})
+
 // Add a dedicated endpoint for authenticated chat streaming that works with the AI SDK
 // TODO: Reconcile this to the old endpoint once migrated
 router.post('/stream-ai-sdk', authenticateChatAccess, async (req: CustomRequest, res) => {
   try {
-    const { id: chatId, messages, messageId } = req.body;
+    const { id: chatId, messages, timezone } = req.body;
     const userId = req.user?.userId;
 
     if (!chatId || !userId) {
@@ -479,10 +493,7 @@ router.post('/stream-ai-sdk', authenticateChatAccess, async (req: CustomRequest,
       return res.status(400).json({ error: 'Company configuration not found' });
     }
 
-    console.log('messages', messages);
-    console.log('messageId', messageId);
-    console.log('chatId', chatId);
-
+    let docsContext = ''
     // Save the user's message to the database asynchronously (non-blocking)
     if (messages) {
       const targetMessage = messages[messages.length - 1];
@@ -499,8 +510,6 @@ router.post('/stream-ai-sdk', authenticateChatAccess, async (req: CustomRequest,
             .map((part: any) => part.text)
             .join('');
         }
-
-        console.log('content', content);
         
         if (content) {
           // Save user message asynchronously to avoid blocking the stream
@@ -522,17 +531,79 @@ router.post('/stream-ai-sdk', authenticateChatAccess, async (req: CustomRequest,
               });
             }
           });
+
+  if (chatConfig?.pinecone_index_name) {
+    try {
+      const documents = await retrieveDocuments(chatConfig.pinecone_index_name, content)
+      if (documents && documents.length > 0) {
+        docsContext = formatDocumentsAsContext(documents)
+      }
+    } catch (retrievalError) {
+      console.error('Error during document retrieval:', retrievalError)
+    }
+  }
         }
       }
     }
 
-    // Use the chat config's system prompt
-    const systemPrompt = chatConfig.system_prompt || 'You are a helpful assistant.';
+    // Determine if email function should be enabled (moved earlier for scope)
+    const shouldEnableEmailTool = Boolean(chatConfig?.support_email) && !Boolean(chat?.user_email)
+
+    const emailStatusInfo = Boolean(chat?.user_email) 
+      ? '\n\nIMPORTANT: The user has already provided their email address for this conversation. Do not ask for their email again or suggest providing contact information.'
+      : ''
+
+    const emailToolInstructions = shouldEnableEmailTool 
+      ? '\n\nIMPORTANT: When you want to follow up with the user via email (such as sending them information, scheduling, pricing details, or further assistance), you must use the request_user_email tool to provide an email capture form. Always call this tool when you want to collect the user\'s email address.'
+      : ''
+
+    const systemPrompt= `Respond using Markdown formatting for headings, lists, and emphasis for all answers.\n\n${chatConfig.system_prompt}${emailStatusInfo}${emailToolInstructions}\n\nThe current date and time is ${new Date().toLocaleString(
+      'en-US',
+      {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: 'numeric',
+        minute: 'numeric',
+        timeZone: timezone || 'UTC'
+      }
+    )}.`
+
+    const modelMessages = convertToModelMessages(messages)
+    messages.unshift({ role: 'system', content: docsContext })
+
+    console.log(shouldEnableEmailTool)
 
     const result = streamText({
       model: openai('gpt-5'),
       system: systemPrompt,
-      messages: convertToModelMessages(messages),
+      messages: modelMessages,
+      tools: shouldEnableEmailTool ? {
+        request_user_email: requestUserEmailTool
+      } : undefined,
+      toolChoice: shouldEnableEmailTool ? 'auto' : undefined,
+      stopWhen: shouldEnableEmailTool ? stepCountIs(2) : undefined, // Allow up to 2 steps: text response -> tool call
+      prepareStep: async ({ steps }) => {
+        // Check if email tool has already been called in any previous step
+        const emailToolAlreadyCalled = steps.some(step => 
+          step.content?.some((content) => content.type === 'tool-call' && content.toolName === 'request_user_email')
+        )
+        
+        // If email tool already called, disable tools for remaining steps
+        if (emailToolAlreadyCalled) {
+          return {
+            tools: {},
+            toolChoice: 'none'
+          }
+        }
+        
+        // Keep tools available and let LLM decide
+        return {
+          tools: shouldEnableEmailTool ? { request_user_email: requestUserEmailTool } : {},
+          toolChoice: shouldEnableEmailTool ? 'auto' : 'none'
+        }
+      },
       providerOptions: {
         openai: {
           reasoningEffort: "minimal",
@@ -540,8 +611,11 @@ router.post('/stream-ai-sdk', authenticateChatAccess, async (req: CustomRequest,
           serviceTier: "priority"
         }
       },
-      onFinish: async ({ text }) => {
-        // Save the assistant's response to the database
+      onError: (error) => {
+        console.error('Error in AI SDK streaming:', error);
+      },
+      onFinish: async ({ text,}) => {
+        // Save the final assistant's response to the database
         if (text) {
           const latestSequenceNumber = await getLatestSequenceNumber(chatId);
           await createMessageAdmin({
@@ -561,5 +635,7 @@ router.post('/stream-ai-sdk', authenticateChatAccess, async (req: CustomRequest,
     return res.status(500).json({ error: 'Internal server error' });
   }
 });
+
+
 
 export default router

@@ -16,7 +16,7 @@ export const Suggestions = ({
   ...props
 }: SuggestionsProps) => (
   <ScrollArea className="w-full overflow-x-auto whitespace-nowrap" {...props}>
-    <div className={cn('flex w-max flex-nowrap items-center gap-2', className)}>
+    <div className={cn('flex w-max flex-nowrap items-center gap-3 px-1 py-1', className)}>
       {children}
     </div>
     <ScrollBar className="hidden" orientation="horizontal" />
@@ -26,6 +26,10 @@ export const Suggestions = ({
 export type SuggestionProps = Omit<ComponentProps<typeof Button>, 'onClick'> & {
   suggestion: string;
   onClick?: (suggestion: string) => void;
+  // Analytics props
+  analyticsLabel?: string;
+  analyticsPosition?: number;
+  onAnalyticsClick?: (label: string | undefined, position: number, prompt: string) => Promise<void>;
 };
 
 export const Suggestion = ({
@@ -35,22 +39,69 @@ export const Suggestion = ({
   variant = 'outline',
   size = 'sm',
   children,
+  analyticsLabel,
+  analyticsPosition = 0,
+  onAnalyticsClick,
   ...props
 }: SuggestionProps) => {
-  const handleClick = () => {
+  const handleClick = async () => {
+    // Record analytics first
+    if (onAnalyticsClick) {
+      try {
+        await onAnalyticsClick(analyticsLabel, analyticsPosition, suggestion);
+      } catch (error) {
+        console.warn('Failed to record conversation starter click:', error);
+      }
+    }
+    
+    // Then call the original onClick
     onClick?.(suggestion);
   };
 
   return (
     <Button
-      className={cn('cursor-pointer rounded-full px-4', className)}
+      className={cn(
+        // Base styling
+        'cursor-pointer relative overflow-hidden',
+        'min-w-fit max-w-[140px] min-h-[3rem]',
+        
+        // Enhanced theme-aware styling
+        'bg-gradient-to-r from-white to-gray-50/80',
+        'border border-gray-200/80 hover:border-primary/30',
+        'text-gray-700 hover:text-primary',
+        'shadow-sm hover:shadow-md',
+        
+        // Typography and spacing - updated for multiline
+        'px-4 py-1 text-sm font-medium leading-snug',
+        'rounded-xl',
+        
+        // Smooth transitions and interactions
+        'transition-all duration-300 ease-out',
+        'hover:scale-[1.02] active:scale-[0.98]',
+        'hover:-translate-y-0.5',
+        
+        // Subtle backdrop effect
+        'backdrop-blur-sm',
+        
+        // Focus states
+        'focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-1',
+        'whitespace-normal',
+        
+        className
+      )}
       onClick={handleClick}
       size={size}
       type="button"
-      variant={variant}
+      variant="ghost"
       {...props}
     >
-      {children || suggestion}
+      {/* Subtle shine effect */}
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500 -skew-x-12 translate-x-[-100%] hover:translate-x-[100%] transition-transform duration-700" />
+      
+      {/* Content */}
+      <span className="relative z-10 text-center block leading-tight max-w-[200px]">
+        {children || suggestion}
+      </span>
     </Button>
   );
 };

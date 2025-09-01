@@ -1,7 +1,11 @@
 import { createContext, useContext, useState, useEffect, useLayoutEffect } from 'react'
-import type { ConversationStarter, DisplayOptions } from '../nlux'
 import type { ReactNode } from 'react'
 import type { ChatConfig } from '../services/api'
+
+type Suggestion = {
+  label?: string
+  prompt: string
+}
 
 // Define the Config type that extends ChatConfig and includes any other app-wide settings
 interface DialogueFoundryConfig {
@@ -13,8 +17,7 @@ interface DialogueFoundryConfig {
       avatar?: string
     }
   }
-  theme?: DisplayOptions['colorScheme']
-  conversationStarters?: ConversationStarter[]
+  suggestions?: Suggestion[]
 
   // Chat Config
   chatConfig: ChatConfig
@@ -62,34 +65,25 @@ const defaultConfig: DialogueFoundryConfig = {
     apiBaseUrl: 'http://localhost:3000/api',
     companyId: 'west-hills-vineyards'
   },
-  personaOptions: {
-    assistant: {
-      name: 'Keystone Coachworks Assistant',
-      tagline: 'Ask me anything about Keystone Coachworks'
-    }
-  },
   logoUrl: "https://keystonecoachworks.net/wp-content/uploads//2017/06/Keystone-logo-wht-grey-no-outline-header.png",
   popupMessage: "Have questions? Click here for help!",
   openOnLoad: "desktop-only",
   welcomeMessage: "Welcome to Keystone Coach Works!\n\nReady to hit the road in style? Whether you're looking to rent, buy, or customize a luxury camper van, I'm here to help.\n\nHave a question? Just ask, or click one of the quick topics below to get started on your next adventure!",
   poweredBy: {},
-  conversationStarters: [
+  suggestions: [
     {
-      label: 'Customization',
       prompt:
-        'What customization options are available for camper vans at Keystone Coach Works?'
+        'What customization options are available?'
     },
     {
-      label: 'Rent',
-      prompt: 'How can I rent a camper van and what are the rental rates?'
+      prompt: 'How can I rent a camper van and what are the rates?'
     },
     {
-      label: 'Buy',
       prompt:
-        'Do you have any camper vans available for sale, and what models do you offer?'
+        'Do you have any camper vans available for sale?'
     },
     {
-      label: 'Contact',
+      // No label - will display the prompt and wrap to two lines
       prompt: 'How can I contact Keystone Coachworks?'
     },
   ],
