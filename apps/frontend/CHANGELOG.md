@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.0
+
+### Minor Changes
+
+- v5 with ai elements
+
 ## 0.3.24
 
 ### Patch Changes

@@ -1,7 +1,7 @@
 {
   "name": "@dialogue-foundry/frontend",
   "private": true,
-  "version": "0.3.24",
+  "version": "0.4.0",
   "type": "module",
   "repository": {
     "type": "git",
@@ -36,6 +36,7 @@
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-markdown": "^10.1.0",
+    "tailwind-merge": "^3.3.1",
     "use-stick-to-bottom": "^1.1.1",
     "vite-plugin-css-injected-by-js": "^3.5.2"
   },
