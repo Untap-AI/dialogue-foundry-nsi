@@ -51,8 +51,9 @@ export const MobileChatModal = ({
     <dialog
       ref={dialogRef}
       className={cn(
-        "w-screen max-w-screen h-screen max-h-screen m-0 p-0 border-none",
-        "z-[10000] overflow-hidden backdrop:bg-black/50"
+        "w-screen max-w-screen h-dvh max-h-dvh m-0 p-0 border-none",
+        "z-[10000] overflow-hidden backdrop:bg-black/50",
+        "fixed inset-0"
       )}
       onCancel={e => {
         e.preventDefault() // Prevent default close on ESC key
@@ -65,7 +66,7 @@ export const MobileChatModal = ({
       }}
     >
       <div className={cn(
-        "w-full h-screen flex flex-col overflow-hidden relative"
+        "w-full h-full flex flex-col overflow-hidden relative"
       )}>
         <ChatHeader onClose={onClose} onNewChat={handleNewChat} />
         <ChatInterface 
