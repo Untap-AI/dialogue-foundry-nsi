@@ -56,18 +56,9 @@ router.get('/:chatId', authenticateChatAccess, async (req, res) => {
 
     const messages = await getMessagesByChatId(chatId)
 
-    // Convert messages to AI SDK compatible format
-    const aiSdkMessages = messages.map(msg => ({
-      id: msg.id,
-      role: msg.role,
-      content: msg.content,
-      createdAt: msg.created_at
-    }))
-
     return res.json({
       chat,
-      messages: aiSdkMessages,
-      originalMessages: messages // Keep original for backward compatibility
+      messages
     })
   } catch (error) {
     return res.status(500).json({ error })
@@ -420,42 +411,6 @@ async function handleSSEStream(req: CustomRequest, res: express.Response) {
 
 router.post('/:chatId/stream', authenticateChatAccess, handleSSEStream)
 router.get('/:chatId/stream', authenticateChatAccess, handleSSEStream)
-
-// AI SDK streaming endpoint for chat interface
-router.post('/stream', async (req, res) => {
-  try {
-    const { messages } = req.body;
-
-    // For now, use a simple system prompt
-    const systemPrompt = 'You are a helpful assistant. Respond using Markdown formatting.';
-
-    const result = streamText({
-      model: openai('gpt-4'),
-      system: systemPrompt,
-      messages: convertToModelMessages(messages),
-      providerOptions: {
-        openai: {
-          reasoning: {
-            effort: "minimal"
-          },
-          stream: true,
-          text: {
-            format: {
-              type: 'text'
-            },
-            verbosity: "low",
-          },
-          service_tier: "priority"
-        }
-      }
-    });
-
-    return result.pipeUIMessageStreamToResponse(res);
-  } catch (error) {
-    logger.error('Error in AI SDK streaming', { error: error as Error });
-    return res.status(500).json({ error: 'Internal server error' });
-  }
-});
 
 // Define email capture tools for AI SDK
 const requestUserEmailTool = tool({
