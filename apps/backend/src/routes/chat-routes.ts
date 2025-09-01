@@ -128,18 +128,10 @@ router.post('/', async (req, res) => {
     // Get any messages that were created (like welcome message)
     const messages = await getMessagesByChatId(chat.id)
 
-    // Convert messages to AI SDK compatible format
-    const aiSdkMessages = messages.map(msg => ({
-      id: msg.id,
-      role: msg.role,
-      content: msg.content,
-      createdAt: msg.created_at
-    }))
-
     return res.status(201).json({
       chat,
       accessToken,
-      messages: aiSdkMessages
+      messages
     })
   } catch (error) {
     logger.error('Error creating chat', {
