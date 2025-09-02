@@ -1,7 +1,4 @@
-@layer theme, base, components, utilities;
-
-@import "tailwindcss/theme.css" layer(theme);
-@import "tailwindcss/preflight.css" layer(base);
+@import "tailwindcss";
 
 @theme {
   /* Tailwind theme colors connected to our simplified variables */
@@ -80,38 +77,32 @@
 
 /* Custom scrollbar styling for all devices */
 /* Webkit browsers (Chrome, Safari, Edge) */
-#dialogue-foundry-app::-webkit-scrollbar {
+::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-#dialogue-foundry-app::-webkit-scrollbar-track {
+::-webkit-scrollbar-track {
   background: var(--color-background);
   border-radius: 4px;
 }
 
-#dialogue-foundry-app::-webkit-scrollbar-thumb {
+::-webkit-scrollbar-thumb {
   background: var(--color-primary);
   border-radius: 4px;
   border: 1px solid var(--color-gray-200);
 }
 
-#dialogue-foundry-app::-webkit-scrollbar-thumb:hover {
+::-webkit-scrollbar-thumb:hover {
   background: color-mix(in srgb, var(--color-primary) 80%, black);
 }
 
-#dialogue-foundry-app::-webkit-scrollbar-thumb:active {
+::-webkit-scrollbar-thumb:active {
   background: color-mix(in srgb, var(--color-primary) 70%, black);
 }
 
-/* Firefox */
-#dialogue-foundry-app {
-  scrollbar-width: thin;
-  scrollbar-color: var(--color-primary) var(--color-background);
-}
-
-/* For thin scrollbars in Firefox */
-#dialogue-foundry-app {
+/* Firefox scrollbar styling */
+* {
   scrollbar-width: thin;
   scrollbar-color: var(--color-primary) var(--color-background);
 }
@@ -141,12 +132,5 @@
   100% {
     opacity: 1;
     transform: translateY(0) scale(1);
-  }
-}
-
-/* Scoped Tailwind utilities - all utilities will only apply within #dialogue-foundry-app */
-@layer utilities {
-  #dialogue-foundry-app {
-    @tailwind utilities;
   }
 }

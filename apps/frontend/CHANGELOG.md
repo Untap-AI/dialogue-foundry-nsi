@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.9
+
+### Patch Changes
+
+- shadow dom
+
 ## 0.4.8
 
 ### Patch Changes
