@@ -67,7 +67,7 @@ export const ChatHeader = ({ onClose, onNewChat }: ChatHeaderProps) => {
       {/* Branding section */}
       <div className="flex items-center flex-grow">
         {logoUrl && (
-          <img src={logoUrl} alt="Brand Logo" className="h-[30px] mr-[10px]" />
+          <img src={logoUrl} alt="Brand Logo" className="h-[30px] max-h-[30px] mr-[10px]" />
         )}
         <div className="font-bold text-base leading-[30px] font-sans">{title}</div>
       </div>

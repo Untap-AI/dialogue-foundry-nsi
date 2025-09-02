@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.8
+
+### Patch Changes
+
+- Scoped styles
+
 ## 0.4.7
 
 ### Patch Changes
