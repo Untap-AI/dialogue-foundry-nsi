@@ -78,7 +78,11 @@ export const Response = memo(
       </div>
     );
   },
-  (prevProps, nextProps) => prevProps.children === nextProps.children
+  (prevProps, nextProps) => {
+    return prevProps.children === nextProps.children && 
+           prevProps.messageId === nextProps.messageId &&
+           prevProps.onLinkClick === nextProps.onLinkClick
+  }
 );
 
 Response.displayName = 'Response';

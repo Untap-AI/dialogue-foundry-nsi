@@ -43,7 +43,10 @@ const Block = memo(
 
     return <HardenedMarkdown {...props}>{parsedContent}</HardenedMarkdown>;
   },
-  (prevProps, nextProps) => prevProps.content === nextProps.content
+  (prevProps, nextProps) => {
+    return prevProps.content === nextProps.content &&
+           prevProps.shouldParseIncompleteMarkdown === nextProps.shouldParseIncompleteMarkdown
+  }
 );
 
 Block.displayName = 'Block';
@@ -90,7 +93,9 @@ export const Streamdown = memo(
         </div>
     );
   },
-  (prevProps, nextProps) =>
-    prevProps.children === nextProps.children
+  (prevProps, nextProps) => {
+    return prevProps.children === nextProps.children &&
+           prevProps.parseIncompleteMarkdown === nextProps.parseIncompleteMarkdown
+  }
 );
 Streamdown.displayName = 'Streamdown';

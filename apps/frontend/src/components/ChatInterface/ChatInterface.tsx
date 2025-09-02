@@ -204,7 +204,7 @@ export const ChatInterface = React.forwardRef<ChatInterfaceRef, ChatInterfacePro
       </>
     );
   }
-
+  
   return (
     <>
       <StreamErrorBanner streamError={streamError} onClearError={clearStreamError} />
@@ -215,7 +215,7 @@ export const ChatInterface = React.forwardRef<ChatInterfaceRef, ChatInterfacePro
               return <Loader key={message.id} />
             }
 
-            return <div key={message.id}>
+            return (
               <Message from={message.role} key={message.id}>
                 <MessageContent>
                   {/* First render all text parts */}
@@ -223,7 +223,7 @@ export const ChatInterface = React.forwardRef<ChatInterfaceRef, ChatInterfacePro
                     .filter(part => part.type === 'text')
                     .map((part, i) => (
                       <Response 
-                        key={`${message.id}-text-${i}`} 
+                        key={`${message.id}-${i}`} 
                         parseIncompleteMarkdown
                         messageId={message.id}
                         onLinkClick={recordLinkClick}
@@ -254,7 +254,7 @@ export const ChatInterface = React.forwardRef<ChatInterfaceRef, ChatInterfacePro
                   }
                 </MessageContent>
               </Message>
-            </div>
+            )
           })}
           {status === 'submitted' && <Loader />}
         </ConversationContent>

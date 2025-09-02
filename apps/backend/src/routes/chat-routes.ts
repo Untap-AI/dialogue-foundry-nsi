@@ -573,7 +573,7 @@ router.post('/stream-ai-sdk', authenticateChatAccess, async (req: CustomRequest,
         }
       }
     });
-
+    
     return result.pipeUIMessageStreamToResponse(res);
   } catch (error) {
     logger.error('Error in authenticated AI SDK streaming', { error: error as Error, chatId: req.params.chatId });
