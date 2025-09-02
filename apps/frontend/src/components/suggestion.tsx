@@ -81,10 +81,10 @@ export const Suggestion = ({
         'cursor-pointer relative overflow-hidden',
         'min-w-fit max-w-[140px] min-h-[3rem]',
         
-        // Enhanced theme-aware styling
-        'bg-gradient-to-r from-white to-gray-50/80',
-        'border border-gray-200/80 hover:border-primary/30',
-        'text-gray-700 hover:text-primary',
+        // Enhanced theme-aware styling - uses lighter version of background
+        'bg-background/50 hover:bg-background/70',
+        'border border-border/60 hover:border-primary/40',
+        'text-foreground/80 hover:text-primary',
         'shadow-sm hover:shadow-md',
         
         // Typography and spacing - updated for multiline
@@ -112,7 +112,7 @@ export const Suggestion = ({
       {...props}
     >
       {/* Subtle shine effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500 -skew-x-12 translate-x-[-100%] hover:translate-x-[100%] transition-transform duration-700" />
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500 -skew-x-12 translate-x-[-100%] hover:translate-x-[100%] transition-transform duration-700" />
       
       {/* Content */}
       <span className="relative z-10 text-center block leading-tight max-w-[200px]">

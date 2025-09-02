@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.13
+
+### Patch Changes
+
+- suggestion styling
+
 ## 0.4.12
 
 ### Patch Changes
