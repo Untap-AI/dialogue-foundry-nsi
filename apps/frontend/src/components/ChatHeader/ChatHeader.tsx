@@ -11,7 +11,7 @@ interface ChatHeaderProps {
 }
 
 export const ChatHeader = ({ onClose, onNewChat }: ChatHeaderProps) => {
-  const { title, logoUrl } = useConfig()
+  const { title, logoUrl, theme } = useConfig()
   // eslint-disable-next-line no-null/no-null
   const menuRef = useRef<HTMLDivElement>(null)
   // eslint-disable-next-line no-null/no-null
@@ -41,8 +41,12 @@ export const ChatHeader = ({ onClose, onNewChat }: ChatHeaderProps) => {
 
   const isMobile = width < 768
 
+  const themeClass = theme === 'secondary' ? 'bg-background text-foreground border-b-1 border-primary' : 'bg-primary text-primary-foreground'
+
+  const buttonClass = theme === 'secondary' ? '' : 'text-primary-foreground bg-white/20 hover:bg-white/30 hover:text-primary-foreground'
+  
   return (
-    <div ref={headerRef} className="flex items-center justify-between p-[15px] bg-primary text-primary-foreground font-sans">
+    <div ref={headerRef} className={cn("flex items-center justify-between p-[15px] font-sans", themeClass)}>
       {/* Branding section */}
       <div className="flex items-center flex-grow">
         {logoUrl && (
@@ -69,11 +73,12 @@ export const ChatHeader = ({ onClose, onNewChat }: ChatHeaderProps) => {
           </svg>
         </Button> */}
         <Button
-          variant="ghost"
+          variant={theme === 'secondary' ? 'default' : 'ghost'}
           size="icon"
           className={cn(
-            "w-[28px] h-[28px] text-primary-foreground bg-white/20 rounded-sm",
-            "hover:bg-white/30 hover:text-primary-foreground font-sans"
+            "w-[28px] h-[28px] rounded-sm",
+            buttonClass,
+            "font-sans"
           )}
           onClick={onClose}
           data-chat-button
@@ -83,43 +88,6 @@ export const ChatHeader = ({ onClose, onNewChat }: ChatHeaderProps) => {
           </svg>
         </Button>
       </div>
-
-      {/* Menu dropdown */}
-      {isMenuOpen && (
-        <Portal containerSelector={isMobile ? '.mobile-chat-modal' : undefined}>
-          <div
-            ref={menuRef}
-            className={cn(
-              "fixed bg-primary rounded-[5px] border border-border shadow-xl",
-              "scale-100 transition-all duration-300 ease-out delay-[50ms] z-[10000000] font-sans"
-            )}
-            onClick={handleMenuClick}
-            style={{
-              top: `${menuPosition.top}px`,
-              right: `${menuPosition.right}px`
-            }}
-            data-chat-button
-          >
-            <Button
-              variant="ghost"
-              className={cn(
-                "w-full justify-start py-[10px] px-[15px] text-primary-foreground text-sm",
-                "hover:bg-white/30 hover:text-primary-foreground first:rounded-t-[5px] last:rounded-b-[5px]",
-                "h-auto font-sans"
-              )}
-              onClick={e => {
-                e.preventDefault()
-                e.stopPropagation()
-                onNewChat()
-                setIsMenuOpen(false)
-              }}
-              data-chat-button
-            >
-              New Chat
-            </Button>
-          </div>
-        </Portal>
-      )}
     </div>
   )
 }

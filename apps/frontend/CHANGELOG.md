@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.11
+
+### Patch Changes
+
+- theme
+
 ## 0.4.10
 
 ### Patch Changes

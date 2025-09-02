@@ -40,6 +40,8 @@ export interface DialogueFoundryConfig {
     foregroundColor?: string
     fontFamily?: string
   }
+
+  theme?: 'primary' | 'secondary'
 }
 
 const styleToVariableMap: Record<keyof DialogueFoundryConfig['styles'], string> = {
@@ -79,6 +81,7 @@ const defaultConfig: DialogueFoundryConfig = {
       prompt: 'How can I contact Keystone Coachworks?'
     },
   ],
+  theme: 'primary',
   styles: {
     primaryColor: '#2563eb',
     secondaryColor: '#f3f4f6',
