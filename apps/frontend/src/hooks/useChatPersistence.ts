@@ -9,9 +9,8 @@ export type ChatStatus = 'uninitialized' | 'loading' | 'initialized' | 'error'
 
 export function useChatPersistence() {
   const [chatStatus, setChatStatus] = useState<ChatStatus>('uninitialized')
-  const [savedChat, setSavedChat] = useState<Chat<UIMessage> | undefined>(undefined)
+  const [chatId, setChatId] = useState<string | undefined>(undefined)
   const [streamError, setStreamError] = useState<string | null>(null)
-
 
   const { chatConfig, welcomeMessage } = useConfig()
   const {apiBaseUrl} = chatConfig
@@ -48,18 +47,18 @@ export function useChatPersistence() {
           ...rest,
           body: {
             ...body,
-            id,
+            id: chatId || id,
             messages,
             timezone: userTimezone,
           },
         }
       }
     })
-  }, [apiBaseUrl, chatService, userTimezone])
+  }, [apiBaseUrl, chatService, userTimezone, chatId])
 
   // Initialize useChat hook with dynamic transport
   const chat = useChat({
-    ...(savedChat && { chat: savedChat }),
+    id: chatId,
     transport,
     onError: (error) => {
       logger.error('Chat stream error:', { error: error.message })
@@ -80,25 +79,20 @@ export function useChatPersistence() {
     try {
       const chatInit = await chatService.initializeChat(welcomeMessage)
       
-      setSavedChat(new Chat({
-        transport,
-        id: chatInit.chatId,
-        messages: chatInit.messages,
-        onError: (error) => {
-          logger.error('Chat stream error:', { error: error.message })
-          setStreamError(error.message)
-
-          setTimeout(() => {
-            setStreamError(null)
-          }, 8000)
-        },
-      }))
+      // Set the chat ID to use with useChat
+      setChatId(chatInit.chatId)
+      
+      // Set initial messages if any
+      if (chatInit.messages && chatInit.messages.length > 0) {
+        chat.setMessages(chatInit.messages)
+      }
+      
       setChatStatus('initialized')
     } catch (error) {
       logger.error('Error loading existing chat:', error)
       setChatStatus('error')
     }
-  }, [chatService, welcomeMessage, transport, chatStatus])
+  }, [chatService, welcomeMessage, chat, chatStatus])
 
   // Auto-initialize when hook is first used
   useLayoutEffect(() => {
@@ -121,12 +115,12 @@ export function useChatPersistence() {
     subject: string,
     conversationSummary: string
   ) => {
-    if (!savedChat) {
+    if (!chatId) {
       throw new Error('No chat session available')
     }
 
     try {
-      const result = await chatService.sendEmailRequest(savedChat.id, {
+      const result = await chatService.sendEmailRequest(chatId, {
         userEmail,
         subject,
         conversationSummary
@@ -137,9 +131,10 @@ export function useChatPersistence() {
       }
       
       // Add tool result to the chat
-      (chat as any).addToolResult({
+      chat.addToolResult({
+        tool: 'request_user_email',
         toolCallId,
-        result: 'Email sent successfully! We\'ll get back to you soon.'
+        output: 'Email sent successfully! We\'ll get back to you soon.'
       })
       
       return result
@@ -147,7 +142,7 @@ export function useChatPersistence() {
       logger.error('Error submitting email for tool call:', error)
       throw error
     }
-  }, [savedChat, chatService, chat])
+  }, [chatId, chatService, chat])
 
   // Analytics methods
   const recordLinkClick = useCallback(async (

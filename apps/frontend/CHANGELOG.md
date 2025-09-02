@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.3
+
+### Patch Changes
+
+- Use chat id instead of chat instance
+
 ## 0.4.2
 
 ### Patch Changes
