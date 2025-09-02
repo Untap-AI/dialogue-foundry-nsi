@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.4
+
+### Patch Changes
+
+- Fix race condition
+
 ## 0.4.3
 
 ### Patch Changes

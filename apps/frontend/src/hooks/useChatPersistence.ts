@@ -10,6 +10,7 @@ export type ChatStatus = 'uninitialized' | 'loading' | 'initialized' | 'error'
 export function useChatPersistence() {
   const [chatStatus, setChatStatus] = useState<ChatStatus>('uninitialized')
   const [chatId, setChatId] = useState<string | undefined>(undefined)
+  const [initialMessages, setInitialMessages] = useState<UIMessage[]>([])
   const [streamError, setStreamError] = useState<string | null>(null)
 
   const { chatConfig, welcomeMessage } = useConfig()
@@ -79,20 +80,20 @@ export function useChatPersistence() {
     try {
       const chatInit = await chatService.initializeChat(welcomeMessage)
       
-      // Set the chat ID to use with useChat
-      setChatId(chatInit.chatId)
-      
-      // Set initial messages if any
+      // Store initial messages first (before setting chatId to avoid race condition)
       if (chatInit.messages && chatInit.messages.length > 0) {
-        chat.setMessages(chatInit.messages)
+        setInitialMessages(chatInit.messages)
       }
+      
+      // Set the chat ID to use with useChat (this will trigger useChat reinitialize)
+      setChatId(chatInit.chatId)
       
       setChatStatus('initialized')
     } catch (error) {
       logger.error('Error loading existing chat:', error)
       setChatStatus('error')
     }
-  }, [chatService, welcomeMessage, chat, chatStatus])
+  }, [chatService, welcomeMessage, chatStatus])
 
   // Auto-initialize when hook is first used
   useLayoutEffect(() => {
@@ -107,6 +108,14 @@ export function useChatPersistence() {
       setStreamError(null)
     }
   }, [chat.status, streamError])
+
+  // Set initial messages when chat ID is set and we have messages to set
+  useEffect(() => {
+    if (chatId && initialMessages.length > 0 && chat.messages.length === 0) {
+      console.log('Setting initial messages:', initialMessages)
+      chat.setMessages(initialMessages)
+    }
+  }, [chatId, initialMessages, chat])
 
   // Function to submit email for tool call
   const submitEmailForToolCall = useCallback(async (
