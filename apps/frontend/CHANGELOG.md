@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.12
+
+### Patch Changes
+
+- font fam
+
 ## 0.4.11
 
 ### Patch Changes

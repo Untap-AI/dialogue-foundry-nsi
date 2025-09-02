@@ -75,6 +75,11 @@
   --color-error: #ef4444;
 }
 
+/* Apply font family globally */
+* {
+  font-family: var(--df-font-family, var(--font-family-sans));
+}
+
 /* Custom scrollbar styling for all devices */
 /* Webkit browsers (Chrome, Safari, Edge) */
 ::-webkit-scrollbar {

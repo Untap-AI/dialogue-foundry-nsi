@@ -1,7 +1,6 @@
-import { useState, useCallback, useEffect, useRef } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import { useResizeObserver } from '../../hooks/useResizeObserver'
 import { useConfig } from '../../contexts/ConfigContext'
-import { Portal } from '../Portal/Portal'
 import { Button } from '@/components/ui/button'
 import { cn } from '@/lib/utils'
 

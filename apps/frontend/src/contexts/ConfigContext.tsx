@@ -51,6 +51,7 @@ const styleToVariableMap: Record<keyof DialogueFoundryConfig['styles'], string> 
   accentColor: '--df-color-accent',
   backgroundColor: '--df-color-background',
   foregroundColor: '--df-color-foreground',
+  fontFamily: '--df-font-family',
 } as const
 
 // Default configuration

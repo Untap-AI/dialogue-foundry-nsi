@@ -166,6 +166,9 @@ class Logger {
 
       this.initialized = true
 
+      // Note: Global error handlers are disabled to only capture explicit logger usage
+      // If you need global error handling, uncomment the code below:
+      /*
       // Set a global error handler for uncaught exceptions
       if (typeof window !== 'undefined') {
         window.onerror = (message, _source, _lineno, _colno, error) => {
@@ -189,6 +192,7 @@ class Logger {
           )
         })
       }
+      */
     } catch (error) {
       console.error('Failed to initialize Sentry:', error)
     }
