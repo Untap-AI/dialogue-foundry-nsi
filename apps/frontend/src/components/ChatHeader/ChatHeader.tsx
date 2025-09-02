@@ -10,7 +10,7 @@ interface ChatHeaderProps {
   onNewChat: () => void
 }
 
-export const ChatHeader = ({ onClose, onNewChat }: ChatHeaderProps) => {
+export const ChatHeader = ({ onClose }: ChatHeaderProps) => {
   const { title, logoUrl, theme } = useConfig()
   // eslint-disable-next-line no-null/no-null
   const menuRef = useRef<HTMLDivElement>(null)
