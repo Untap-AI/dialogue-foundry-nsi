@@ -3,7 +3,6 @@ import { ChatButton } from '../ChatButton/ChatButton'
 import { ChatWindow } from '../ChatWindow/ChatWindow'
 import { MobileChatModal } from '../MobileChatModal/MobileChatModal'
 import { useResizeObserver } from '../../hooks/useResizeObserver'
-import { useChatScroll } from '../../hooks/useChatScroll'
 import { useConfig } from '../../contexts/ConfigContext'
 import { useNavigationEvents } from '../../hooks/useNavigationEvents'
 import { cn } from '@/lib/utils'
@@ -94,11 +93,11 @@ export const ChatWidget = () => {
     const handleClickOutside = (event: MouseEvent) => {
       // Check if the click was on an element with data-chat-button attribute
       const target = event.target as HTMLElement
-      if (target.closest('[data-chat-button]')) return
+      const app = document.querySelector('#dialogue-foundry-app')
 
       if (
         chatWindowRef.current &&
-        !chatWindowRef.current.contains(event.target as Node) &&
+        !app?.contains(target as Node) &&
         isOpen
       ) {
         toggleChat()
@@ -114,8 +113,6 @@ export const ChatWidget = () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
   }, [isOpen, toggleChat, isMobile])
-
-  useChatScroll({ isOpen })
 
   // Handle chat status changes from ChatInterface
   const handleChatStatusChange = useCallback((status: ChatStatus) => {

@@ -1,9 +1,11 @@
 import {StrictMode} from 'react'
 import { createRoot } from 'react-dom/client'
+import ReactShadowRoot from 'react-shadow-root'
 import App from './App'
 import { ConfigProvider, type DialogueFoundryConfig } from './contexts/ConfigContext'
 import { initLogger } from './services/logger'
-import cssContent from "./index.css?inline";
+import cssContent from "./index.css?inline"
+import { normalizeTailwindForShadowDOM } from './lib/shadow-dom-utils'
 
 /**
  * Initialize the DialogueFoundry application with Shadow DOM isolation
@@ -24,37 +26,24 @@ async function init(
     dsn: import.meta.env.VITE_SENTRY_DSN
   })
 
-  // Create Shadow DOM for complete style isolation
-  const shadowRoot = rootElement.attachShadow({ mode: 'open' })
-  
-  // Create the app container inside the shadow DOM
-  const appContainer = document.createElement('div')
-  appContainer.id = 'dialogue-foundry-app'
-  
-  // Add our CSS to the shadow DOM
-  const style = document.createElement('style')
-  style.textContent = cssContent.replace(
-    '((-webkit-hyphens: none) and (not (margin-trim: inline)))',
-    '(not (margin-trim: inline))'
-  )
-  shadowRoot.appendChild(style)
-  
-  // Add app container to shadow DOM
-  shadowRoot.appendChild(appContainer)
+  // Create React root directly on the provided element
+  const root = createRoot(rootElement)
 
-  // Create React root in the shadow DOM container
-  const root = createRoot(appContainer)
-
-  // Render app with config context
+  // Render app with Shadow DOM isolation using react-shadow-root
   root.render(
-    <StrictMode>
-      <ConfigProvider initialConfig={options}>
-        <App />
-      </ConfigProvider>
-    </StrictMode>
+    <ReactShadowRoot>
+      <style>{normalizeTailwindForShadowDOM(cssContent)}</style>
+      <div id="dialogue-foundry-app">
+        <StrictMode>
+          <ConfigProvider initialConfig={options}>
+            <App />
+          </ConfigProvider>
+        </StrictMode>
+      </div>
+    </ReactShadowRoot>
   )
 
-  return { root, shadowRoot, appContainer }
+  return { root }
 }
 
 // Auto-initialize if in standard mode (not being used as a library)
