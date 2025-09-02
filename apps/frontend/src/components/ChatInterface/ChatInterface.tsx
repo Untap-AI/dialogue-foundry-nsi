@@ -259,26 +259,24 @@ export const ChatInterface = React.forwardRef<ChatInterfaceRef, ChatInterfacePro
         </ConversationContent>
         <ConversationScrollButton />
       </Conversation>
-      
-      {/* Suggestions area */}
-      {shouldShowSuggestions && (
-        <div className="px-4 py-3">
-          <Suggestions>
-            {configSuggestions?.map((suggestion, index) => (
-              <Suggestion
-                key={index}
-                suggestion={suggestion.label || suggestion.prompt}
-                analyticsLabel={suggestion.label}
-                analyticsPosition={index}
-                onAnalyticsClick={() => recordConversationStarterClick(suggestion.label || suggestion.prompt, index, suggestion.prompt)}
-                onClick={() => handleSuggestionClick(suggestion.prompt)}
-              />
-            ))}
-          </Suggestions>
-        </div>
-      )}
     
-      <div className="p-4">
+      <div className="pt-2">
+        {/* Suggestions area - positioned just above prompt input */}
+        {shouldShowSuggestions && (
+            <Suggestions className="px-4" scrollAreaClassName="pb-2">
+              {configSuggestions?.map((suggestion, index) => (
+                <Suggestion
+                  key={index}
+                  suggestion={suggestion.label || suggestion.prompt}
+                  analyticsLabel={suggestion.label}
+                  analyticsPosition={index}
+                  onAnalyticsClick={() => recordConversationStarterClick(suggestion.label || suggestion.prompt, index, suggestion.prompt)}
+                  onClick={() => handleSuggestionClick(suggestion.prompt)}
+                />
+              ))}
+            </Suggestions>
+        )}
+        <div className="pb-4 px-4">
         <PromptInput onSubmit={handleSubmit} className="flex items-center pr-3">
           <PromptInputTextarea
             onChange={(e) => setInput(e.target.value)}
@@ -286,6 +284,7 @@ export const ChatInterface = React.forwardRef<ChatInterfaceRef, ChatInterfacePro
           />
           <PromptInputSubmit disabled={!input || !isInitialized} status={status} />
         </PromptInput>
+        </div>
       </div>
 
       {showPoweredBy && (

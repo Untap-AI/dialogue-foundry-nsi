@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.6
+
+### Patch Changes
+
+- Suggestions scroll
+
 ## 0.4.5
 
 ### Patch Changes

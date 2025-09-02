@@ -28,9 +28,10 @@ function ScrollArea({
 
 function ScrollBar({
   className,
+  thumbClassName,
   orientation = "vertical",
   ...props
-}: React.ComponentProps<typeof ScrollAreaScrollbar>) {
+}: React.ComponentProps<typeof ScrollAreaScrollbar> & { thumbClassName?: string }) {
   return (
     <ScrollAreaScrollbar
       data-slot="scroll-area-scrollbar"
@@ -47,7 +48,7 @@ function ScrollBar({
     >
       <ScrollAreaThumb
         data-slot="scroll-area-thumb"
-        className="bg-border relative flex-1 rounded-full"
+        className={cn("bg-border relative flex-1 rounded-full", thumbClassName)}
       />
     </ScrollAreaScrollbar>
   )

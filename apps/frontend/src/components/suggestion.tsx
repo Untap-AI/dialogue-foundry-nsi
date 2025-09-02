@@ -6,19 +6,31 @@ import {
 import { cn } from '@/lib/utils';
 import type { ComponentProps } from 'react';
 
-export type SuggestionsProps = ComponentProps<typeof ScrollArea>;
+export type SuggestionsProps = ComponentProps<typeof ScrollArea> & {
+  scrollAreaClassName?: string;
+};
 
 export const Suggestions = ({
   className,
   children,
+  scrollAreaClassName,
   ...props
 }: SuggestionsProps) => (
-  <ScrollArea className="w-full overflow-x-auto whitespace-nowrap" {...props}>
-    <div className={cn('flex w-max flex-nowrap items-center gap-3 px-1 py-1', className)}>
-      {children}
-    </div>
-    <ScrollBar className="hidden" orientation="horizontal" />
-  </ScrollArea>
+  <div className="relative">
+    {/* Subtle fade at the right edge to indicate more content */}
+    <div className="absolute right-0 top-0 bottom-0 w-5 bg-gradient-to-l from-background/80 to-transparent z-10 pointer-events-none" />
+    
+    <ScrollArea className={cn("w-full overflow-x-auto whitespace-nowrap", scrollAreaClassName)} type="always" {...props}>
+      <div className={cn('flex w-max flex-nowrap items-center gap-3 px-1 py-1 pr-6', className)}>
+        {children}
+      </div>
+      <ScrollBar 
+        className="h-1.5 mb-1" 
+        orientation="horizontal"
+        thumbClassName="bg-primary rounded-[2px] hover:bg-primary/80 transition-colors"
+      />
+    </ScrollArea>
+  </div>
 );
 
 export type SuggestionProps = Omit<ComponentProps<typeof Button>, 'onClick'> & {
