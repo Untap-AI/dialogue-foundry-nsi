@@ -20,9 +20,15 @@ export const Suggestions = ({
     {/* Subtle fade at the right edge to indicate more content */}
     <div className="absolute right-0 top-0 bottom-0 w-5 bg-gradient-to-l from-background/80 to-transparent z-10 pointer-events-none" />
     
-    <ScrollArea className={cn("w-full overflow-x-auto whitespace-nowrap", scrollAreaClassName)} type="always" {...props}>
-      <div className={cn('flex w-max flex-nowrap items-center gap-3 px-1 py-1 pr-6', className)}>
+    <ScrollArea 
+      className={cn("w-full overflow-x-scroll whitespace-nowrap", scrollAreaClassName)} 
+      type="always" 
+      {...props}
+    >
+      <div className={cn('flex w-max min-w-full flex-nowrap items-center gap-3 py-1', className)}>
+        <div className="flex-shrink-0 w-1 h-1" aria-hidden="true" />
         {children}
+        <div className="flex-shrink-0 w-1 h-1" aria-hidden="true" />
       </div>
       <ScrollBar 
         className="h-1.5 mb-1" 

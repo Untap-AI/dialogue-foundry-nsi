@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.7
+
+### Patch Changes
+
+- Fix mobile scrollbar
+
 ## 0.4.6
 
 ### Patch Changes

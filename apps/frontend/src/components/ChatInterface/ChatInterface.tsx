@@ -263,7 +263,7 @@ export const ChatInterface = React.forwardRef<ChatInterfaceRef, ChatInterfacePro
       <div className="pt-2">
         {/* Suggestions area - positioned just above prompt input */}
         {shouldShowSuggestions && (
-            <Suggestions className="px-4" scrollAreaClassName="pb-2">
+            <Suggestions scrollAreaClassName="pb-2">
               {configSuggestions?.map((suggestion, index) => (
                 <Suggestion
                   key={index}
