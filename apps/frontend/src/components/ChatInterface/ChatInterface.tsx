@@ -224,7 +224,6 @@ export const ChatInterface = React.forwardRef<ChatInterfaceRef, ChatInterfacePro
                     .map((part, i) => (
                       <Response 
                         key={`${message.id}-${i}`} 
-                        parseIncompleteMarkdown
                         messageId={message.id}
                         onLinkClick={recordLinkClick}
                       >

@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.5
+
+### Patch Changes
+
+- Dont parse incomplete
+
 ## 0.4.4
 
 ### Patch Changes
