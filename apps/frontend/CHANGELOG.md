@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.18
+
+### Patch Changes
+
+- Remove target
+
 ## 0.4.17
 
 ### Patch Changes
