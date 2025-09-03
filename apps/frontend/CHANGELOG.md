@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.23
+
+### Patch Changes
+
+- button styling
+
 ## 0.4.22
 
 ### Patch Changes

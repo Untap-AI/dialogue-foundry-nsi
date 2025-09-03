@@ -25,7 +25,7 @@ const buttonVariants = cva(
         default: "df:h-9 df:px-4 df:py-2 df:has-[>svg]:px-3",
         sm: "df:h-8 df:rounded-sm df:gap-1.5 df:px-3 df:has-[>svg]:px-2.5",
         lg: "df:h-10 df:rounded-sm df:px-6 df:has-[>svg]:px-4",
-        icon: "df:size-9",
+        icon: "df:size-9 df:p-0",
       },
     },
     defaultVariants: {
