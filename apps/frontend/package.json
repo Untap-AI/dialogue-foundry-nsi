@@ -1,7 +1,7 @@
 {
   "name": "@dialogue-foundry/frontend",
   "private": true,
-  "version": "0.4.20",
+  "version": "0.4.21",
   "type": "module",
   "repository": {
     "type": "git",
@@ -44,7 +44,6 @@
   },
   "devDependencies": {
     "@babel/plugin-syntax-jsx": "^7.23.3",
-    "@csstools/postcss-oklab-function": "^4.0.11",
     "@dialogue-foundry/deploy-s3": "workspace:*",
     "@dialogue-foundry/eslint-config": "workspace:*",
     "@dialogue-foundry/tsconfig": "workspace:*",
@@ -63,7 +62,6 @@
     "dotenv": "^16.4.7",
     "eslint": "^8.57.1",
     "glob": "^10.3.10",
-    "postcss": "^8.5.6",
     "rollup-plugin-visualizer": "^6.0.3",
     "semver": "^7.5.4",
     "shadcn": "^3.0.0",

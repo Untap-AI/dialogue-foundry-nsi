@@ -66,7 +66,7 @@ export const MobileChatModal = ({
       }}
     >
       <div className={cn(
-        "df:w-full df:h-full df:flex df:flex-col df:overflow-hidden df:relative"
+        "df:w-full df:h-full df:flex df:flex-col df:overflow-hidden df:relative df:bg-background df:text-foreground"
       )}>
         <ChatHeader onClose={onClose} onNewChat={handleNewChat} />
         <ChatInterface 
