@@ -76,40 +76,40 @@
 }
 
 /* Apply font family globally */
-* {
-  font-family: var(--df-font-family, var(--font-family-sans));
+#dialogue-foundry-app {
+  font-family: var(--df-font-family, var(--df-font-family-sans));
 }
 
 /* Custom scrollbar styling for all devices */
 /* Webkit browsers (Chrome, Safari, Edge) */
-::-webkit-scrollbar {
+#dialogue-foundry-app ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
-::-webkit-scrollbar-track {
-  background: var(--color-background);
+#dialogue-foundry-app ::-webkit-scrollbar-track {
+  background: var(--df-color-background);
   border-radius: 4px;
 }
 
-::-webkit-scrollbar-thumb {
-  background: var(--color-primary);
+#dialogue-foundry-app ::-webkit-scrollbar-thumb {
+  background: var(--df-color-primary);
   border-radius: 4px;
-  border: 1px solid var(--color-gray-200);
+  border: 1px solid var(--df-color-gray-200);
 }
 
-::-webkit-scrollbar-thumb:hover {
-  background: color-mix(in srgb, var(--color-primary) 80%, black);
+#dialogue-foundry-app ::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--df-color-primary) 80%, black);
 }
 
-::-webkit-scrollbar-thumb:active {
-  background: color-mix(in srgb, var(--color-primary) 70%, black);
+#dialogue-foundry-app ::-webkit-scrollbar-thumb:active {
+  background: color-mix(in srgb, var(--df-color-primary) 70%, black);
 }
 
 /* Firefox scrollbar styling */
-* {
+#dialogue-foundry-app {
   scrollbar-width: thin;
-  scrollbar-color: var(--color-primary) var(--color-background);
+  scrollbar-color: var(--df-color-primary) var(--df-color-background);
 }
 
 /* Custom animations */
