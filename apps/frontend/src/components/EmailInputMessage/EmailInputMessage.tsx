@@ -87,12 +87,15 @@ export const EmailInputMessage: React.FC<EmailInputMessageProps> = ({
   const isFormDisabled = state === 'loading' || state === 'success'
 
   return (
-    <div className={cn(
-      'df:p-4 df:rounded-lg df:border df:bg-card df:transition-all df:duration-300',
-      'df:border-primary/20 df:bg-primary/5 df:mt-3',
-      isVisible ? 'df:opacity-100 df:translate-y-0' : 'df:opacity-0 df:translate-y-2',
-      className
-    )}>
+    <div 
+      className={cn(
+        'df:p-4 df:rounded-lg df:border df:bg-card df:transition-all df:duration-300',
+        'df:border-primary/20 df:bg-primary/5 df:mt-3',
+        isVisible ? 'df:opacity-100 df:translate-y-0' : 'df:opacity-0 df:translate-y-2',
+        className
+      )}
+      data-dialogue-foundry-id="email-input-message"
+    >
       {state === 'success' ? (
         <div className="df:flex df:items-start df:space-x-3">
           <div className="df:size-6 df:rounded-full df:bg-green-100 df:flex df:items-center df:justify-center df:flex-shrink-0 df:mt-0.5">

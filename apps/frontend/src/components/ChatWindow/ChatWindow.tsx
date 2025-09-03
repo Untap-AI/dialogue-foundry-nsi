@@ -37,7 +37,7 @@ export const ChatWindow = forwardRef<HTMLDivElement, ChatWindowProps>(
     }, [isOpen])
 
     return (
-      <div ref={ref} className={className} aria-hidden={!isOpen}>
+      <div ref={ref} className={className} data-dialogue-foundry-id="chat-window" aria-hidden={!isOpen}>
         <ChatHeader onClose={onClose} onNewChat={handleNewChat} />
         <ChatInterface 
           ref={chatInterfaceRef}

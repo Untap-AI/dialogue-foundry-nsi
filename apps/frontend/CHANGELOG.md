@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.24
+
+### Patch Changes
+
+- Remove axios
+
 ## 0.4.23
 
 ### Patch Changes

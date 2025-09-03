@@ -55,6 +55,7 @@ export const MobileChatModal = ({
         "df:z-[10000] df:overflow-hidden backdrop:df:bg-black/50",
         "df:fixed df:inset-0"
       )}
+      data-dialogue-foundry-id="mobile-chat-modal"
       onCancel={e => {
         e.preventDefault() // Prevent default close on ESC key
       }}

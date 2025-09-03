@@ -15,6 +15,7 @@ export const Message = ({ className, from, ...props }: MessageProps) => (
       'df:[&>div]:max-w-[80%]',
       className
     )}
+    data-dialogue-foundry-id="message"
     {...props}
   />
 );
@@ -34,6 +35,7 @@ export const MessageContent = ({
       'df:is-user:dark',
       className
     )}
+    data-dialogue-foundry-id="message-content"
     {...props}
   >
     {children}

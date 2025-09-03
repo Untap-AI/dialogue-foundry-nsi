@@ -16,7 +16,7 @@ export const Suggestions = ({
   scrollAreaClassName,
   ...props
 }: SuggestionsProps) => (
-  <div className="df:relative">
+  <div className="df:relative" data-dialogue-foundry-id="suggestions">
     {/* Subtle fade at the right edge to indicate more content */}
     <div className="df:absolute df:right-0 df:top-0 df:bottom-0 df:w-5 df:bg-gradient-to-l df:from-background/80 df:to-transparent df:z-10 df:pointer-events-none" />
     
@@ -105,6 +105,7 @@ export const Suggestion = ({
         
         className
       )}
+      data-dialogue-foundry-id="suggestion"
       onClick={handleClick}
       size={size}
       type="button"

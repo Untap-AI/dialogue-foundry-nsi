@@ -45,7 +45,11 @@ export const ChatHeader = ({ onClose }: ChatHeaderProps) => {
   const buttonClass = theme === 'secondary' ? '' : 'df:text-primary-foreground df:bg-white/20 df:hover:bg-white/30 df:hover:text-primary-foreground'
   
   return (
-    <div ref={headerRef} className={cn("df:flex df:items-center df:justify-between df:p-[15px] df:font-sans", themeClass)}>
+    <div 
+      ref={headerRef} 
+      className={cn("df:flex df:items-center df:justify-between df:p-[15px] df:font-sans", themeClass)}
+      data-dialogue-foundry-id="chat-header"
+    >
       {/* Branding section */}
       <div className="df:flex df:items-center df:flex-grow">
         {logoUrl && (

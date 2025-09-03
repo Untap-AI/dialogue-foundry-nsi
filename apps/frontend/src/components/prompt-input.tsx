@@ -19,6 +19,7 @@ export const PromptInput = ({ className, ...props }: PromptInputProps) => (
       'df:w-full df:divide-y df:overflow-hidden df:rounded-xl df:border df:bg-background df:text-primary',
       className
     )}
+    data-dialogue-foundry-id="prompt-input"
     {...props}
   />
 );
@@ -65,6 +66,7 @@ export const PromptInputTextarea = ({
         'df:focus-visible:ring-0 df:text-foreground',
         className
       )}
+      data-dialogue-foundry-id="prompt-textarea"
       name="message"
       onChange={(e) => {
         onChange?.(e);
@@ -156,6 +158,7 @@ export const PromptInputSubmit = ({
   return (
     <Button
       className={cn('df:gap-1.5 df:rounded-sm', className)}
+      data-dialogue-foundry-id="prompt-submit"
       size={size}
       type="submit"
       variant={variant}

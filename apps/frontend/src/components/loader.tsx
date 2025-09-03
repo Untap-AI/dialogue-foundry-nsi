@@ -89,6 +89,7 @@ export const Loader = ({ className, size = 16, ...props }: LoaderProps) => (
       'df:inline-flex df:animate-spin df:items-center df:justify-center',
       className
     )}
+    data-dialogue-foundry-id="loader"
     {...props}
   >
     <LoaderIcon size={size} />

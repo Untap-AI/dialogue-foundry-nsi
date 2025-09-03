@@ -64,7 +64,7 @@ export const Response = memo(
     }, [onLinkClick, messageId]);
 
     return (
-      <div ref={containerRef}>
+      <div ref={containerRef} data-dialogue-foundry-id="response">
         <Streamdown
           className={cn(
             'df:size-full df:[&>*:first-child]:mt-0 df:[&>*:last-child]:mb-0',

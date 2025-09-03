@@ -126,11 +126,14 @@ export const ChatWidget = () => {
   }, [])
 
   return (
-    <div className={cn(
-      "df:fixed df:z-[9999] df:right-5 df:bottom-5",
-      "df:[&_::-webkit-scrollbar-track]:bg-background df:[&_::-webkit-scrollbar-thumb]:bg-primary df:[&_::-webkit-scrollbar-thumb]:rounded",
-      "df:[&_*]:scrollbar-thin df:[&_*]:scrollbar-track-background df:[&_*]:scrollbar-thumb-primary"
-    )}>
+    <div 
+      className={cn(
+        "df:fixed df:z-[9999] df:right-5 df:bottom-5",
+        "df:[&_::-webkit-scrollbar-track]:bg-background df:[&_::-webkit-scrollbar-thumb]:bg-primary df:[&_::-webkit-scrollbar-thumb]:rounded",
+        "df:[&_*]:scrollbar-thin df:[&_*]:scrollbar-track-background df:[&_*]:scrollbar-thumb-primary"
+      )}
+      data-dialogue-foundry-id="chat-widget"
+    >
       {/* Render either the desktop chat window or mobile modal based on screen size */}
       {isMobile ? (
         <MobileChatModal

@@ -13,7 +13,11 @@ import type { ComponentProps } from 'react';
 export type ActionsProps = ComponentProps<'div'>;
 
 export const Actions = ({ className, children, ...props }: ActionsProps) => (
-  <div className={cn('df:flex df:items-center df:gap-1', className)} {...props}>
+  <div 
+    className={cn('df:flex df:items-center df:gap-1', className)} 
+    data-dialogue-foundry-id="actions"
+    {...props}
+  >
     {children}
   </div>
 );
@@ -38,6 +42,7 @@ export const Action = ({
         'df:size-9 df:p-1.5 df:text-muted-foreground df:hover:text-foreground df:relative',
         className
       )}
+      data-dialogue-foundry-id="action"
       size={size}
       type="button"
       variant={variant}

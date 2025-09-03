@@ -107,6 +107,7 @@ export const ChatButton: React.FC<ChatButtonProps> = ({ onClick, isOpen }) => {
       <Button
         ref={buttonRef}
         data-chat-button
+        data-dialogue-foundry-id="chat-button"
         size="icon"
         className={cn(
           "df:w-[60px] df:h-[60px] df:rounded-full df:shadow-lg df:transition-all df:duration-200 df:hover:scale-105 df:hover:shadow-xl df:active:scale-95",
