@@ -110,7 +110,7 @@ export const ChatButton: React.FC<ChatButtonProps> = ({ onClick, isOpen }) => {
         size="icon"
         className={cn(
           "df:w-[60px] df:h-[60px] df:rounded-full df:shadow-lg df:transition-all df:duration-200 df:hover:scale-105 df:hover:shadow-xl df:active:scale-95",
-          "df:bg-primary df:text-primary-foreground df:border-none df:p-0 df:m-0"
+          "df:bg-primary df:text-primary-foreground df:border-none df:p-0 df:m-0, df:[&_svg:not([class*='size-'])]:size-[30px]"
         )}
         onClick={onClick}
         aria-label={isOpen ? 'Close chat' : 'Open chat'}

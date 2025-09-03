@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.17
+
+### Patch Changes
+
+- icon size
+
 ## 0.4.16
 
 ### Patch Changes
