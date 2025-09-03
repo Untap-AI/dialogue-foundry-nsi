@@ -173,7 +173,14 @@ export function ConfigProvider({ children }: ConfigProviderProps) {
     loadExternalConfig()
   }, [])
 
-  const finalConfig = config ?? defaultConfig
+  const finalConfig = config ? {
+    ...defaultConfig,
+    ...config,
+    styles: {
+      ...defaultConfig.styles,
+      ...config.styles
+    }
+  } : defaultConfig
 
   // Dynamically inject styles into CSS custom properties
   useLayoutEffect(() => {

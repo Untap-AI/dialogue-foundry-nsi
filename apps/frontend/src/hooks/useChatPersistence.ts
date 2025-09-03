@@ -112,7 +112,6 @@ export function useChatPersistence() {
   // Set initial messages when chat ID is set and we have messages to set
   useEffect(() => {
     if (chatId && initialMessages.length > 0 && chat.messages.length === 0) {
-      console.log('Setting initial messages:', initialMessages)
       chat.setMessages(initialMessages)
     }
   }, [chatId, initialMessages, chat])
