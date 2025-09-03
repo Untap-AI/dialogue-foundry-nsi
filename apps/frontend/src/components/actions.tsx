@@ -13,7 +13,7 @@ import type { ComponentProps } from 'react';
 export type ActionsProps = ComponentProps<'div'>;
 
 export const Actions = ({ className, children, ...props }: ActionsProps) => (
-  <div className={cn('flex items-center gap-1', className)} {...props}>
+  <div className={cn('df:flex df:items-center df:gap-1', className)} {...props}>
     {children}
   </div>
 );
@@ -35,7 +35,7 @@ export const Action = ({
   const button = (
     <Button
       className={cn(
-        'size-9 p-1.5 text-muted-foreground hover:text-foreground relative',
+        'df:size-9 df:p-1.5 df:text-muted-foreground df:hover:text-foreground df:relative',
         className
       )}
       size={size}
@@ -44,7 +44,7 @@ export const Action = ({
       {...props}
     >
       {children}
-      <span className="sr-only">{label || tooltip}</span>
+      <span className="df:sr-only">{label || tooltip}</span>
     </Button>
   );
 

@@ -16,7 +16,7 @@ function ScrollArea({
     >
       <Viewport
         data-slot="scroll-area-viewport"
-        className="focus-visible:ring-ring/50 size-full rounded-[inherit] transition-[color,box-shadow] outline-none focus-visible:ring-[3px] focus-visible:outline-1"
+        className="df:focus-visible:ring-ring/50 df:size-full df:rounded-[inherit] df:transition-[color,box-shadow] df:outline-none df:focus-visible:ring-[3px] df:focus-visible:outline-1"
       >
         {children}
       </Viewport>
@@ -37,18 +37,18 @@ function ScrollBar({
       data-slot="scroll-area-scrollbar"
       orientation={orientation}
       className={cn(
-        "flex touch-none p-px transition-colors select-none",
+        "df:flex df:touch-none df:p-px df:transition-colors df:select-none",
         orientation === "vertical" &&
-          "h-full w-2.5 border-l border-l-transparent",
+          "df:h-full df:w-2.5 df:border-l df:border-l-transparent",
         orientation === "horizontal" &&
-          "h-2.5 flex-col border-t border-t-transparent",
+          "df:h-2.5 df:flex-col df:border-t df:border-t-transparent",
         className
       )}
       {...props}
     >
       <ScrollAreaThumb
         data-slot="scroll-area-thumb"
-        className={cn("bg-border relative flex-1 rounded-full", thumbClassName)}
+        className={cn("df:bg-border df:relative df:flex-1 df:rounded-full", thumbClassName)}
       />
     </ScrollAreaScrollbar>
   )

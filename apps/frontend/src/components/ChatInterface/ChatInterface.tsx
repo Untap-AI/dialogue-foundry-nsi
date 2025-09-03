@@ -22,26 +22,26 @@ import { Suggestions, Suggestion } from '../suggestion';
 
 // Loading state component
 const ChatLoadingState = () => (
-  <div className="flex flex-col items-center justify-center h-full space-y-4">
-    <Loader size={32} className="text-primary" />
-    <div className="text-center space-y-2">
-      <h3 className="text-lg font-medium text-foreground">Setting up your chat</h3>
-      <p className="text-sm text-muted-foreground">Please wait while we initialize...</p>
+  <div className="df:flex df:flex-col df:items-center df:justify-center df:h-full df:space-y-4">
+    <Loader size={32} className="df:text-primary" />
+    <div className="df:text-center df:space-y-2">
+      <h3 className="df:text-lg df:font-medium df:text-foreground">Setting up your chat</h3>
+      <p className="df:text-sm df:text-muted-foreground">Please wait while we initialize...</p>
     </div>
   </div>
 );
 
 // Error state component
 const ChatErrorState = () => (
-  <div className="flex flex-col items-center justify-center h-full space-y-4 p-8">
-    <div className="size-12 rounded-full bg-destructive/10 flex items-center justify-center">
-      <svg className="size-6 text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+  <div className="df:flex df:flex-col df:items-center df:justify-center df:h-full df:space-y-4 df:p-8">
+    <div className="df:size-12 df:rounded-full df:bg-destructive/10 df:flex df:items-center df:justify-center">
+      <svg className="df:size-6 df:text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
       </svg>
     </div>
-    <div className="text-center space-y-2">
-      <h3 className="text-lg font-medium text-foreground">Unable to start chat</h3>
-      <p className="text-sm text-muted-foreground">There was a problem initializing the chat. Please refresh the page to try again.</p>
+    <div className="df:text-center df:space-y-2">
+      <h3 className="df:text-lg df:font-medium df:text-foreground">Unable to start chat</h3>
+      <p className="df:text-sm df:text-muted-foreground">There was a problem initializing the chat. Please refresh the page to try again.</p>
     </div>
   </div>
 );
@@ -56,20 +56,20 @@ const StreamErrorBanner = ({ streamError, onClearError }: StreamErrorBannerProps
   if (!streamError) return null;
   
   return (
-    <div className="mx-4 my-2 p-3 rounded-md bg-destructive/10 border border-destructive/20">
-      <div className="flex items-start space-x-3">
-        <svg className="size-4 text-destructive mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+    <div className="df:mx-4 df:my-2 df:p-3 df:rounded-md df:bg-destructive/10 df:border df:border-destructive/20">
+      <div className="df:flex df:items-start df:space-x-3">
+        <svg className="df:size-4 df:text-destructive df:mt-0.5 df:flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
-        <div className="flex-1 min-w-0">
-          <p className="text-sm text-destructive font-medium">Message failed to send</p>
-          <p className="text-xs text-destructive/80 mt-1">Please try sending your message again.</p>
+        <div className="df:flex-1 df:min-w-0">
+          <p className="df:text-sm df:text-destructive df:font-medium">Message failed to send</p>
+          <p className="df:text-xs df:text-destructive/80 df:mt-1">Please try sending your message again.</p>
         </div>
         <button
           onClick={onClearError}
-          className="text-destructive/60 hover:text-destructive transition-colors"
+          className="df:text-destructive/60 df:hover:text-destructive df:transition-colors"
         >
-          <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <svg className="df:size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
           </svg>
         </button>
@@ -164,14 +164,14 @@ export const ChatInterface = React.forwardRef<ChatInterfaceRef, ChatInterfacePro
         <ChatLoadingState />
         {showPoweredBy && (
           <div className={cn(
-            "text-center text-[11px] leading-[11px] text-primary-foreground py-[3px] px-0 bg-primary"
+            "df:text-center df:text-[11px] df:leading-[11px] df:text-primary-foreground df:py-[3px] df:px-0 df:bg-primary"
           )}>
             Powered by{' '}
             <a
               href={poweredByUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-inherit underline"
+              className="df:text-inherit df:underline"
             >
               {poweredByText}
             </a>
@@ -188,14 +188,14 @@ export const ChatInterface = React.forwardRef<ChatInterfaceRef, ChatInterfacePro
         <ChatErrorState />
         {showPoweredBy && (
           <div className={cn(
-            "text-center text-[11px] leading-[11px] text-primary-foreground py-[3px] px-0 bg-primary"
+            "df:text-center df:text-[11px] df:leading-[11px] df:text-primary-foreground df:py-[3px] df:px-0 df:bg-primary"
           )}>
             Powered by{' '}
             <a
               href={poweredByUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-inherit underline"
+              className="df:text-inherit df:underline"
             >
               {poweredByText}
             </a>
@@ -208,7 +208,7 @@ export const ChatInterface = React.forwardRef<ChatInterfaceRef, ChatInterfacePro
   return (
     <>
       <StreamErrorBanner streamError={streamError} onClearError={clearStreamError} />
-      <Conversation className="h-full">
+      <Conversation className="df:h-full">
         <ConversationContent>
           {messages.map((message) => {
             if(!message.parts.some(part => part.type === 'text')) {
@@ -260,10 +260,10 @@ export const ChatInterface = React.forwardRef<ChatInterfaceRef, ChatInterfacePro
         <ConversationScrollButton />
       </Conversation>
     
-      <div className="pt-2">
+      <div className="df:pt-2">
         {/* Suggestions area - positioned just above prompt input */}
         {shouldShowSuggestions && (
-            <Suggestions scrollAreaClassName="pb-2">
+            <Suggestions scrollAreaClassName="df:pb-2">
               {configSuggestions?.map((suggestion, index) => (
                 <Suggestion
                   key={index}
@@ -276,8 +276,8 @@ export const ChatInterface = React.forwardRef<ChatInterfaceRef, ChatInterfacePro
               ))}
             </Suggestions>
         )}
-        <div className="pb-4 px-4">
-        <PromptInput onSubmit={handleSubmit} className="flex items-center pr-3">
+        <div className="df:pb-4 df:px-4">
+        <PromptInput onSubmit={handleSubmit} className="df:flex df:items-center df:pr-3">
           <PromptInputTextarea
             onChange={(e) => setInput(e.target.value)}
             value={input}
@@ -289,14 +289,14 @@ export const ChatInterface = React.forwardRef<ChatInterfaceRef, ChatInterfacePro
 
       {showPoweredBy && (
         <div className={cn(
-          "text-center text-[11px] leading-[11px] text-primary-foreground py-[3px] px-0 bg-primary"
+          "df:text-center df:text-[11px] df:leading-[11px] df:text-primary-foreground df:py-[3px] df:px-0 df:bg-primary"
         )}>
           Powered by{' '}
           <a
             href={poweredByUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="text-inherit underline"
+            className="df:text-inherit df:underline"
           >
             {poweredByText}
           </a>

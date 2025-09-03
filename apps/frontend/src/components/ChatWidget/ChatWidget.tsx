@@ -127,9 +127,9 @@ export const ChatWidget = () => {
 
   return (
     <div className={cn(
-      "fixed z-[9999] right-5 bottom-5",
-      "[&_::-webkit-scrollbar-track]:bg-background [&_::-webkit-scrollbar-thumb]:bg-primary [&_::-webkit-scrollbar-thumb]:rounded",
-      "[&_*]:scrollbar-thin [&_*]:scrollbar-track-background [&_*]:scrollbar-thumb-primary"
+      "df:fixed df:z-[9999] df:right-5 df:bottom-5",
+      "df:[&_::-webkit-scrollbar-track]:bg-background df:[&_::-webkit-scrollbar-thumb]:bg-primary df:[&_::-webkit-scrollbar-thumb]:rounded",
+      "df:[&_*]:scrollbar-thin df:[&_*]:scrollbar-track-background df:[&_*]:scrollbar-thumb-primary"
     )}>
       {/* Render either the desktop chat window or mobile modal based on screen size */}
       {isMobile ? (

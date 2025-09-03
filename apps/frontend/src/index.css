@@ -1,4 +1,4 @@
-@import "tailwindcss";
+@import "tailwindcss" prefix(df);
 
 @theme {
   /* Tailwind theme colors connected to our simplified variables */

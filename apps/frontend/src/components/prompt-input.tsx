@@ -16,7 +16,7 @@ export type PromptInputProps = HTMLAttributes<HTMLFormElement>;
 export const PromptInput = ({ className, ...props }: PromptInputProps) => (
   <form
     className={cn(
-      'w-full divide-y overflow-hidden rounded-xl border bg-background text-primary',
+      'df:w-full df:divide-y df:overflow-hidden df:rounded-xl df:border df:bg-background df:text-primary',
       className
     )}
     {...props}
@@ -60,9 +60,9 @@ export const PromptInputTextarea = ({
   return (
     <Textarea
       className={cn(
-        'w-full resize-none rounded-none border-none p-3 shadow-none outline-none ring-0',
-        'field-sizing-content max-h-[6lh] bg-transparent dark:bg-transparent',
-        'focus-visible:ring-0 text-foreground',
+        'df:w-full df:resize-none df:rounded-none df:border-none df:p-3 df:shadow-none df:outline-none df:ring-0',
+        'df:field-sizing-content df:max-h-[6lh] df:bg-transparent df:dark:bg-transparent',
+        'df:focus-visible:ring-0 df:text-foreground',
         className
       )}
       name="message"
@@ -83,7 +83,7 @@ export const PromptInputToolbar = ({
   ...props
 }: PromptInputToolbarProps) => (
   <div
-    className={cn('flex items-center justify-between p-1', className)}
+    className={cn('df:flex df:items-center df:justify-between df:p-1', className)}
     {...props}
   />
 );
@@ -96,8 +96,8 @@ export const PromptInputTools = ({
 }: PromptInputToolsProps) => (
   <div
     className={cn(
-      'flex items-center gap-1',
-      '[&_button:first-child]:rounded-bl-xl',
+      'df:flex df:items-center df:gap-1',
+      'df:[&_button:first-child]:rounded-bl-xl',
       className
     )}
     {...props}
@@ -118,9 +118,9 @@ export const PromptInputButton = ({
   return (
     <Button
       className={cn(
-        'shrink-0 gap-1.5 rounded-lg',
-        variant === 'ghost' && 'text-muted-foreground',
-        newSize === 'default' && 'px-3',
+        'df:shrink-0 df:gap-1.5 df:rounded-lg',
+        variant === 'ghost' && 'df:text-muted-foreground',
+        newSize === 'default' && 'df:px-3',
         className
       )}
       size={newSize}
@@ -143,19 +143,19 @@ export const PromptInputSubmit = ({
   children,
   ...props
 }: PromptInputSubmitProps) => {
-  let Icon = <SendIcon className="size-4" />;
+  let Icon = <SendIcon className="df:size-4" />;
 
   if (status === 'submitted') {
-    Icon = <Loader2Icon className="size-4 animate-spin" />;
+    Icon = <Loader2Icon className="df:size-4 df:animate-spin" />;
   } else if (status === 'streaming') {
-    Icon = <SquareIcon className="size-4" />;
+    Icon = <SquareIcon className="df:size-4" />;
   } else if (status === 'error') {
-    Icon = <XIcon className="size-4" />;
+    Icon = <XIcon className="df:size-4" />;
   }
 
   return (
     <Button
-      className={cn('gap-1.5 rounded-sm', className)}
+      className={cn('df:gap-1.5 df:rounded-sm', className)}
       size={size}
       type="submit"
       variant={variant}

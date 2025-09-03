@@ -88,36 +88,36 @@ export const EmailInputMessage: React.FC<EmailInputMessageProps> = ({
 
   return (
     <div className={cn(
-      'p-4 rounded-lg border bg-card transition-all duration-300',
-      'border-primary/20 bg-primary/5 mt-3',
-      isVisible ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2',
+      'df:p-4 df:rounded-lg df:border df:bg-card df:transition-all df:duration-300',
+      'df:border-primary/20 df:bg-primary/5 df:mt-3',
+      isVisible ? 'df:opacity-100 df:translate-y-0' : 'df:opacity-0 df:translate-y-2',
       className
     )}>
       {state === 'success' ? (
-        <div className="flex items-start space-x-3">
-          <div className="size-6 rounded-full bg-green-100 flex items-center justify-center flex-shrink-0 mt-0.5">
-            <svg className="size-4 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="df:flex df:items-start df:space-x-3">
+          <div className="df:size-6 df:rounded-full df:bg-green-100 df:flex df:items-center df:justify-center df:flex-shrink-0 df:mt-0.5">
+            <svg className="df:size-4 df:text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <div className="flex-1">
-            <h4 className="text-sm font-medium text-foreground mb-1">Perfect! We've got your email</h4>
-                          <p className="text-xs text-muted-foreground">
-                We'll reach out to you shortly at <span className="font-medium break-all">{email}</span>
+          <div className="df:flex-1">
+            <h4 className="df:text-sm df:font-medium df:text-foreground df:mb-1">Perfect! We've got your email</h4>
+                          <p className="df:text-xs df:text-muted-foreground">
+                We'll reach out to you shortly at <span className="df:font-medium df:break-all">{email}</span>
               </p>
           </div>
         </div>
       ) : (
-        <div className="space-y-3">
-          <h4 className="text-sm font-medium text-foreground">Let's get you connected</h4>
+        <div className="df:space-y-3">
+          <h4 className="df:text-sm df:font-medium df:text-foreground">Let's get you connected</h4>
           
-          <form onSubmit={handleSubmit} className="space-y-2">
-            <div className="flex space-x-2">
-              <div className="flex-1">
+          <form onSubmit={handleSubmit} className="df:space-y-2">
+            <div className="df:flex df:space-x-2">
+              <div className="df:flex-1">
                 <Input
                   type="email"
                   className={cn(
-                    validationError && 'border-destructive focus:ring-destructive focus:border-destructive'
+                    validationError && 'df:border-destructive df:focus:ring-destructive df:focus:border-destructive'
                   )}
                   placeholder="your@email.com"
                   value={email}
@@ -137,13 +137,13 @@ export const EmailInputMessage: React.FC<EmailInputMessageProps> = ({
               >
                 {state === 'loading' ? (
                   <>
-                    <svg className="size-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                      <path className="opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    <svg className="df:size-4 df:animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="df:opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="df:opacity-75" fill="currentColor" d="m4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                     </svg>
                   </>
                 ) : (
-                    <svg className="size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <svg className="df:size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                     </svg>
                 )}
@@ -152,19 +152,19 @@ export const EmailInputMessage: React.FC<EmailInputMessageProps> = ({
             
             {/* Show validation error */}
             {validationError && (
-              <p className="text-xs text-destructive">{validationError}</p>
+              <p className="df:text-xs df:text-destructive">{validationError}</p>
             )}
             
             {/* Show submit error with retry option */}
             {state === 'error' && submitError && (
-              <div className="flex items-center justify-between p-2 rounded-md bg-destructive/10 border border-destructive/20">
-                <p className="text-xs text-destructive">{submitError}</p>
+              <div className="df:flex df:items-center df:justify-between df:p-2 df:rounded-md df:bg-destructive/10 df:border df:border-destructive/20">
+                <p className="df:text-xs df:text-destructive">{submitError}</p>
                 <Button
                   type="button"
                   onClick={handleRetry}
                   variant="ghost"
                   size="sm"
-                  className="h-auto px-2 py-1 text-xs"
+                  className="df:h-auto df:px-2 df:py-1 df:text-xs"
                 >
                   Try again
                 </Button>

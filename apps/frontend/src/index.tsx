@@ -1,14 +1,12 @@
 import {StrictMode} from 'react'
 import { createRoot } from 'react-dom/client'
-import ReactShadowRoot from 'react-shadow-root'
+import './index.css'
 import App from './App'
 import { ConfigProvider, type DialogueFoundryConfig } from './contexts/ConfigContext'
 import { initLogger } from './services/logger'
-import cssContent from "./index.css?inline"
-import { normalizeTailwindForShadowDOM } from './lib/shadow-dom-utils'
 
 /**
- * Initialize the DialogueFoundry application with Shadow DOM isolation
+ * Initialize the DialogueFoundry application
  * @param rootElement - The DOM element to mount the app to
  * @param options - Configuration options for the app
  */
@@ -26,24 +24,19 @@ async function init(
     dsn: import.meta.env.VITE_SENTRY_DSN
   })
 
-  // Create React root directly on the provided element
+  // Create React root
   const root = createRoot(rootElement)
 
-  // Render app with Shadow DOM isolation using react-shadow-root
+  // Render app with config context
   root.render(
-    <ReactShadowRoot>
-      <style>{normalizeTailwindForShadowDOM(cssContent)}</style>
-      <div id="dialogue-foundry-app">
-        <StrictMode>
-          <ConfigProvider initialConfig={options}>
-            <App />
-          </ConfigProvider>
-        </StrictMode>
-      </div>
-    </ReactShadowRoot>
+    <StrictMode>
+      <ConfigProvider initialConfig={options}>
+        <App />
+      </ConfigProvider>
+    </StrictMode>
   )
 
-  return { root }
+  return root
 }
 
 // Auto-initialize if in standard mode (not being used as a library)

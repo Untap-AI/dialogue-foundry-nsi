@@ -73,7 +73,7 @@ export const Streamdown = memo(
     );
 
     return (
-        <div className={cn('space-y-4', className)} {...props}>
+        <div className={cn('df:space-y-4', className)} {...props}>
           {blocks.map((block, index) => (
             <Block
               allowedImagePrefixes={allowedImagePrefixes ?? ['*']}

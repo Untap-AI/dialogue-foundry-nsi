@@ -86,7 +86,7 @@ export type LoaderProps = HTMLAttributes<HTMLDivElement> & {
 export const Loader = ({ className, size = 16, ...props }: LoaderProps) => (
   <div
     className={cn(
-      'inline-flex animate-spin items-center justify-center',
+      'df:inline-flex df:animate-spin df:items-center df:justify-center',
       className
     )}
     {...props}

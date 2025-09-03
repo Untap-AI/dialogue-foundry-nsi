@@ -51,9 +51,9 @@ export const MobileChatModal = ({
     <dialog
       ref={dialogRef}
       className={cn(
-        "w-screen max-w-screen h-dvh max-h-dvh m-0 p-0 border-none",
-        "z-[10000] overflow-hidden backdrop:bg-black/50",
-        "fixed inset-0"
+        "df:w-screen df:max-w-screen df:h-dvh df:max-h-dvh df:m-0 df:p-0 df:border-none",
+        "df:z-[10000] df:overflow-hidden backdrop:df:bg-black/50",
+        "df:fixed df:inset-0"
       )}
       onCancel={e => {
         e.preventDefault() // Prevent default close on ESC key
@@ -66,7 +66,7 @@ export const MobileChatModal = ({
       }}
     >
       <div className={cn(
-        "w-full h-full flex flex-col overflow-hidden relative"
+        "df:w-full df:h-full df:flex df:flex-col df:overflow-hidden df:relative"
       )}>
         <ChatHeader onClose={onClose} onNewChat={handleNewChat} />
         <ChatInterface 

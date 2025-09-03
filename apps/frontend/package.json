@@ -1,7 +1,7 @@
 {
   "name": "@dialogue-foundry/frontend",
   "private": true,
-  "version": "0.4.13",
+  "version": "0.4.14",
   "type": "module",
   "repository": {
     "type": "git",
@@ -15,7 +15,8 @@
     "clean": "rm -rf dist && rm -rf node_modules",
     "typecheck": "tsc --noEmit",
     "unused-exports": "ts-unused-exports tsconfig.json",
-    "publish-package": "node ../../packages/deploy-s3/dist/version-based-deploy.js --package ./package.json --source ./dist --bucket dialogue-foundry-frontend"
+    "publish-package": "node ../../packages/deploy-s3/dist/version-based-deploy.js --package ./package.json --source ./dist --bucket dialogue-foundry-frontend",
+    "migrate-tailwind": "node migrate-tailwind-prefix.js"
   },
   "dependencies": {
     "@ai-sdk/react": "^2.0.28",

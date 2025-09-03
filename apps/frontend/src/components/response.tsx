@@ -13,7 +13,7 @@ type ResponseProps = ComponentProps<typeof Streamdown> & {
 const CustomLink = ({ node, children, className, href, ...props }: any) => (
   <a
     className={cn(
-      'font-medium text-primary underline break-words break-all hyphens-auto inline-block max-w-full',
+      'df:font-medium df:text-primary df:underline df:break-words df:break-all df:hyphens-auto df:inline-block df:max-w-full',
       className
     )}
     data-streamdown="link"
@@ -67,7 +67,7 @@ export const Response = memo(
       <div ref={containerRef}>
         <Streamdown
           className={cn(
-            'size-full [&>*:first-child]:mt-0 [&>*:last-child]:mb-0',
+            'df:size-full df:[&>*:first-child]:mt-0 df:[&>*:last-child]:mb-0',
             className
           )}
           components={{

@@ -10,9 +10,9 @@ export type MessageProps = HTMLAttributes<HTMLDivElement> & {
 export const Message = ({ className, from, ...props }: MessageProps) => (
   <div
     className={cn(
-      'group flex w-full items-end justify-end gap-2 py-3',
-      from === 'user' ? 'is-user' : 'is-assistant flex-row-reverse justify-end',
-      '[&>div]:max-w-[80%]',
+      'df:group df:flex df:w-full df:items-end df:justify-end df:gap-2 df:py-3',
+      from === 'user' ? 'is-user' : 'is-assistant df:flex-row-reverse df:justify-end',
+      'df:[&>div]:max-w-[80%]',
       className
     )}
     {...props}
@@ -28,10 +28,10 @@ export const MessageContent = ({
 }: MessageContentProps) => (
   <div
     className={cn(
-      'flex flex-col gap-2 overflow-hidden rounded-lg px-4 py-3 text-foreground text-sm',
-      'group-[.is-user]:bg-primary group-[.is-user]:text-primary-foreground',
-      'group-[.is-assistant]:bg-secondary group-[.is-assistant]:text-foreground',
-      'is-user:dark',
+      'df:flex df:flex-col df:gap-2 df:overflow-hidden df:rounded-lg df:px-4 df:py-3 df:text-foreground df:text-sm',
+      'df:group-[.is-user]:bg-primary df:group-[.is-user]:text-primary-foreground',
+      'df:group-[.is-assistant]:bg-secondary df:group-[.is-assistant]:text-foreground',
+      'df:is-user:dark',
       className
     )}
     {...props}

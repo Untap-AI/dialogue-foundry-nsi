@@ -16,24 +16,24 @@ export const Suggestions = ({
   scrollAreaClassName,
   ...props
 }: SuggestionsProps) => (
-  <div className="relative">
+  <div className="df:relative">
     {/* Subtle fade at the right edge to indicate more content */}
-    <div className="absolute right-0 top-0 bottom-0 w-5 bg-gradient-to-l from-background/80 to-transparent z-10 pointer-events-none" />
+    <div className="df:absolute df:right-0 df:top-0 df:bottom-0 df:w-5 df:bg-gradient-to-l df:from-background/80 df:to-transparent df:z-10 df:pointer-events-none" />
     
     <ScrollArea 
-      className={cn("w-full overflow-x-scroll whitespace-nowrap", scrollAreaClassName)} 
+      className={cn("df:w-full df:overflow-x-scroll df:whitespace-nowrap", scrollAreaClassName)} 
       type="always" 
       {...props}
     >
-      <div className={cn('flex w-max min-w-full flex-nowrap items-center gap-3 py-1', className)}>
-        <div className="flex-shrink-0 w-1 h-1" aria-hidden="true" />
+      <div className={cn('df:flex df:w-max df:min-w-full df:flex-nowrap df:items-center df:gap-3 df:py-1', className)}>
+        <div className="df:flex-shrink-0 df:w-1 df:h-1" aria-hidden="true" />
         {children}
-        <div className="flex-shrink-0 w-1 h-1" aria-hidden="true" />
+        <div className="df:flex-shrink-0 df:w-1 df:h-1" aria-hidden="true" />
       </div>
       <ScrollBar 
-        className="h-1.5 mb-1" 
+        className="df:h-1.5 df:mb-1" 
         orientation="horizontal"
-        thumbClassName="bg-primary rounded-[2px] hover:bg-primary/80 transition-colors"
+        thumbClassName="df:bg-primary df:rounded-[2px] df:hover:bg-primary/80 df:transition-colors"
       />
     </ScrollArea>
   </div>
@@ -78,30 +78,30 @@ export const Suggestion = ({
     <Button
       className={cn(
         // Base styling
-        'cursor-pointer relative overflow-hidden',
-        'min-w-fit max-w-[140px] min-h-[3rem]',
+        'df:cursor-pointer df:relative df:overflow-hidden',
+        'df:min-w-fit df:max-w-[140px] df:min-h-[3rem]',
         
         // Enhanced theme-aware styling - uses lighter version of background
-        'bg-background/50 hover:bg-background/70',
-        'border border-border/60 hover:border-primary/40',
-        'text-foreground/80 hover:text-primary',
-        'shadow-sm hover:shadow-md',
+        'df:bg-background/50 df:hover:bg-background/70',
+        'df:border df:border-border/60 df:hover:border-primary/40',
+        'df:text-foreground/80 df:hover:text-primary',
+        'df:shadow-sm df:hover:shadow-md',
         
         // Typography and spacing - updated for multiline
-        'px-4 py-1 text-sm font-medium leading-snug',
-        'rounded-xl',
+        'df:px-4 df:py-1 df:text-sm df:font-medium df:leading-snug',
+        'df:rounded-xl',
         
         // Smooth transitions and interactions
-        'transition-all duration-300 ease-out',
-        'hover:scale-[1.02] active:scale-[0.98]',
-        'hover:-translate-y-0.5',
+        'df:transition-all df:duration-300 df:ease-out',
+        'df:hover:scale-[1.02] df:active:scale-[0.98]',
+        'df:hover:-translate-y-0.5',
         
         // Subtle backdrop effect
-        'backdrop-blur-sm',
+        'df:backdrop-blur-sm',
         
         // Focus states
-        'focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:ring-offset-1',
-        'whitespace-normal',
+        'df:focus-visible:ring-2 df:focus-visible:ring-primary/20 df:focus-visible:ring-offset-1',
+        'df:whitespace-normal',
         
         className
       )}
@@ -112,10 +112,10 @@ export const Suggestion = ({
       {...props}
     >
       {/* Subtle shine effect */}
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-background/20 to-transparent opacity-0 hover:opacity-100 transition-opacity duration-500 -skew-x-12 translate-x-[-100%] hover:translate-x-[100%] transition-transform duration-700" />
+      <div className="df:absolute df:inset-0 df:bg-gradient-to-r df:from-transparent df:via-background/20 df:to-transparent df:opacity-0 df:hover:opacity-100 df:transition-opacity df:duration-500 df:-skew-x-12 df:translate-x-[-100%] df:hover:translate-x-[100%] df:transition-transform df:duration-700" />
       
       {/* Content */}
-      <span className="relative z-10 text-center block leading-tight max-w-[200px]">
+      <span className="df:relative df:z-10 df:text-center df:block df:leading-tight df:max-w-[200px]">
         {children || suggestion}
       </span>
     </Button>

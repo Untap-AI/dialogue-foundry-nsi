@@ -4,7 +4,7 @@ import { cn } from './utils';
 export const components: Options['components'] = {
   ol: ({ node, children, className, ...props }) => (
     <ol
-      className={cn('ml-4 list-outside list-decimal', className)}
+      className={cn('df:ml-4 df:list-outside df:list-decimal', className)}
       data-streamdown="ordered-list"
       {...props}
     >
@@ -13,7 +13,7 @@ export const components: Options['components'] = {
   ),
   li: ({ node, children, className, ...props }) => (
     <li
-      className={cn('py-1', className)}
+      className={cn('df:py-1', className)}
       data-streamdown="list-item"
       {...props}
     >
@@ -22,7 +22,7 @@ export const components: Options['components'] = {
   ),
   ul: ({ node, children, className, ...props }) => (
     <ul
-      className={cn('ml-4 list-outside list-disc', className)}
+      className={cn('df:ml-4 df:list-outside df:list-disc', className)}
       data-streamdown="unordered-list"
       {...props}
     >
@@ -31,14 +31,14 @@ export const components: Options['components'] = {
   ),
   hr: ({ node, className, ...props }) => (
     <hr
-      className={cn('my-6 border-border', className)}
+      className={cn('df:my-6 df:border-border', className)}
       data-streamdown="horizontal-rule"
       {...props}
     />
   ),
   strong: ({ node, children, className, ...props }) => (
     <span
-      className={cn('font-semibold', className)}
+      className={cn('df:font-semibold', className)}
       data-streamdown="strong"
       {...props}
     >
@@ -47,7 +47,7 @@ export const components: Options['components'] = {
   ),
   a: ({ node, children, className, href, ...props }) => (
     <a
-      className={cn('font-medium text-primary underline', className)}
+      className={cn('df:font-medium df:text-primary df:underline', className)}
       data-streamdown="link"
       href={href}
       rel="noreferrer"
@@ -59,7 +59,7 @@ export const components: Options['components'] = {
   ),
   h1: ({ node, children, className, ...props }) => (
     <h1
-      className={cn('mt-6 mb-2 font-semibold text-3xl', className)}
+      className={cn('df:mt-6 df:mb-2 df:font-semibold df:text-3xl', className)}
       data-streamdown="heading-1"
       {...props}
     >
@@ -68,7 +68,7 @@ export const components: Options['components'] = {
   ),
   h2: ({ node, children, className, ...props }) => (
     <h2
-      className={cn('mt-6 mb-2 font-semibold text-2xl', className)}
+      className={cn('df:mt-6 df:mb-2 df:font-semibold df:text-2xl', className)}
       data-streamdown="heading-2"
       {...props}
     >
@@ -77,7 +77,7 @@ export const components: Options['components'] = {
   ),
   h3: ({ node, children, className, ...props }) => (
     <h3
-      className={cn('mt-6 mb-2 font-semibold text-xl', className)}
+      className={cn('df:mt-6 df:mb-2 df:font-semibold df:text-xl', className)}
       data-streamdown="heading-3"
       {...props}
     >
@@ -86,7 +86,7 @@ export const components: Options['components'] = {
   ),
   h4: ({ node, children, className, ...props }) => (
     <h4
-      className={cn('mt-6 mb-2 font-semibold text-lg', className)}
+      className={cn('df:mt-6 df:mb-2 df:font-semibold df:text-lg', className)}
       data-streamdown="heading-4"
       {...props}
     >
@@ -95,7 +95,7 @@ export const components: Options['components'] = {
   ),
   h5: ({ node, children, className, ...props }) => (
     <h5
-      className={cn('mt-6 mb-2 font-semibold text-base', className)}
+      className={cn('df:mt-6 df:mb-2 df:font-semibold df:text-base', className)}
       data-streamdown="heading-5"
       {...props}
     >
@@ -104,7 +104,7 @@ export const components: Options['components'] = {
   ),
   h6: ({ node, children, className, ...props }) => (
     <h6
-      className={cn('mt-6 mb-2 font-semibold text-sm', className)}
+      className={cn('df:mt-6 df:mb-2 df:font-semibold df:text-sm', className)}
       data-streamdown="heading-6"
       {...props}
     >

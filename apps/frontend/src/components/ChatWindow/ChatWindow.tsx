@@ -23,17 +23,17 @@ export const ChatWindow = forwardRef<HTMLDivElement, ChatWindowProps>(
     // Generate CSS class names based on component state
     const className = useMemo(() => {
       const baseClasses = cn(
-        "w-[385px] h-[555px] absolute bottom-[70px] max-w-[90vw] max-h-[80vh]",
-        "rounded-[10px] shadow-xl flex flex-col overflow-hidden",
-        "transition-all duration-300 ease-out delay-[50ms]",
-        "bg-background text-foreground right-0 origin-bottom-right"
+        "df:w-[385px] df:h-[555px] df:absolute df:bottom-[70px] df:max-w-[90vw] df:max-h-[80vh]",
+        "df:rounded-[10px] df:shadow-xl df:flex df:flex-col df:overflow-hidden",
+        "df:transition-all df:duration-300 df:ease-out df:delay-[50ms]",
+        "df:bg-background df:text-foreground df:right-0 df:origin-bottom-right"
       )
 
       if (isOpen) {
-        return cn(baseClasses, "scale-100 opacity-100 translate-x-0 translate-y-0 pointer-events-auto")
+        return cn(baseClasses, "df:scale-100 df:opacity-100 df:translate-x-0 df:translate-y-0 df:pointer-events-auto")
       }
 
-      return cn(baseClasses, "scale-0 opacity-0 translate-y-2 pointer-events-none")
+      return cn(baseClasses, "df:scale-0 df:opacity-0 df:translate-y-2 df:pointer-events-none")
     }, [isOpen])
 
     return (
