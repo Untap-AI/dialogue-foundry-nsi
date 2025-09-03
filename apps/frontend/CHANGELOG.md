@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.19
+
+### Patch Changes
+
+- postcss
+
 ## 0.4.18
 
 ### Patch Changes
