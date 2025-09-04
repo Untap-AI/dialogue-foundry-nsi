@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.27
+
+### Patch Changes
+
+- rem to px
+
 ## 0.4.26
 
 ### Patch Changes
