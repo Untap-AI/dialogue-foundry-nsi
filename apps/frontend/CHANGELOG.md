@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.25
+
+### Patch Changes
+
+- popup data
+
 ## 0.4.24
 
 ### Patch Changes
