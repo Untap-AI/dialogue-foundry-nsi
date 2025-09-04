@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.26
+
+### Patch Changes
+
+- Dont log everything
+
 ## 0.4.25
 
 ### Patch Changes
