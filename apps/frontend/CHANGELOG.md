@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.30
+
+### Patch Changes
+
+- df
+
 ## 0.4.29
 
 ### Patch Changes
