@@ -79,7 +79,7 @@ export const Suggestion = ({
       className={cn(
         // Base styling
         'df:cursor-pointer df:relative df:overflow-hidden',
-        'df:min-w-fit df:max-w-[140px] df:min-h-[3rem]',
+        'df:min-w-fit df:max-w-[140px] df:min-h-[48px]',
         
         // Enhanced theme-aware styling - uses lighter version of background
         'df:bg-background/50 df:hover:bg-background/70',
