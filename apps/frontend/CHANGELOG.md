@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.31
+
+### Patch Changes
+
+- text transform none
+
 ## 0.4.30
 
 ### Patch Changes
