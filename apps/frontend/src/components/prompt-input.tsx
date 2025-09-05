@@ -120,7 +120,7 @@ export const PromptInputButton = ({
   return (
     <Button
       className={cn(
-        'df:shrink-0 df:gap-1.5 df:rounded-lg',
+        'df:shrink-0 df:gap-1.5 df:rounded-md',
         variant === 'ghost' && 'df:text-muted-foreground',
         newSize === 'default' && 'df:px-3',
         className
@@ -157,7 +157,7 @@ export const PromptInputSubmit = ({
 
   return (
     <Button
-      className={cn('df:gap-1.5 df:rounded-sm', className)}
+      className={cn('df:gap-1.5 df:rounded-md', className)}
       data-dialogue-foundry-id="prompt-submit"
       size={size}
       type="submit"

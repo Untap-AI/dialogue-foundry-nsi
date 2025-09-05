@@ -1,5 +1,12 @@
 # @dialogue-foundry/frontend
 
+## 0.4.32
+
+### Patch Changes
+
+- button rounded md
+- 8686755: normal case
+
 ## 0.4.31
 
 ### Patch Changes

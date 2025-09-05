@@ -79,7 +79,7 @@ export const ChatHeader = ({ onClose }: ChatHeaderProps) => {
           variant={theme === 'secondary' ? 'default' : 'ghost'}
           size="icon"
           className={cn(
-            "df:w-[28px] df:h-[28px] df:rounded-sm",
+            "df:w-[28px] df:h-[28px] df:rounded-md",
             buttonClass,
             "df:font-sans"
           )}
