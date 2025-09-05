@@ -5,7 +5,7 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "df:inline-flex df:items-center df:justify-center df:gap-2 df:whitespace-nowrap df:rounded-sm df:text-sm df:font-medium df:transition-all df:disabled:pointer-events-none df:disabled:opacity-50 df:[&_svg]:pointer-events-none df:[&_svg:not([class*='size-'])]:size-4 df:shrink-0 df:[&_svg]:shrink-0 df:outline-none df:focus-visible:border-ring df:focus-visible:ring-ring/50 df:focus-visible:ring-[3px] df:aria-invalid:ring-destructive/20 df:aria-invalid:border-destructive df:cursor-pointer df:text-transform-none",
+  "df:inline-flex df:items-center df:justify-center df:gap-2 df:whitespace-nowrap df:rounded-sm df:text-sm df:font-medium df:transition-all df:disabled:pointer-events-none df:disabled:opacity-50 df:[&_svg]:pointer-events-none df:[&_svg:not([class*='size-'])]:size-4 df:shrink-0 df:[&_svg]:shrink-0 df:outline-none df:focus-visible:border-ring df:focus-visible:ring-ring/50 df:focus-visible:ring-[3px] df:aria-invalid:ring-destructive/20 df:aria-invalid:border-destructive df:cursor-pointer df:normal-case",
   {
     variants: {
       variant: {

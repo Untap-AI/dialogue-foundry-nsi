@@ -116,7 +116,7 @@ export const Suggestion = ({
       <div className="df:absolute df:inset-0 df:bg-gradient-to-r df:from-transparent df:via-background/20 df:to-transparent df:opacity-0 df:hover:opacity-100 df:transition-opacity df:duration-500 df:-skew-x-12 df:translate-x-[-100%] df:hover:translate-x-[100%] df:transition-transform df:duration-700" />
       
       {/* Content */}
-      <span className="df:relative df:z-10 df:text-center df:block df:leading-tight df:max-w-[200px] df:text-transform-none">
+      <span className="df:relative df:z-10 df:text-center df:block df:leading-tight df:max-w-[200px] df:normal-case">
         {children || suggestion}
       </span>
     </Button>
