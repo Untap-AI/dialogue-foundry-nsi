@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.33
+
+### Patch Changes
+
+- pronounced border
+
 ## 0.4.32
 
 ### Patch Changes

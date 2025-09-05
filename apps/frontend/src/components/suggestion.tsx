@@ -83,7 +83,7 @@ export const Suggestion = ({
         
         // Enhanced theme-aware styling - uses lighter version of background
         'df:bg-background/50 df:hover:bg-background/70',
-        'df:border df:border-border/60 df:hover:border-primary/40',
+        'df:border df:border-border/80 df:hover:border-primary/60',
         'df:text-foreground/80 df:hover:text-primary',
         'df:shadow-sm df:hover:shadow-md',
         
