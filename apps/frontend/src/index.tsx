@@ -1,48 +1,39 @@
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-// Note: We don't need to import global CSS here as it's handled by the Vite plugin
-// Component CSS files are imported directly in their respective components
+import {StrictMode} from 'react'
+import { createRoot } from 'react-dom/client'
+import './index.css'
 import App from './App'
-import { ConfigProvider } from './contexts/ConfigContext'
+import { ConfigProvider, type DialogueFoundryConfig } from './contexts/ConfigContext'
 import { initLogger } from './services/logger'
-
-// For production builds, CSS will be included through the normal build process
-// The development CSS is injected via the script in index.html
-
-// Define interface for configuration options
-interface DialogueFoundryOptions {
-  // Add any configuration options here
-  theme?: 'light' | 'dark'
-}
 
 /**
  * Initialize the DialogueFoundry application
  * @param rootElement - The DOM element to mount the app to
  * @param options - Configuration options for the app
  */
-function init(
+async function init(
   rootElement: HTMLElement | null,
-  options: DialogueFoundryOptions = {}
+  options: Partial<DialogueFoundryConfig> = {}
 ) {
   if (!rootElement) {
     console.error('DialogueFoundry: Root element not found')
     return
   }
 
-  initLogger({
+  // Initialize logger asynchronously
+  await initLogger({
     dsn: import.meta.env.VITE_SENTRY_DSN
   })
 
   // Create React root
-  const root = ReactDOM.createRoot(rootElement)
+  const root = createRoot(rootElement)
 
   // Render app with config context
   root.render(
-    <React.StrictMode>
+    <StrictMode>
       <ConfigProvider initialConfig={options}>
         <App />
       </ConfigProvider>
-    </React.StrictMode>
+    </StrictMode>
   )
 
   return root
@@ -56,7 +47,9 @@ if (typeof window !== 'undefined' && !window.DialogueFoundry) {
   document.body.appendChild(appContainer)
 
   // Initialize the app in the container
-  init(appContainer)
+  init(appContainer).catch(error => {
+    console.error('Failed to initialize DialogueFoundry:', error)
+  })
 }
 
 // Expose the API to window for non-module usage

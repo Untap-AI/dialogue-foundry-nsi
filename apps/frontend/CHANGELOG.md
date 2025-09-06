@@ -1,5 +1,222 @@
 # @dialogue-foundry/frontend
 
+## 0.4.33
+
+### Patch Changes
+
+- pronounced border
+
+## 0.4.32
+
+### Patch Changes
+
+- button rounded md
+- 8686755: normal case
+
+## 0.4.31
+
+### Patch Changes
+
+- text transform none
+
+## 0.4.30
+
+### Patch Changes
+
+- df
+
+## 0.4.29
+
+### Patch Changes
+
+- Fix rounded
+
+## 0.4.28
+
+### Patch Changes
+
+- More rem
+
+## 0.4.27
+
+### Patch Changes
+
+- rem to px
+
+## 0.4.26
+
+### Patch Changes
+
+- Dont log everything
+
+## 0.4.25
+
+### Patch Changes
+
+- popup data
+
+## 0.4.24
+
+### Patch Changes
+
+- Remove axios
+
+## 0.4.23
+
+### Patch Changes
+
+- button styling
+
+## 0.4.22
+
+### Patch Changes
+
+- merge styles
+
+## 0.4.21
+
+### Patch Changes
+
+- styles
+
+## 0.4.20
+
+### Patch Changes
+
+- No preserve
+
+## 0.4.19
+
+### Patch Changes
+
+- postcss
+
+## 0.4.18
+
+### Patch Changes
+
+- Remove target
+
+## 0.4.17
+
+### Patch Changes
+
+- icon size
+
+## 0.4.16
+
+### Patch Changes
+
+- important
+
+## 0.4.15
+
+### Patch Changes
+
+- Fix styling
+
+## 0.4.14
+
+### Patch Changes
+
+- prefix
+
+## 0.4.13
+
+### Patch Changes
+
+- suggestion styling
+
+## 0.4.12
+
+### Patch Changes
+
+- font fam
+
+## 0.4.11
+
+### Patch Changes
+
+- theme
+
+## 0.4.10
+
+### Patch Changes
+
+- shadow dom 2
+
+## 0.4.9
+
+### Patch Changes
+
+- shadow dom
+
+## 0.4.8
+
+### Patch Changes
+
+- Scoped styles
+
+## 0.4.7
+
+### Patch Changes
+
+- Fix mobile scrollbar
+
+## 0.4.6
+
+### Patch Changes
+
+- Suggestions scroll
+
+## 0.4.5
+
+### Patch Changes
+
+- Dont parse incomplete
+
+## 0.4.4
+
+### Patch Changes
+
+- Fix race condition
+
+## 0.4.3
+
+### Patch Changes
+
+- Use chat id instead of chat instance
+
+## 0.4.2
+
+### Patch Changes
+
+- Fix streaming
+
+## 0.4.1
+
+### Patch Changes
+
+- 49fb0a3: Fix mobile height
+
+## 0.4.0
+
+### Minor Changes
+
+- v5 with ai elements
+
+## 0.3.24
+
+### Patch Changes
+
+- Better stream errors
+
+## 0.3.23
+
+### Patch Changes
+
+- fullproof init
+
 ## 0.3.22
 
 ### Patch Changes

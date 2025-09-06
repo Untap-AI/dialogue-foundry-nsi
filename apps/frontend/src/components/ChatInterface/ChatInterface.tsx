@@ -1,369 +1,311 @@
-import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
-import { AiChat, useAiChatApi, useAsStreamAdapter } from '../../nlux'
-import { useConfig } from '../../contexts/ConfigContext'
-import '@nlux/themes/unstyled.css'
-import './ChatInterface.css'
+import {
+  Conversation,
+  ConversationContent,
+  ConversationScrollButton,
+} from '@/components/conversation';
+import { Message, MessageContent } from '@/components/message';
+import {
+  PromptInput,
+  PromptInputSubmit,
+  PromptInputTextarea,
+} from '@/components/prompt-input';
+import React, { useState } from 'react';
+import { Response } from '@/components/response';
 
-import { ChatStreamingService } from '../../services/streaming'
-import { ChatApiService } from '../../services/api'
-import { ErrorCategory, categorizeError } from '../../services/errors'
-import type { ChatStatus } from '../ChatWidget/ChatWidget'
-import type { ServiceError } from '../../services/errors'
-import type {
-  AssistantPersona,
-  ChatItem,
-  ErrorEventDetails
-} from '../../nlux'
+import { Loader } from '@/components/loader';
+import { useConfig } from '@/contexts/ConfigContext';
+import { cn } from '@/lib/utils';
+import { useChatPersistence } from '../../hooks/useChatPersistence';
+import type { ChatStatus } from '../../hooks/useChatPersistence';
+import { EmailInputMessage } from '../EmailInputMessage/EmailInputMessage';
+import { Suggestions, Suggestion } from '../suggestion';
 
-// Add the icon based on error category
-const ERROR_ICON_MAP: Record<ErrorCategory, string> = {
-  [ErrorCategory.AUTHENTICATION]: '🔒',
-  [ErrorCategory.CONNECTION]: '🔌',
-  [ErrorCategory.SERVER]: '🖥️',
-  [ErrorCategory.RATE_LIMIT]: '⏱️',
-  [ErrorCategory.TIMEOUT]: '⌛',
-  [ErrorCategory.UNKNOWN]: '⚠️'
+// Loading state component
+const ChatLoadingState = () => (
+  <div className="df:flex df:flex-col df:items-center df:justify-center df:h-full df:space-y-4">
+    <Loader size={32} className="df:text-primary" />
+    <div className="df:text-center df:space-y-2">
+      <h3 className="df:text-lg df:font-medium df:text-foreground">Setting up your chat</h3>
+      <p className="df:text-sm df:text-muted-foreground">Please wait while we initialize...</p>
+    </div>
+  </div>
+);
+
+// Error state component
+const ChatErrorState = () => (
+  <div className="df:flex df:flex-col df:items-center df:justify-center df:h-full df:space-y-4 df:p-8">
+    <div className="df:size-12 df:rounded-full df:bg-destructive/10 df:flex df:items-center df:justify-center">
+      <svg className="df:size-6 df:text-destructive" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+      </svg>
+    </div>
+    <div className="df:text-center df:space-y-2">
+      <h3 className="df:text-lg df:font-medium df:text-foreground">Unable to start chat</h3>
+      <p className="df:text-sm df:text-muted-foreground">There was a problem initializing the chat. Please refresh the page to try again.</p>
+    </div>
+  </div>
+);
+
+// Stream error banner component
+interface StreamErrorBannerProps {
+  streamError: string | null;
+  onClearError: () => void;
 }
+
+const StreamErrorBanner = ({ streamError, onClearError }: StreamErrorBannerProps) => {
+  if (!streamError) return null;
+  
+  return (
+    <div className="df:mx-4 df:my-2 df:p-3 df:rounded-md df:bg-destructive/10 df:border df:border-destructive/20">
+      <div className="df:flex df:items-start df:space-x-3">
+        <svg className="df:size-4 df:text-destructive df:mt-0.5 df:flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        <div className="df:flex-1 df:min-w-0">
+          <p className="df:text-sm df:text-destructive df:font-medium">Message failed to send</p>
+          <p className="df:text-xs df:text-destructive/80 df:mt-1">Please try sending your message again.</p>
+        </div>
+        <button
+          onClick={onClearError}
+          className="df:text-destructive/60 df:hover:text-destructive df:transition-colors"
+        >
+          <svg className="df:size-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
+        </button>
+      </div>
+    </div>
+  );
+};
 
 interface ChatInterfaceProps {
-  className?: string | undefined
-  chatId: string | undefined
-  initialConversation: ChatItem[] | undefined
-  chatStatus: ChatStatus
+  onNewChatRequest?: () => void;
+  onChatStatusChange?: (status: ChatStatus) => void;
 }
 
-export const ChatInterface = ({
-  className,
-  chatId,
-  initialConversation,
-  chatStatus,
-}: ChatInterfaceProps) => {
-  // Get config from context
-  const {
-    conversationStarters,
-    chatConfig,
-    theme = 'light',
-    personaOptions,
-    poweredBy
-  } = useConfig()
+// Create a ref interface for exposing methods to parent
+export interface ChatInterfaceRef {
+  createNewChat: () => Promise<void>;
+}
+
+
+
+export const ChatInterface = React.forwardRef<ChatInterfaceRef, ChatInterfaceProps>(
+  ({ onChatStatusChange }, _ref) => {
+  const { poweredBy, suggestions: configSuggestions } = useConfig()
+  const [input, setInput] = useState('');
 
   const showPoweredBy = poweredBy?.show ?? true
   const poweredByText = poweredBy?.text ?? 'Untap AI'
   const poweredByUrl = poweredBy?.url ?? 'https://untap-ai.com'
+  
+  // Use the chat persistence hook
+  const {
+    messages,
+    sendMessage,
+    status,
+    chatStatus,
+    streamError,
+    clearStreamError,
+    submitEmailForToolCall,
+    recordLinkClick,
+    recordConversationStarterClick,
+  } = useChatPersistence();
 
-  // Add ref for the chat interface container
-  const chatInterfaceRef = useRef<HTMLDivElement>(null)
+  const isInitialized = chatStatus === 'initialized'
 
-  // Add state to store email request details
-  const [emailRequestDetails, setEmailRequestDetails] = useState<{
-    subject: string
-    conversationSummary: string
-  } | null>(null)
+  // Notify parent of chat status changes
+  React.useEffect(() => {
+    onChatStatusChange?.(chatStatus)
+  }, [chatStatus, onChatStatusChange])
 
-  // Add state to track if we should create email input after streaming
-  const pendingEmailInput = useRef(false)
+  // Determine if we should show suggestions (only when there are no user messages)
+  const hasUserMessages = messages.some(message => message.role === 'user')
+  const shouldShowSuggestions = isInitialized && !hasUserMessages && configSuggestions && configSuggestions.length > 0
 
-  const streamingService = useMemo(
-    () => new ChatStreamingService(chatConfig),
-    [chatConfig]
-  )
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (input.trim() && isInitialized) {
+      sendMessage({
+        text: input,
+      });
+      setInput('');
+    }
+  };
 
-  // Create analytics service for tracking events
-  const analyticsService = useMemo(
-    () => new ChatApiService(chatConfig),
-    [chatConfig]
-  )
+  // Handle suggestion clicks - send the prompt, not the label
+  const handleSuggestionClick = (prompt: string) => {
+    if (isInitialized) {
+      sendMessage({
+        text: prompt,
+      });
+    }
+  };
 
-  const api = useAiChatApi()
-
-  // Handle markdown rendering completion
-  const handleMessageRendered = useCallback(() => {
+  // Handle email submission for tool calls
+  // const handleEmailSubmit = async (email: string) => {
+  //   if (!emailRequest) return;
     
-    // If we have a pending email input, create it after any markdown rendering completes
-    // This ensures the email input appears after the text is fully rendered
-    if (pendingEmailInput.current) {
-      pendingEmailInput.current = false
-      api.conversation.createEmailInput()
-    }
-  }, [api])
+  //   setIsSubmittingEmail(true);
+  //   try {
+  //     await submitEmailForToolCall(email);
+  //   } catch (error) {
+  //     console.error('Failed to submit email:', error);
+  //     // Could show an error message here
+  //   } finally {
+  //     setIsSubmittingEmail(false);
+  //   }
+  // };
 
-  // Adapter with special event support
-  const adapter = useAsStreamAdapter(
-    (userMessage: string, observer) => {
-      streamingService.streamMessage(
-        userMessage,
-        chunk => observer.next(chunk),
-        () => observer.complete(),
-        error => observer.error(error),
-        chatConfig.companyId,
-        event => {
-          if (event.type === 'request_email') {
-            // Store the email request details from the LLM but don't create input yet
-            if (event.details) {
-              setEmailRequestDetails({
-                subject: event.details.subject || '',
-                conversationSummary: event.details.conversationSummary || ''
-              })
-            }
-            // Set flag to create email input after markdown rendering completes
-            pendingEmailInput.current = true
-            // We'll need to get the message ID when it's available
-          }
-        }
-      )
-    },
-    [chatConfig.companyId, streamingService]
-  )
-
-  // Create a custom error handler for the NLUX error event
-  const handleNluxError = (error: ErrorEventDetails) => {
-    if (!error.errorObject) {
-      return
-    }
-
-    const errorObject = error.errorObject as ServiceError
-
-    // Find the error box element
-    const errorBox = document.querySelector('.nlux-comp-exceptionBox')
-    if (errorBox) {
-      // Clear the existing content
-      errorBox.innerHTML = ''
-
-      // Process the error through our error handling system
-      const category = categorizeError(errorObject.code)
-      const message = error.errorObject.message
-
-      // Create our custom error banner
-      const errorBanner = document.createElement('div')
-      errorBanner.className = `df-error-banner df-error-${category}`
-
-      // Build the error banner content
-      errorBanner.innerHTML = `
-        <div class="df-error-icon">${ERROR_ICON_MAP[category] || '⚠️'}</div>
-        <div class="df-error-content">
-          <div class="df-error-message">${message}</div>
-        </div>
-      `
-
-      // Append our custom error banner
-      errorBox.appendChild(errorBanner)
-
-      setTimeout(() => {
-        errorBox.innerHTML = ''
-      }, 3000)
-    }
-
-    console.error('NLUX chat error:', error)
+  // Show loading state when initializing
+  if (chatStatus === 'loading') {
+    return (
+      <>
+        <ChatLoadingState />
+        {showPoweredBy && (
+          <div className={cn(
+            "df:text-center df:text-[11px] df:leading-[11px] df:text-primary-foreground df:py-[3px] df:px-0 df:bg-primary"
+          )}>
+            Powered by{' '}
+            <a
+              href={poweredByUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="df:text-inherit df:underline"
+            >
+              {poweredByText}
+            </a>
+          </div>
+        )}
+      </>
+    );
   }
 
-  // Handle message sent event - creates ChatGPT-like scrolling
-  const handleMessageSent = () => {
-    // Clear pending email input flag when new message is sent
-    pendingEmailInput.current = false
-    
-    // Remove the conversation starters container
-    const startersContainer = document.querySelectorAll(
-      '.nlux-conversationStarters-container'
-    )
-    startersContainer.forEach(container => container.remove())
-
-    // Find the conversation container
-    const conversationContainer = document.querySelector(
-      '.nlux-conversation-container'
-    )
-    const chatSegmentsContainer = document.querySelector(
-      '.nlux-chatSegments-container'
-    )
-
-    if (
-      conversationContainer &&
-      conversationContainer instanceof HTMLElement &&
-      chatSegmentsContainer &&
-      chatSegmentsContainer instanceof HTMLElement
-    ) {
-      // Wait for the last message to be rendered
-      setTimeout(() => {
-        // Find the last sent message - use querySelectorAll and get the last one to ensure we get the most recent
-        const sentMessages = document.querySelectorAll(
-          '.nlux-comp-message.nlux_msg_sent'
-        )
-        const lastMessage =
-          sentMessages.length > 0
-            ? sentMessages[sentMessages.length - 1]
-            : undefined
-
-        if (lastMessage && lastMessage instanceof HTMLElement) {
-          // Get the necessary measurements
-          const chatSegmentsContainerRect =
-            chatSegmentsContainer.getBoundingClientRect()
-          const lastMessageRect = lastMessage.getBoundingClientRect()
-          const conversationContainerHeight = conversationContainer.clientHeight
-
-          // Calculate how far we need to scroll to position the last message at the top of the container
-          // We add a small offset (70px) for better visual appearance
-          const scrollOffset =
-            conversationContainerHeight -
-            (chatSegmentsContainerRect.bottom - lastMessageRect.bottom)
-          // TODO: Calcuate small offset based on font size, etc.
-          chatSegmentsContainer.style.minHeight = `${
-            chatSegmentsContainer.scrollHeight + scrollOffset - 70
-          }px`
-        }
-        // If for some reason we can't find the last message, fall back to scrolling to bottom
-        conversationContainer.scrollTo({
-          top: chatSegmentsContainer.scrollHeight,
-          behavior: 'smooth'
-        })
-      }, 50)
-    }
+  // Show error state when chat failed to initialize
+  if (chatStatus === 'error') {
+    return (
+      <>
+        <ChatErrorState />
+        {showPoweredBy && (
+          <div className={cn(
+            "df:text-center df:text-[11px] df:leading-[11px] df:text-primary-foreground df:py-[3px] df:px-0 df:bg-primary"
+          )}>
+            Powered by{' '}
+            <a
+              href={poweredByUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="df:text-inherit df:underline"
+            >
+              {poweredByText}
+            </a>
+          </div>
+        )}
+      </>
+    );
   }
-
-  // Handler for submitting email
-  const handleEmailSubmitted = async (email: string): Promise<{ success: boolean; error?: string }> => {
-    if (!chatId) {
-      return { success: false, error: 'No chat session available' }
-    }
-
-    try {
-      // Use the stored email request details from the LLM or fallback to empty strings
-      const subject = emailRequestDetails?.subject || ''
-      const conversationSummary = emailRequestDetails?.conversationSummary || ''
-
-      const result = await analyticsService.sendEmailRequest(chatId, {
-        userEmail: email,
-        subject,
-        conversationSummary
-      })
-
-      // Clear the stored email request details after use
-      setEmailRequestDetails(null)
-
-      return result
-    } catch (error) {
-      console.error('Error submitting email:', error)
-      return { 
-        success: false, 
-        error: error instanceof Error ? error.message : 'An unexpected error occurred' 
-      }
-    }
-  }
-
-  // Pass email input handlers and state to AiChat
-  const aiChatProps = {
-    api,
-    adapter,
-    displayOptions: {
-      themeId: 'dialogue-foundry',
-      colorScheme: theme
-    },
-    initialConversation,
-    conversationOptions: {
-      showWelcomeMessage: true,
-      autoScroll: false,
-      conversationStarters
-    },
-    messageOptions: {
-      markdownLinkTarget: 'self' as 'self',
-    },
-    personaOptions: {
-      assistant: personaOptions?.assistant as AssistantPersona
-    },
-    composerOptions: {
-      placeholder: 'Ask me anything...',
-      autoFocus: true
-    },
-    events: {
-      error: handleNluxError,
-      messageSent: handleMessageSent,
-      emailSubmitted: handleEmailSubmitted,
-      messageRendered: handleMessageRendered
-    },
-  }
-  // Set up link click tracking - only within the chat interface
-  useEffect(() => {
-    const handleLinkClick = (event: MouseEvent) => {
-      const target = event.target as HTMLElement
-      const link = target.closest('a')
-
-      if (link && link.href) {
-        // Find the message container that contains this link
-        const messageContainer = link.closest('.nlux-comp-message')
-        let messageId: string | undefined
-
-        if (messageContainer) {
-          messageId =
-            messageContainer.getAttribute('data-message-id') ||
-            messageContainer.id ||
-            undefined
-        }
-
-        // Record analytics immediately without waiting - if the user is clicking links,
-        // the chat should already be initialized
-        analyticsService
-          .recordAnalyticsEvent('link_click', {
-            url: link.href,
-            linkText: link.textContent || link.innerText || undefined,
-            messageId
-          })
-          .catch(error => {
-            console.warn('Analytics recording failed:', error)
-          })
-      }
-    }
-
-    // Add event listener only to the chat interface container
-    const chatContainer = chatInterfaceRef.current
-    if (chatContainer) {
-      chatContainer.addEventListener('click', handleLinkClick)
-    }
-
-    // Cleanup
-    return () => {
-      if (chatContainer) {
-        chatContainer.removeEventListener('click', handleLinkClick)
-      }
-    }
-  }, [analyticsService])
-
+  
   return (
-    <div ref={chatInterfaceRef} className={`chat-interface-wrapper ${className}`}>
-      <div className="chat-interface-content">
-        {(() => {
-          switch (chatStatus) {
-            case 'uninitialized':
-            case 'loading':
-              return (
-                <div className="chat-loader-container">
-                  <div className="chat-spinner"></div>
-                  <p className="chat-loading-text">Loading chat...</p>
-                </div>
-              )
-            case 'initialized':
-              return (
-                <AiChat {...aiChatProps} key={chatId} />
-              )
-            case 'error':
-              return (
-                <div className="chat-error-container">
-                  <p className="chat-error-text">Error loading chat.</p>
-                  <p className="chat-error-text">Please try again.</p>
-                </div>
-              )
-          }
-        })()}
+    <>
+      <StreamErrorBanner streamError={streamError} onClearError={clearStreamError} />
+      <Conversation className="df:h-full">
+        <ConversationContent>
+          {messages.map((message) => {
+            if(!message.parts.some(part => part.type === 'text')) {
+              return <Loader key={message.id} />
+            }
+
+            return (
+              <Message from={message.role} key={message.id}>
+                <MessageContent>
+                  {/* First render all text parts */}
+                  {message.parts
+                    .filter(part => part.type === 'text')
+                    .map((part, i) => (
+                      <Response 
+                        key={`${message.id}-${i}`} 
+                        messageId={message.id}
+                        onLinkClick={recordLinkClick}
+                      >
+                        {part.type === 'text' ? part.text : ''}
+                      </Response>
+                    ))
+                  }
+                  
+                  {/* Then render tool calls after the text */}
+                  {message.parts
+                    .filter(part => part.type === 'tool-request_user_email')
+                    .map((part, i) => {
+                      if(part.type !== 'tool-request_user_email') {
+                        return null
+                      }
+
+                      const args = part.output as { subject: string; conversationSummary: string } 
+                      return (
+                        <EmailInputMessage
+                          key={`${message.id}-tool-${i}`}
+                          onSubmit={async (email: string) => {
+                            await submitEmailForToolCall(email, part.toolCallId, args.subject, args.conversationSummary)
+                          }}
+                        />
+                      )
+                    })
+                  }
+                </MessageContent>
+              </Message>
+            )
+          })}
+          {status === 'submitted' && <Loader />}
+        </ConversationContent>
+        <ConversationScrollButton />
+      </Conversation>
+    
+      <div className="df:pt-2">
+        {/* Suggestions area - positioned just above prompt input */}
+        {shouldShowSuggestions && (
+            <Suggestions scrollAreaClassName="df:pb-2">
+              {configSuggestions?.map((suggestion, index) => (
+                <Suggestion
+                  key={index}
+                  suggestion={suggestion.label || suggestion.prompt}
+                  analyticsLabel={suggestion.label}
+                  analyticsPosition={index}
+                  onAnalyticsClick={() => recordConversationStarterClick(suggestion.label || suggestion.prompt, index, suggestion.prompt)}
+                  onClick={() => handleSuggestionClick(suggestion.prompt)}
+                />
+              ))}
+            </Suggestions>
+        )}
+        <div className="df:pb-4 df:px-4">
+        <PromptInput onSubmit={handleSubmit} className="df:flex df:items-center df:pr-3">
+          <PromptInputTextarea
+            onChange={(e) => setInput(e.target.value)}
+            value={input}
+          />
+          <PromptInputSubmit disabled={!input || !isInitialized} status={status} />
+        </PromptInput>
+        </div>
       </div>
+
       {showPoweredBy && (
-        <div className="df-powered-by">
+        <div className={cn(
+          "df:text-center df:text-[11px] df:leading-[11px] df:text-primary-foreground df:py-[3px] df:px-0 df:bg-primary"
+        )}>
           Powered by{' '}
           <a
             href={poweredByUrl}
             target="_blank"
             rel="noopener noreferrer"
+            className="df:text-inherit df:underline"
           >
             {poweredByText}
           </a>
         </div>
       )}
-    </div>
-  )
-}
+
+
+    </>
+  );
+});
+
+ChatInterface.displayName = 'ChatInterface';

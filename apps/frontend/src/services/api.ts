@@ -1,9 +1,7 @@
-import axios from 'axios'
 import { ApiError, ErrorCodes as ServiceErrorCodes } from './errors'
 import { logger } from './logger'
 import type { ErrorCodeValue } from './errors'
-import type { AxiosError } from 'axios'
-import type { ChatItem } from '../nlux'
+import { UIMessage } from '@ai-sdk/react'
 
 // Default config values (can be overridden)
 export const DEFAULT_TOKEN_STORAGE_KEY = 'dialogue_foundry_token'
@@ -80,7 +78,166 @@ interface Message {
 
 interface ChatInit {
   chatId: string
-  messages: ChatItem[]
+  messages: UIMessage[]
+}
+
+// Simple fetch wrapper class
+class FetchWrapper {
+  private baseURL: string
+  private defaultHeaders: Record<string, string>
+  private timeout: number
+  private getAuthToken: () => string | null
+
+  constructor(baseURL: string, getAuthToken: () => string | null) {
+    this.baseURL = baseURL
+    this.defaultHeaders = {
+      'Content-Type': 'application/json'
+    }
+    this.timeout = 30000 // 30 second timeout
+    this.getAuthToken = getAuthToken
+  }
+
+  private async request(endpoint: string, options: RequestInit = {}): Promise<any> {
+    const url = `${this.baseURL}${endpoint}`
+    
+    // Add auth token if available
+    const token = this.getAuthToken()
+    const headers = {
+      ...this.defaultHeaders,
+      ...options.headers,
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    }
+
+    // Create AbortController for timeout
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), this.timeout)
+
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers,
+        signal: controller.signal
+      })
+
+      clearTimeout(timeoutId)
+
+      // Handle response errors similar to axios interceptor
+      if (!response.ok) {
+        const responseStatus = response.status
+        let data: any = {}
+        
+        try {
+          data = await response.json()
+        } catch (e) {
+          // Response might not be JSON
+        }
+
+        let errorCode: ErrorCodeValue = ServiceErrorCodes.UNKNOWN_ERROR
+
+        // Check if there's a specific error in the response
+        if (data && data.error) {
+          errorCode = data.code || `HTTP_${responseStatus}`
+        }
+
+        // Create friendly messages for common HTTP status codes
+        switch (responseStatus) {
+          case 401:
+            if (data && data.code === ServiceErrorCodes.TOKEN_EXPIRED) {
+              errorCode = ServiceErrorCodes.TOKEN_EXPIRED
+            } else {
+              errorCode = ServiceErrorCodes.TOKEN_INVALID
+            }
+            break
+          case 403:
+            errorCode = ServiceErrorCodes.AUTH_FORBIDDEN
+            break
+          case 404:
+            errorCode = ServiceErrorCodes.NOT_FOUND
+            break
+          case 429:
+            errorCode = ServiceErrorCodes.RATE_LIMITED
+            break
+          case 500:
+          case 502:
+          case 503:
+          case 504:
+            errorCode = ServiceErrorCodes.SERVER_ERROR
+            break
+        }
+
+        const apiError = new ApiError(errorCode, false)
+
+        // Only log to Sentry for non-expiration errors
+        if (errorCode !== ServiceErrorCodes.TOKEN_EXPIRED) {
+          logger.captureException(apiError, {
+            httpStatus: responseStatus,
+            endpoint: url,
+            method: options.method?.toUpperCase() || 'GET',
+            requestData: options.body,
+            responseData: data
+          })
+        }
+
+        throw apiError
+      }
+
+      // Return response data
+      const contentType = response.headers.get('content-type')
+      if (contentType && contentType.includes('application/json')) {
+        return { data: await response.json() }
+      } else {
+        return { data: await response.text() }
+      }
+
+    } catch (error) {
+      clearTimeout(timeoutId)
+
+      if (error instanceof ApiError) {
+        throw error
+      }
+
+      if (error.name === 'AbortError') {
+        const timeoutError = new ApiError(ServiceErrorCodes.REQUEST_FAILED, true)
+        logger.captureException(timeoutError, {
+          endpoint: url,
+          method: options.method?.toUpperCase() || 'GET',
+          message: 'Request timeout'
+        })
+        throw timeoutError
+      }
+
+      // Network or other errors
+      const networkError = new ApiError(ServiceErrorCodes.NETWORK_ERROR, true)
+      logger.captureException(networkError, {
+        originalError: error,
+        endpoint: url,
+        method: options.method?.toUpperCase() || 'GET'
+      })
+      throw networkError
+    }
+  }
+
+  async get(endpoint: string): Promise<any> {
+    return this.request(endpoint, { method: 'GET' })
+  }
+
+  async post(endpoint: string, data?: any): Promise<any> {
+    return this.request(endpoint, {
+      method: 'POST',
+      body: data ? JSON.stringify(data) : undefined
+    })
+  }
+
+  async put(endpoint: string, data?: any): Promise<any> {
+    return this.request(endpoint, {
+      method: 'PUT',
+      body: data ? JSON.stringify(data) : undefined
+    })
+  }
+
+  async delete(endpoint: string): Promise<any> {
+    return this.request(endpoint, { method: 'DELETE' })
+  }
 }
 
 export class ChatApiService {
@@ -90,7 +247,7 @@ export class ChatApiService {
   private chatIdStorageKey: string
   private userIdStorageKey: string
   private storage: Storage
-  private api: ReturnType<typeof axios.create>
+  private api: FetchWrapper
 
   constructor(config: ChatConfig) {
     this.apiBaseUrl = config.apiBaseUrl
@@ -102,124 +259,10 @@ export class ChatApiService {
       config.userIdStorageKey || DEFAULT_USER_ID_STORAGE_KEY
     this.storage = getStorage()
 
-    // Create axios instance
-    this.api = axios.create({
-      baseURL: this.apiBaseUrl,
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      timeout: 30000 // 30 second timeout
-    })
-
-    // Add a request interceptor to include the token in all requests
-    this.api.interceptors.request.use(
-      requestConfig => {
-        const token = this.storage.getItem(this.tokenStorageKey)
-        if (token && requestConfig.headers) {
-          Object.assign(requestConfig.headers, {
-            Authorization: `Bearer ${token}`
-          })
-        }
-        return requestConfig
-      },
-      (error: AxiosError) => {
-        logger.captureException(error, {
-          context: 'request-interceptor',
-          url: error.config?.url
-        })
-        return Promise.reject(error)
-      }
-    )
-
-    // Add a response interceptor to handle errors consistently
-    this.api.interceptors.response.use(
-      response => response,
-      (error: AxiosError) => {
-        if (error.response) {
-          // The request was made and the server responded with an error status
-          const responseStatus = error.response.status
-          const data = error.response.data as any
-
-          let errorCode: ErrorCodeValue = ServiceErrorCodes.UNKNOWN_ERROR
-
-          // Check if there's a specific error in the response
-          if (data && data.error) {
-            errorCode = data.code || `HTTP_${responseStatus}`
-          }
-
-          // Create friendly messages for common HTTP status codes
-          switch (responseStatus) {
-            case 401:
-              // Check if this is specifically a token expiration
-              if (data && data.code === ServiceErrorCodes.TOKEN_EXPIRED) {
-                errorCode = ServiceErrorCodes.TOKEN_EXPIRED
-              } else {
-                // Other authentication errors like invalid tokens
-                errorCode = ServiceErrorCodes.TOKEN_INVALID
-              }
-              break
-            case 403:
-              errorCode = ServiceErrorCodes.AUTH_FORBIDDEN
-              break
-            case 404:
-              errorCode = ServiceErrorCodes.NOT_FOUND
-              break
-            case 429:
-              errorCode = ServiceErrorCodes.RATE_LIMITED
-              break
-            case 500:
-            case 502:
-            case 503:
-            case 504:
-              errorCode = ServiceErrorCodes.SERVER_ERROR
-              break
-          }
-
-          // Create the API error
-          const apiError = new ApiError(errorCode, false)
-
-          // Only log to Sentry for non-expiration errors
-          if (errorCode !== ServiceErrorCodes.TOKEN_EXPIRED) {
-            logger.captureException(apiError, {
-              originalError: error,
-              httpStatus: responseStatus,
-              endpoint: error.config?.url,
-              method: error.config?.method?.toUpperCase(),
-              requestData: error.config?.data,
-              responseData: data
-            })
-          }
-
-          return Promise.reject(apiError)
-        } else if (error.request) {
-          // The request was made but no response was received
-          const networkError = new ApiError(
-            ServiceErrorCodes.NETWORK_ERROR,
-            true
-          )
-
-          logger.captureException(networkError, {
-            originalError: error,
-            endpoint: error.config?.url,
-            method: error.config?.method?.toUpperCase()
-          })
-
-          return Promise.reject(networkError)
-        } else {
-          // Something happened in setting up the request
-          const requestError = new ApiError(
-            ServiceErrorCodes.REQUEST_FAILED,
-            false
-          )
-
-          logger.captureException(requestError, {
-            originalError: error,
-            message: error.message
-          })
-
-          return Promise.reject(requestError)
-        }
-      }
+    // Create fetch wrapper instance
+    this.api = new FetchWrapper(
+      this.apiBaseUrl,
+      () => this.storage.getItem(this.tokenStorageKey)
     )
   }
 
@@ -240,7 +283,7 @@ export class ChatApiService {
 
         return {
           chatId: storedChatId,
-          messages: this.mapMessagesToNluxFormat(response.data.messages || [])
+          messages: this.mapMessagesToUIFormat(response.data.messages || [])
         }
       } catch (error) {
         // Check if this is a token expiration
@@ -296,7 +339,7 @@ export class ChatApiService {
 
       return {
         chatId: response.data.chat.id,
-        messages: [] // New chat has no messages yet
+        messages: this.mapMessagesToUIFormat(response.data.messages || [])
       }
     } catch (error) {
       logger.error('Error creating new chat', { error })
@@ -365,28 +408,21 @@ export class ChatApiService {
   }
 
   /**
-   * Map backend message format to NLUX format
+   * Map backend message format to UI format
    * @param messages - Backend messages
    */
-  private mapMessagesToNluxFormat(messages: Message[]): ChatItem[] {
-    return messages.map(message => {
-      if (message.role === 'user') {
-        return {
-          id: message.id,
-          message: message.content,
-          role: 'user' as const,
-          timestamp: new Date(message.created_at).getTime()
-        }
-      } else {
-        return {
-          id: message.id,
-          message: message.content,
-          role: 'assistant' as const,
-          type: 'text' as const,
-          timestamp: new Date(message.created_at).getTime()
-        }
-      }
-    })
+  private mapMessagesToUIFormat(messages: Message[]): UIMessage[] {
+    return messages.map((msg: any) => ({
+              id: msg.id,
+              role: msg.role as 'user' | 'assistant' | 'system',
+              parts: [
+                {
+                  type: 'text',
+                  text: msg.content
+                }
+              ],
+              createdAt: new Date(msg.createdAt)
+            }))
   }
 
   /**

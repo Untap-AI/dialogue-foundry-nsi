@@ -1,13 +1,14 @@
 import React, { useRef, useEffect, useState, useMemo } from 'react'
-import './ChatButton.css'
 import { useConfig } from '../../contexts/ConfigContext'
 import { PopupMessage } from './PopupMessage'
 import { logger } from '../../services/logger'
+import { Button } from '@/components/ui/button'
+import { cn } from '@/lib/utils'
 
 const POPUP_DELAY = 3000
 const POPUP_DURATION = 10000
 const DIALOGUE_FOUNDRY_POPUP_KEY = 'dialogue_foundry_popup'
-const ANIMATION_CLASS = `chat-button-animation-twist`
+const ANIMATION_CLASS = `animate-[twist_10s_ease-in-out_infinite]`
 
 // Helper to safely access localStorage
 const isLocalStorageAvailable = () => {
@@ -103,20 +104,25 @@ export const ChatButton: React.FC<ChatButtonProps> = ({ onClick, isOpen }) => {
 
   return (
     <>
-      <button
+      <Button
         ref={buttonRef}
         data-chat-button
-        className="chat-icon-button"
+        data-dialogue-foundry-id="chat-button"
+        size="icon"
+        className={cn(
+          "df:w-[60px] df:h-[60px] df:rounded-full df:shadow-lg df:transition-all df:duration-200 df:hover:scale-105 df:hover:shadow-xl df:active:scale-95",
+          "df:bg-primary df:text-primary-foreground df:border-none df:p-0 df:m-0, df:[&_svg:not([class*='size-'])]:size-[30px]"
+        )}
         onClick={onClick}
         aria-label={isOpen ? 'Close chat' : 'Open chat'}
       >
         {/* Icon */}
-        <svg viewBox="0 0 24 24">
+        <svg viewBox="0 0 24 24" className="df:fill-primary-foreground df:!h-[30px] df:!w-[30px]">
           <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z" />
           <path d="M7 9h10v2H7z" />
           <path d="M7 12h7v2H7z" />
         </svg>
-      </button>
+      </Button>
 
       {popupVisible && <PopupMessage buttonRef={buttonRef} />}
     </>

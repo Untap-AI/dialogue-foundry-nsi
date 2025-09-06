@@ -134,30 +134,20 @@ class Logger {
         release: this.config.release,
         debug: this.config.debug,
 
-        // Performance monitoring using modern Sentry API
-        integrations: [Sentry.browserTracingIntegration()],
+        // Disable automatic error capture - only capture manually logged errors
+        beforeSend: () => {
+          // Return null to prevent automatic error capture
+          return null
+        },
 
-        // Error processing
-        beforeSend: event => {
-          // Add useful application state if available
-          try {
-            if (typeof window !== 'undefined') {
-              // Create a new event object instead of modifying the original
-              return {
-                ...event,
-                tags: {
-                  ...event.tags,
-                  screen_width: window.innerWidth,
-                  screen_height: window.innerHeight,
-                  url_path: window.location.pathname
-                }
-              }
-            }
-          } catch (e) {
-            // Ignore any errors here
-          }
-          return event
-        }
+        // Disable automatic integrations that capture errors
+        integrations: [
+          // Only include browser tracing, exclude error capturing integrations
+          Sentry.browserTracingIntegration()
+        ],
+
+        // Disable automatic breadcrumbs for DOM events
+        defaultIntegrations: false
       })
 
       // Add default tags
@@ -166,6 +156,9 @@ class Logger {
 
       this.initialized = true
 
+      // Note: Global error handlers are disabled to only capture explicit logger usage
+      // If you need global error handling, uncomment the code below:
+      /*
       // Set a global error handler for uncaught exceptions
       if (typeof window !== 'undefined') {
         window.onerror = (message, _source, _lineno, _colno, error) => {
@@ -189,6 +182,7 @@ class Logger {
           )
         })
       }
+      */
     } catch (error) {
       console.error('Failed to initialize Sentry:', error)
     }
@@ -266,6 +260,28 @@ class Logger {
       // Set severity level
       scope.setLevel(this.severityMap.error)
 
+      // Override beforeSend for this specific capture to allow manual errors
+      scope.addEventProcessor(event => {
+        // Add useful application state if available
+        try {
+          if (typeof window !== 'undefined') {
+            return {
+              ...event,
+              tags: {
+                ...event.tags,
+                screen_width: window.innerWidth,
+                screen_height: window.innerHeight,
+                url_path: window.location.pathname,
+                manual_capture: true
+              }
+            }
+          }
+          return { ...event, tags: { ...event.tags, manual_capture: true } }
+        } catch (e) {
+          return { ...event, tags: { ...event.tags, manual_capture: true } }
+        }
+      })
+
       // Capture the exception with Sentry
       Sentry.captureException(error)
     })
@@ -288,10 +304,24 @@ class Logger {
       return
     }
 
-    // Capture event with Sentry
-    Sentry.captureMessage(eventName, {
-      level: 'info',
-      extra: metadata
+    // Capture event with Sentry using scope to override beforeSend
+    Sentry.withScope(scope => {
+      // Override beforeSend for this specific capture to allow manual events
+      scope.addEventProcessor(event => {
+        return {
+          ...event,
+          tags: {
+            ...event.tags,
+            manual_capture: true
+          }
+        }
+      })
+
+      // Capture event with Sentry
+      Sentry.captureMessage(eventName, {
+        level: 'info',
+        extra: metadata
+      })
     })
 
     // Also log to console
@@ -359,10 +389,24 @@ class Logger {
     // Add breadcrumb for the log
     this.addBreadcrumb('log', message, { level, ...metadata })
 
-    // Send to Sentry
-    Sentry.captureMessage(message, {
-      level: this.severityMap[level],
-      extra: metadata
+    // Send to Sentry using scope to override beforeSend
+    Sentry.withScope(scope => {
+      // Override beforeSend for this specific capture to allow manual logs
+      scope.addEventProcessor(event => {
+        return {
+          ...event,
+          tags: {
+            ...event.tags,
+            manual_capture: true
+          }
+        }
+      })
+
+      // Send to Sentry
+      Sentry.captureMessage(message, {
+        level: this.severityMap[level],
+        extra: metadata
+      })
     })
 
     // Log to console if appropriate for the configured console level

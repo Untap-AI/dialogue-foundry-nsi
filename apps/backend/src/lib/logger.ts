@@ -1,4 +1,10 @@
-import * as Sentry from '@sentry/node'
+import {
+init,
+captureException,
+captureMessage,
+setContext,
+setUser,
+} from '@sentry/node'
 import dotenv from 'dotenv'
 
 dotenv.config()
@@ -20,7 +26,7 @@ if (!isDevelopment) {
   }
 
   // Initialize Sentry with basic configuration
-  Sentry.init({
+  init({
     dsn,
     environment,
     enabled: !!dsn && !isDevelopment,
@@ -36,7 +42,7 @@ if (!isDevelopment) {
 
     // If this is an Error object, capture it in Sentry
     if (args[0] instanceof Error && !isDevelopment) {
-      Sentry.captureException(args[0])
+      captureException(args[0])
     }
   }
 }
@@ -60,7 +66,7 @@ class Logger {
 
     // Only send debug logs to Sentry in smokebox environment
     if (isSmokebox && !isDevelopment) {
-      Sentry.captureMessage(message, {
+      captureMessage(message, {
         level: 'debug',
         extra: metadata
       })
@@ -81,7 +87,7 @@ class Logger {
     console.warn(message, metadata || '')
 
     if (!isDevelopment) {
-      Sentry.captureMessage(message, {
+      captureMessage(message, {
         level: 'warning',
         extra: metadata
       })
@@ -101,7 +107,7 @@ class Logger {
       console.error(error, metadata || '')
 
       if (!isDevelopment) {
-        Sentry.captureMessage(error, {
+        captureMessage(error, {
           level: 'error',
           extra: metadata
         })
@@ -116,7 +122,7 @@ class Logger {
       console.error(error.message, error.stack || '', combinedMetadata)
 
       if (!isDevelopment) {
-        Sentry.captureException(error, {
+        captureException(error, {
           extra: combinedMetadata
         })
       }
@@ -128,7 +134,7 @@ class Logger {
    */
   setContext(contextName: string, context: Record<string, unknown>): void {
     if (!isDevelopment) {
-      Sentry.setContext(contextName, context)
+      setContext(contextName, context)
     }
   }
 
@@ -137,7 +143,7 @@ class Logger {
    */
   setUser(user: { id: string; email?: string; username?: string }): void {
     if (!isDevelopment) {
-      Sentry.setUser(user)
+      setUser(user)
     }
   }
 }

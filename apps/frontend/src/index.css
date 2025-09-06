@@ -1,0 +1,145 @@
+@import "tailwindcss" prefix(df) important;
+
+@theme {
+  /* Tailwind theme colors connected to our simplified variables */
+  --color-background: var(--df-color-background);
+  --color-foreground: var(--df-color-foreground);
+  --color-card: #f9fafb;
+  --color-card-foreground: #374151;
+  --color-popover: var(--df-color-background);
+  --color-popover-foreground: #374151;
+  --color-primary: var(--df-color-primary);
+  --color-primary-foreground: #ffffff;
+  --color-secondary: var(--df-color-secondary);
+  --color-secondary-foreground: #374151;
+  --color-muted: var(--df-color-muted);
+  --color-muted-foreground: #6b7280;
+  --color-accent: var(--df-color-accent);
+  --color-accent-foreground: #374151;
+  --color-destructive: #ef4444;
+  --color-destructive-foreground: #ffffff;
+  --color-border: #e5e7eb;
+  --color-input: var(--df-color-background);
+  --color-ring: var(--df-color-primary);
+  
+  /* Typography Scale */
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-base: 16px;
+  --text-lg: 18px;
+  --text-xl: 20px;
+  --text-2xl: 24px;
+  --text-3xl: 28px;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+
+  /* Spacing Scale */
+  --spacing: 4px;
+  --spacing-1: 4px;
+  --spacing-2: 8px;
+  --spacing-3: 12px;
+  --spacing-4: 16px;
+  --spacing-5: 20px;
+  --spacing-6: 24px;
+  --spacing-8: 32px;
+
+  /* Border Radius */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 100%;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  
+  /* Font Family */
+  --font-family-sans: var(--df-font-family);
+
+  /* Fixed Colors */
+  --color-white: #ffffff;
+  --color-gray-50: #f9fafb;
+  --color-gray-100: #f3f4f6;
+  --color-gray-200: #e5e7eb;
+  --color-gray-300: #d1d5db;
+  --color-gray-400: #9ca3af;
+  --color-gray-500: #6b7280;
+  --color-gray-600: #4b5563;
+  --color-gray-700: #374151;
+  --color-gray-800: #1f2937;
+  --color-gray-900: #111827;
+
+  /* Status Colors */
+  --color-success: #10b981;
+  --color-warning: #f59e0b;
+  --color-error: #ef4444;
+}
+
+/* Apply font family globally */
+#dialogue-foundry-app {
+  font-family: var(--df-font-family, var(--df-font-family-sans));
+}
+
+/* Custom scrollbar styling for all devices */
+/* Webkit browsers (Chrome, Safari, Edge) */
+#dialogue-foundry-app ::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+#dialogue-foundry-app ::-webkit-scrollbar-track {
+  background: var(--df-color-background);
+  border-radius: 4px;
+}
+
+#dialogue-foundry-app ::-webkit-scrollbar-thumb {
+  background: var(--df-color-primary);
+  border-radius: 4px;
+  border: 1px solid var(--df-color-gray-200);
+}
+
+#dialogue-foundry-app ::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--df-color-primary) 80%, black);
+}
+
+#dialogue-foundry-app ::-webkit-scrollbar-thumb:active {
+  background: color-mix(in srgb, var(--df-color-primary) 70%, black);
+}
+
+/* Firefox scrollbar styling */
+#dialogue-foundry-app {
+  scrollbar-width: thin;
+  scrollbar-color: var(--df-color-primary) var(--df-color-background);
+}
+
+/* Custom animations */
+@keyframes twist {
+  0%, 30%, 100% {
+    transform: rotate(0deg);
+  }
+  40% {
+    transform: rotate(-15deg) scale(1.08);
+  }
+  70% {
+    transform: rotate(15deg) scale(1.08);
+  }
+}
+
+@keyframes popIn {
+  0% {
+    opacity: 0;
+    transform: translateY(15px) scale(0.9);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(-5px) scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
