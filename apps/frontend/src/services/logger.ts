@@ -134,9 +134,13 @@ class Logger {
         release: this.config.release,
         debug: this.config.debug,
 
-        // Disable automatic error capture - only capture manually logged errors
-        beforeSend: () => {
-          // Return null to prevent automatic error capture
+        // Allow manual error capture but disable automatic error capture
+        beforeSend: (event) => {
+          // Only allow events that are manually captured (have manual_capture tag)
+          if (event.tags?.manual_capture === true) {
+            return event
+          }
+          // Block automatic error capture
           return null
         },
 

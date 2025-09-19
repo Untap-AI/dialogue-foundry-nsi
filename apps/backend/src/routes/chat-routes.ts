@@ -518,7 +518,11 @@ router.post('/stream-ai-sdk', authenticateChatAccess, async (req: CustomRequest,
     )}.`
 
     const modelMessages = convertToModelMessages(messages)
-    modelMessages.unshift({ role: 'system', content: docsContext })
+    
+    // Only add docs context if we actually have content
+    if (docsContext && docsContext.trim()) {
+      modelMessages.unshift({ role: 'system', content: docsContext })
+    }
 
     const result = streamText({
       model: openai('gpt-5'),

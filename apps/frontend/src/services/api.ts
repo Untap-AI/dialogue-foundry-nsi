@@ -453,13 +453,6 @@ export class ChatApiService {
     const chatId = this.storage.getItem(this.chatIdStorageKey)
     const userId = this.storage.getItem(this.userIdStorageKey)
 
-    console.log('Analytics event attempt:', {
-      eventType,
-      chatId: chatId ? `${chatId.substring(0, 8)}...` : null,
-      userId: userId ? `${userId.substring(0, 8)}...` : null,
-      storageType: this.storage.constructor.name
-    })
-
     // Check if chat is properly initialized
     if (!chatId || !userId) {
       console.warn('Skipping analytics event - missing required identifiers:', {

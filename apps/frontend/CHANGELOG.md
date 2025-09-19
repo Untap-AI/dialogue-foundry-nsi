@@ -1,5 +1,17 @@
 # @dialogue-foundry/frontend
 
+## 0.4.35
+
+### Patch Changes
+
+- docs content
+
+## 0.4.34
+
+### Patch Changes
+
+- Manual sentry events
+
 ## 0.4.33
 
 ### Patch Changes
