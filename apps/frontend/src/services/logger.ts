@@ -135,7 +135,7 @@ class Logger {
         debug: this.config.debug,
 
         // Allow manual error capture but disable automatic error capture
-        beforeSend: (event) => {
+        beforeSend: () => {
           // Block automatic error capture
           return null
         },
