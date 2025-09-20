@@ -420,6 +420,21 @@ const requestUserEmailTool = tool({
 // Add a dedicated endpoint for authenticated chat streaming that works with the AI SDK
 // TODO: Reconcile this to the old endpoint once migrated
 router.post('/stream-ai-sdk', authenticateChatAccess, async (req: CustomRequest, res) => {
+
+  console.log('Request body in authenticated AI SDK streaming', req.body);
+  console.log('Request user in authenticated AI SDK streaming', req.user);
+  console.log('Request params in authenticated AI SDK streaming', req.params);
+  console.log('Request query in authenticated AI SDK streaming', req.query);
+  console.log('Request headers in authenticated AI SDK streaming', req.headers);
+  console.log('Request method in authenticated AI SDK streaming', req.method);
+  console.log('Request path in authenticated AI SDK streaming', req.path);
+  console.log('Request protocol in authenticated AI SDK streaming', req.protocol);
+  console.log('Request secure in authenticated AI SDK streaming', req.secure);
+  console.log('Request url in authenticated AI SDK streaming', req.url);
+  console.log('Request hostname in authenticated AI SDK streaming', req.hostname);
+  console.log('Request ip in authenticated AI SDK streaming', req.ip);
+  console.log('Request ips in authenticated AI SDK streaming', req.ips);
+
   try {
     const { id: chatId, messages, timezone } = req.body;
     const userId = req.user?.userId;
@@ -428,17 +443,23 @@ router.post('/stream-ai-sdk', authenticateChatAccess, async (req: CustomRequest,
       return res.status(400).json({ error: 'Chat ID and authentication are required' });
     }
 
+    console.log('Chat ID in authenticated AI SDK streaming', chatId);
+
     // Get chat and configuration
     const chat = await getChatById(chatId);
     if (!chat) {
       return res.status(404).json({ error: 'Chat not found' });
     }
 
+    console.log('Chat in authenticated AI SDK streaming', chat);
+
     const companyId = chat.company_id;
     const chatConfig = await getChatConfigByCompanyId(companyId as string);
     if (!chatConfig) {
       return res.status(400).json({ error: 'Company configuration not found' });
     }
+
+    console.log('Chat config in authenticated AI SDK streaming', chatConfig);
 
     let docsContext = ''
     // Save the user's message to the database asynchronously (non-blocking)
@@ -479,6 +500,8 @@ router.post('/stream-ai-sdk', authenticateChatAccess, async (req: CustomRequest,
             }
           });
 
+          console.log('Content in authenticated AI SDK streaming', content);
+
   if (chatConfig?.pinecone_index_name) {
     try {
       const documents = await retrieveDocuments(chatConfig.pinecone_index_name, content)
@@ -492,6 +515,8 @@ router.post('/stream-ai-sdk', authenticateChatAccess, async (req: CustomRequest,
         }
       }
     }
+
+    console.log('Docs context in authenticated AI SDK streaming', docsContext);
 
     // Determine if email function should be enabled (moved earlier for scope)
     const shouldEnableEmailTool = Boolean(chatConfig?.support_email) && !Boolean(chat?.user_email)
@@ -518,11 +543,15 @@ router.post('/stream-ai-sdk', authenticateChatAccess, async (req: CustomRequest,
     )}.`
 
     const modelMessages = convertToModelMessages(messages)
+
+    console.log('Model messages in authenticated AI SDK streaming', modelMessages);
     
     // Only add docs context if we actually have content
     if (docsContext && docsContext.trim()) {
       modelMessages.unshift({ role: 'system', content: docsContext })
     }
+
+    console.log('Model messages with docs context in authenticated AI SDK streaming', modelMessages);
 
     const result = streamText({
       model: openai('gpt-5'),
