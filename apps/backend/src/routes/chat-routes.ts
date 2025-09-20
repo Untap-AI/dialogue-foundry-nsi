@@ -577,9 +577,12 @@ router.post('/stream-ai-sdk', authenticateChatAccess, async (req: CustomRequest,
         }
       }
     });
+
+    console.log('Result in authenticated AI SDK streaming', result);
     
     return result.pipeUIMessageStreamToResponse(res);
   } catch (error) {
+    console.error('Error in authenticated AI SDK streaming', { error: error as Error, chatId: req.params.chatId });
     logger.error('Error in authenticated AI SDK streaming', { error: error as Error, chatId: req.params.chatId });
     return res.status(500).json({ error: 'Internal server error' });
   }
