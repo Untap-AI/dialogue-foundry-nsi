@@ -136,10 +136,6 @@ class Logger {
 
         // Allow manual error capture but disable automatic error capture
         beforeSend: (event) => {
-          // Only allow events that are manually captured (have manual_capture tag)
-          if (event.tags?.manual_capture === true) {
-            return event
-          }
           // Block automatic error capture
           return null
         },
