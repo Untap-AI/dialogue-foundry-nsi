@@ -479,11 +479,11 @@ export class ChatApiService {
     // Try sendBeacon first if available (for better reliability during page unload)
     if (typeof navigator.sendBeacon === 'function') {
       try {
-        const blob = new Blob([JSON.stringify(analyticsPayload)], {
-          type: 'application/json'
-        })
-
-        const beaconSuccess = navigator.sendBeacon(`${this.apiBaseUrl}/events`, blob)
+        // Use text/plain content type to avoid CORS preflight issues on mobile
+        const beaconSuccess = navigator.sendBeacon(
+          `${this.apiBaseUrl}/events`, 
+          JSON.stringify(analyticsPayload)
+        )
         
         if (beaconSuccess) {
           console.log('Analytics event sent via sendBeacon:', {

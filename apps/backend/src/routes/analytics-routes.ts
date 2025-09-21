@@ -53,11 +53,28 @@ const validateEventData = (eventType: EventType, eventData: any) => {
 /**
  * POST /analytics/events
  * Create a new analytics event
+ * Handles both regular POST requests and sendBeacon requests
  */
 router.post('/events', async (req, res) => {
   try {
+    // Handle sendBeacon requests (which may have different content-type)
+    let body = req.body
+    
+    // If content-type is text/plain (common with sendBeacon), try to parse as JSON
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body)
+      } catch (parseError) {
+        console.warn('Failed to parse request body as JSON:', parseError)
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid JSON in request body'
+        })
+      }
+    }
+
     // Parse and validate the base event structure
-    const eventData = analyticsEventSchema.parse(req.body)
+    const eventData = analyticsEventSchema.parse(body)
     
     // Validate the event_data based on event_type
     const validatedEventData = validateEventData(eventData.event_type, eventData.event_data)
@@ -75,6 +92,14 @@ router.post('/events', async (req, res) => {
       event_data: validatedEventData,
       ip_address: ipAddress
     })
+
+    // Return minimal response for sendBeacon (to save bandwidth)
+    const isBeaconRequest = req.headers['content-type']?.includes('text/plain') || 
+                           req.headers['user-agent']?.includes('sendBeacon')
+    
+    if (isBeaconRequest) {
+      return res.status(204).send() // No content response for beacon
+    }
 
     return res.status(201).json({
       success: true,
@@ -101,11 +126,28 @@ router.post('/events', async (req, res) => {
 /**
  * POST /
  * Create a new analytics event (base route)
+ * Handles both regular POST requests and sendBeacon requests
  */
 router.post('/', async (req, res) => {
   try {
+    // Handle sendBeacon requests (which may have different content-type)
+    let body = req.body
+    
+    // If content-type is text/plain (common with sendBeacon), try to parse as JSON
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body)
+      } catch (parseError) {
+        console.warn('Failed to parse request body as JSON:', parseError)
+        return res.status(400).json({
+          success: false,
+          error: 'Invalid JSON in request body'
+        })
+      }
+    }
+
     // Parse and validate the base event structure
-    const eventData = analyticsEventSchema.parse(req.body)
+    const eventData = analyticsEventSchema.parse(body)
     
     // Validate the event_data based on event_type
     const validatedEventData = validateEventData(eventData.event_type, eventData.event_data)
@@ -123,6 +165,14 @@ router.post('/', async (req, res) => {
       event_data: validatedEventData,
       ip_address: ipAddress
     })
+
+    // Return minimal response for sendBeacon (to save bandwidth)
+    const isBeaconRequest = req.headers['content-type']?.includes('text/plain') || 
+                           req.headers['user-agent']?.includes('sendBeacon')
+    
+    if (isBeaconRequest) {
+      return res.status(204).send() // No content response for beacon
+    }
 
     return res.status(201).json({
       success: true,

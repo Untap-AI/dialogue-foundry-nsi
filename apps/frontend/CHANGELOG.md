@@ -1,5 +1,23 @@
 # @dialogue-foundry/frontend
 
+## 0.4.38
+
+### Patch Changes
+
+- Fix mobile
+
+## 0.4.37
+
+### Patch Changes
+
+- a
+
+## 0.4.36
+
+### Patch Changes
+
+- Roll back logging
+
 ## 0.4.35
 
 ### Patch Changes
