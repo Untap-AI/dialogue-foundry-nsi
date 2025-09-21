@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.38
+
+### Patch Changes
+
+- Fix mobile
+
 ## 0.4.37
 
 ### Patch Changes

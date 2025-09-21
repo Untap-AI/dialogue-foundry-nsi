@@ -18,8 +18,10 @@ const port = parseInt(process.env.PORT || '3000', 10)
 // This allows Express to trust the X-Forwarded-For header for accurate IP detection
 app.set('trust proxy', 1)
 
-// Parse JSON bodies
-app.use(express.json())
+// Middleware to handle different content types (especially for sendBeacon)
+app.use(express.text({ type: 'text/plain' })) // Handle text/plain for sendBeacon
+app.use(express.json({ limit: '10mb' })) // Handle JSON requests
+app.use(express.urlencoded({ extended: true })) // Handle form data
 
 // Health check endpoint - placed at the top to ensure it's always accessible
 app.get('/health', (_, res) => {
@@ -29,15 +31,18 @@ app.get('/health', (_, res) => {
 // Configure rate limiting
 const globalRateLimit = rateLimit({
   windowMs: 5 * 60 * 1000, // 5 minutes
-  limit: 100, // 100 requests per window per IP
+  limit: 200, // Increased limit for mobile compatibility
   standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
   message: { error: 'Too many requests, please try again later.' },
   // Trust the X-Forwarded-For header from Render's proxy
   skipSuccessfulRequests: false, // Don't skip successful requests
   skip: (req) => {
-    // Skip rate limiting for health check
-    return req.path === '/health'
+    // Skip rate limiting for health check and analytics
+    return req.path === '/health' || 
+           req.path === '/api/analytics/events' || 
+           req.path === '/api/analytics' ||
+           req.path.startsWith('/api/analytics/')
   }
 })
 
@@ -66,13 +71,14 @@ app.use(
       return callback(null, true)
     },
     credentials: true,
-    // Add specific headers needed for sendBeacon
+    // Add specific headers needed for sendBeacon and mobile requests
     allowedHeaders: [
       'Content-Type',
       'Authorization',
       'X-Requested-With',
       'Accept',
-      'Origin'
+      'Origin',
+      'User-Agent'
     ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     // Expose headers that might be needed
