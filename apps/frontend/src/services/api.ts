@@ -467,7 +467,7 @@ export class ChatApiService {
 
     const analyticsPayload = {
       chat_id: chatId,
-      message_id: messageId,
+      ...(messageId ? { message_id: messageId } : {}),
       user_id: userId,
       company_id: this.companyId,
       event_type: eventType,
@@ -479,6 +479,7 @@ export class ChatApiService {
     // Try sendBeacon first if available (for better reliability during page unload)
     if (typeof navigator.sendBeacon === 'function') {
       try {
+        
         // Use text/plain content type to avoid CORS preflight issues on mobile
         const beaconSuccess = navigator.sendBeacon(
           `${this.apiBaseUrl}/events`, 
@@ -489,6 +490,7 @@ export class ChatApiService {
           console.log('Analytics event sent via sendBeacon:', {
             eventType,
             url: eventData.url,
+            payload: analyticsPayload,
             success: true
           })
           return // Success, no need to fall back
@@ -534,7 +536,7 @@ export class ChatApiService {
   ): Promise<void> {
     await this.recordAnalyticsEvent('link_click', {
       url,
-      linkText,
+      link_text: linkText,
     }, messageId)
   }
 
