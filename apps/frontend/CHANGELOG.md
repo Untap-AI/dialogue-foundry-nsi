@@ -1,5 +1,12 @@
 # @dialogue-foundry/frontend
 
+## 0.4.39
+
+### Patch Changes
+
+- ac8628d: Button Border Override
+- be22c75: events
+
 ## 0.4.38
 
 ### Patch Changes
