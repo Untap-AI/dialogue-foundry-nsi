@@ -1,5 +1,5 @@
 import { useState, useLayoutEffect, useCallback, useMemo, useEffect } from 'react'
-import { Chat, useChat } from '@ai-sdk/react'
+import { useChat } from '@ai-sdk/react'
 import { ChatApiService } from '../services/api'
 import { logger } from '../services/logger'
 import { DefaultChatTransport, UIMessage } from 'ai'
@@ -156,9 +156,8 @@ export function useChatPersistence() {
   const recordLinkClick = useCallback(async (
     url: string,
     linkText?: string,
-    messageId?: string
   ) => {
-    await chatService.recordLinkClick(url, linkText, messageId)
+    await chatService.recordLinkClick(url, linkText)
   }, [chatService])
 
   const recordConversationStarterClick = useCallback(async (

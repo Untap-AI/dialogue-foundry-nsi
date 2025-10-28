@@ -538,12 +538,11 @@ export class ChatApiService {
   async recordLinkClick(
     url: string,
     linkText?: string,
-    messageId?: string
   ): Promise<void> {
     await this.recordAnalyticsEvent('link_click', {
       url,
       link_text: linkText,
-    }, messageId)
+    })
   }
 
   /**
