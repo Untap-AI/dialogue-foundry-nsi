@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.43
+
+### Patch Changes
+
+- Fix event logging
+
 ## 0.4.42
 
 ### Patch Changes

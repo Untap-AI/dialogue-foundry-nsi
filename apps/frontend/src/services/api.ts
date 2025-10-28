@@ -465,9 +465,14 @@ export class ChatApiService {
       return
     }
 
+    // Generate a UUID for message_id if provided, since AI SDK uses nanoid format
+    // which is incompatible with the database UUID column type
+    // TODO: Transition DB to being compatible with nanoid format
+    const messageIdUUID = messageId ? crypto.randomUUID() : undefined
+
     const analyticsPayload = {
       chat_id: chatId,
-      ...(messageId ? { message_id: messageId } : {}),
+      ...(messageIdUUID ? { message_id: messageIdUUID } : {}),
       user_id: userId,
       company_id: this.companyId,
       event_type: eventType,
