@@ -11,7 +11,7 @@ type ResponseProps = ComponentProps<typeof Streamdown> & {
 const CustomLink = ({ node, children, className, href, ...props }: any) => (
   <a
     className={cn(
-      'df:font-medium df:text-primary df:underline df:break-words df:overflow-wrap-anywhere df:inline',
+      'df:font-medium df:text-primary df:underline df:inline',
       className
     )}
     data-streamdown="link"
@@ -19,6 +19,10 @@ const CustomLink = ({ node, children, className, href, ...props }: any) => (
     rel="noreferrer"
     {...props}
     target="_self"
+    style={{ 
+      overflowWrap: 'break-word',
+      wordBreak: 'break-word'
+    }}
   >
     {children}
   </a>

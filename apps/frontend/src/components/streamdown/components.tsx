@@ -1,7 +1,18 @@
 import type { Options } from 'react-markdown';
+import type React from 'react';
 import { cn } from './utils';
 
 export const components: Options['components'] = {
+  p: ({ node, children, className, ...props }) => (
+    <p
+      className={cn('df:text-balance', className)}
+      data-streamdown="paragraph"
+      style={{ textWrap: 'pretty' } as React.CSSProperties}
+      {...props}
+    >
+      {children}
+    </p>
+  ),
   ol: ({ node, children, className, ...props }) => (
     <ol
       className={cn('df:ml-4 df:list-outside df:list-decimal', className)}
