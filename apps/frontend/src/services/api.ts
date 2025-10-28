@@ -465,14 +465,15 @@ export class ChatApiService {
       return
     }
 
-    // Generate a UUID for message_id if provided, since AI SDK uses nanoid format
-    // which is incompatible with the database UUID column type
-    // TODO: Transition DB to being compatible with nanoid format
-    const messageIdUUID = messageId ? crypto.randomUUID() : undefined
-
+    // Note: message_id is omitted because:
+    // 1. AI SDK uses nanoid format which is incompatible with DB UUID column
+    // 2. There's a foreign key constraint to messages table
+    // 3. The field is optional in the database schema
+    // TODO: Future - remove FK constraint and change column to TEXT to support nanoid
+    
     const analyticsPayload = {
       chat_id: chatId,
-      ...(messageIdUUID ? { message_id: messageIdUUID } : {}),
+      // message_id intentionally omitted - see note above
       user_id: userId,
       company_id: this.companyId,
       event_type: eventType,

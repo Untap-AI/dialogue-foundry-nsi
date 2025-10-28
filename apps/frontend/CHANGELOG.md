@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.44
+
+### Patch Changes
+
+- No message id sent
+
 ## 0.4.43
 
 ### Patch Changes
