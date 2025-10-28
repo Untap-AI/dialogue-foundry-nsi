@@ -448,7 +448,7 @@ export class ChatApiService {
   /**
    * Record an analytics event - tries sendBeacon first, falls back to regular POST
    */
-  async recordAnalyticsEvent(eventType: string, eventData: Record<string, any> = {}, messageId?: string): Promise<void> {
+  async recordAnalyticsEvent(eventType: string, eventData: Record<string, any> = {}): Promise<void> {
     // Capture all required values immediately to avoid issues during page unload
     const chatId = this.storage.getItem(this.chatIdStorageKey)
     const userId = this.storage.getItem(this.userIdStorageKey)
