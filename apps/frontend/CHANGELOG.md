@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.40
+
+### Patch Changes
+
+- Link rendering
+
 ## 0.4.39
 
 ### Patch Changes

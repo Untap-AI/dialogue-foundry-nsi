@@ -11,7 +11,7 @@ type ResponseProps = ComponentProps<typeof Streamdown> & {
 const CustomLink = ({ node, children, className, href, ...props }: any) => (
   <a
     className={cn(
-      'df:font-medium df:text-primary df:underline df:break-words df:break-all df:hyphens-auto df:inline-block df:max-w-full',
+      'df:font-medium df:text-primary df:underline df:break-words df:overflow-wrap-anywhere df:inline',
       className
     )}
     data-streamdown="link"
