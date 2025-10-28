@@ -58,11 +58,15 @@ export const components: Options['components'] = {
   ),
   a: ({ node, children, className, href, ...props }) => (
     <a
-      className={cn('df:font-medium df:text-primary df:underline', className)}
+      className={cn('df:font-medium df:text-primary df:underline df:inline', className)}
       data-streamdown="link"
       href={href}
       rel="noreferrer"
       target="_blank"
+      style={{ 
+        overflowWrap: 'break-word',
+        wordBreak: 'break-word'
+      } as React.CSSProperties}
       {...props}
     >
       {children}
