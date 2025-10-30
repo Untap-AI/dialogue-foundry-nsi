@@ -1,5 +1,42 @@
 # @dialogue-foundry/frontend
 
+## 0.4.44
+
+### Patch Changes
+
+- No message id sent
+
+## 0.4.43
+
+### Patch Changes
+
+- Fix event logging
+
+## 0.4.42
+
+### Patch Changes
+
+- Regular link
+
+## 0.4.41
+
+### Patch Changes
+
+- Try again
+
+## 0.4.40
+
+### Patch Changes
+
+- Link rendering
+
+## 0.4.39
+
+### Patch Changes
+
+- ac8628d: Button Border Override
+- be22c75: events
+
 ## 0.4.38
 
 ### Patch Changes

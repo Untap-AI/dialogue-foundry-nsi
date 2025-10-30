@@ -88,7 +88,8 @@ export interface ChatInterfaceRef {
   createNewChat: () => Promise<void>;
 }
 
-
+const DEFAULT_POWERED_BY_TEXT = 'Untap AI'
+const DEFAULT_POWERED_BY_URL = 'https://untap-ai.com' 
 
 export const ChatInterface = React.forwardRef<ChatInterfaceRef, ChatInterfaceProps>(
   ({ onChatStatusChange }, _ref) => {
@@ -96,8 +97,14 @@ export const ChatInterface = React.forwardRef<ChatInterfaceRef, ChatInterfacePro
   const [input, setInput] = useState('');
 
   const showPoweredBy = poweredBy?.show ?? true
-  const poweredByText = poweredBy?.text ?? 'Untap AI'
-  const poweredByUrl = poweredBy?.url ?? 'https://untap-ai.com'
+  const poweredByText = poweredBy?.text ?? DEFAULT_POWERED_BY_TEXT
+  const poweredByUrl = poweredBy?.url ?? DEFAULT_POWERED_BY_URL
+  
+  // Determine if email should be unbranded based on poweredBy config
+  const isUnbranded = 
+    poweredBy?.show === false ||
+    (poweredBy?.text !== undefined && poweredBy.text !== DEFAULT_POWERED_BY_TEXT) ||
+    (poweredBy?.url !== undefined && poweredBy.url !== DEFAULT_POWERED_BY_URL)
   
   // Use the chat persistence hook
   const {
@@ -142,20 +149,6 @@ export const ChatInterface = React.forwardRef<ChatInterfaceRef, ChatInterfacePro
     }
   };
 
-  // Handle email submission for tool calls
-  // const handleEmailSubmit = async (email: string) => {
-  //   if (!emailRequest) return;
-    
-  //   setIsSubmittingEmail(true);
-  //   try {
-  //     await submitEmailForToolCall(email);
-  //   } catch (error) {
-  //     console.error('Failed to submit email:', error);
-  //     // Could show an error message here
-  //   } finally {
-  //     setIsSubmittingEmail(false);
-  //   }
-  // };
 
   // Show loading state when initializing
   if (chatStatus === 'loading') {
@@ -245,7 +238,7 @@ export const ChatInterface = React.forwardRef<ChatInterfaceRef, ChatInterfacePro
                         <EmailInputMessage
                           key={`${message.id}-tool-${i}`}
                           onSubmit={async (email: string) => {
-                            await submitEmailForToolCall(email, part.toolCallId, args.subject, args.conversationSummary)
+                            await submitEmailForToolCall(email, part.toolCallId, args.subject, args.conversationSummary, isUnbranded)
                           }}
                         />
                       )

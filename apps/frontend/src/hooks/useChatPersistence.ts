@@ -1,5 +1,5 @@
 import { useState, useLayoutEffect, useCallback, useMemo, useEffect } from 'react'
-import { Chat, useChat } from '@ai-sdk/react'
+import { useChat } from '@ai-sdk/react'
 import { ChatApiService } from '../services/api'
 import { logger } from '../services/logger'
 import { DefaultChatTransport, UIMessage } from 'ai'
@@ -121,7 +121,8 @@ export function useChatPersistence() {
     userEmail: string,
     toolCallId: string,
     subject: string,
-    conversationSummary: string
+    conversationSummary: string,
+    isUnbranded: boolean = false
   ) => {
     if (!chatId) {
       throw new Error('No chat session available')
@@ -131,7 +132,8 @@ export function useChatPersistence() {
       const result = await chatService.sendEmailRequest(chatId, {
         userEmail,
         subject,
-        conversationSummary
+        conversationSummary,
+        isUnbranded
       })
 
       if (!result.success) {
@@ -156,9 +158,8 @@ export function useChatPersistence() {
   const recordLinkClick = useCallback(async (
     url: string,
     linkText?: string,
-    messageId?: string
   ) => {
-    await chatService.recordLinkClick(url, linkText, messageId)
+    await chatService.recordLinkClick(url, linkText)
   }, [chatService])
 
   const recordConversationStarterClick = useCallback(async (

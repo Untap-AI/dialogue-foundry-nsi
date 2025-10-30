@@ -448,7 +448,7 @@ export class ChatApiService {
   /**
    * Record an analytics event - tries sendBeacon first, falls back to regular POST
    */
-  async recordAnalyticsEvent(eventType: string, eventData: Record<string, any> = {}, messageId?: string): Promise<void> {
+  async recordAnalyticsEvent(eventType: string, eventData: Record<string, any> = {}): Promise<void> {
     // Capture all required values immediately to avoid issues during page unload
     const chatId = this.storage.getItem(this.chatIdStorageKey)
     const userId = this.storage.getItem(this.userIdStorageKey)
@@ -465,9 +465,15 @@ export class ChatApiService {
       return
     }
 
+    // Note: message_id is omitted because:
+    // 1. AI SDK uses nanoid format which is incompatible with DB UUID column
+    // 2. There's a foreign key constraint to messages table
+    // 3. The field is optional in the database schema
+    // TODO: Future - remove FK constraint and change column to TEXT to support nanoid
+    
     const analyticsPayload = {
       chat_id: chatId,
-      message_id: messageId,
+      // message_id intentionally omitted - see note above
       user_id: userId,
       company_id: this.companyId,
       event_type: eventType,
@@ -479,6 +485,7 @@ export class ChatApiService {
     // Try sendBeacon first if available (for better reliability during page unload)
     if (typeof navigator.sendBeacon === 'function') {
       try {
+        
         // Use text/plain content type to avoid CORS preflight issues on mobile
         const beaconSuccess = navigator.sendBeacon(
           `${this.apiBaseUrl}/events`, 
@@ -489,6 +496,7 @@ export class ChatApiService {
           console.log('Analytics event sent via sendBeacon:', {
             eventType,
             url: eventData.url,
+            payload: analyticsPayload,
             success: true
           })
           return // Success, no need to fall back
@@ -530,12 +538,11 @@ export class ChatApiService {
   async recordLinkClick(
     url: string,
     linkText?: string,
-    messageId?: string
   ): Promise<void> {
     await this.recordAnalyticsEvent('link_click', {
       url,
-      linkText,
-    }, messageId)
+      link_text: linkText,
+    })
   }
 
   /**
@@ -557,14 +564,16 @@ export class ChatApiService {
     {
       userEmail,
       subject,
-      conversationSummary
-    }: { userEmail: string; subject: string; conversationSummary: string }
+      conversationSummary,
+      isUnbranded = false
+    }: { userEmail: string; subject: string; conversationSummary: string; isUnbranded?: boolean }
   ): Promise<{ success: boolean; error?: string }> {
     try {
       await this.api.post(`/chats/${chatId}/send-email`, {
         userEmail,
         subject,
-        conversationSummary
+        conversationSummary,
+        isUnbranded
       })
       return { success: true }
     } catch (error) {

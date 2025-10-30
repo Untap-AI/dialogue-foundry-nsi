@@ -23,7 +23,7 @@ const conversationStarterClickEventSchema = z.object({
 // Base analytics event schema
 const analyticsEventSchema = z.object({
   chat_id: z.string().uuid(),
-  message_id: z.string().optional(),
+  message_id: z.string().uuid().optional(),
   user_id: z.string().uuid(),
   company_id: z.string(),
   event_type: z.enum([
@@ -185,7 +185,7 @@ router.post('/', async (req, res) => {
       return res.status(400).json({
         success: false,
         error: 'Validation error',
-        details: error.message
+        details: error.issues
       })
     }
 
