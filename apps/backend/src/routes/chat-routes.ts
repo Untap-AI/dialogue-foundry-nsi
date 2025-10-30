@@ -146,7 +146,7 @@ router.post('/', async (req, res) => {
 router.post('/:chatId/send-email', authenticateChatAccess, async (req, res) => {
   try {
     const { chatId } = req.params
-    const { userEmail, subject, conversationSummary } = req.body
+    const { userEmail, subject, conversationSummary, isUnbranded = false } = req.body
 
     if (!chatId || !userEmail || subject === undefined || conversationSummary === undefined) {
       return res.status(400).json({ error: 'Missing required fields' })
@@ -173,7 +173,8 @@ router.post('/:chatId/send-email', authenticateChatAccess, async (req, res) => {
       subject,
       conversationSummary,
       recentMessages,
-      companyId
+      companyId,
+      isUnbranded
     })
 
     if (emailSent) {

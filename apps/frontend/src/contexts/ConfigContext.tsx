@@ -64,7 +64,9 @@ const defaultConfig: DialogueFoundryConfig = {
   popupMessage: "Have questions? Click here for help!",
   openOnLoad: "desktop-only",
   welcomeMessage: "Welcome to Keystone Coach Works!\n\nReady to hit the road in style? Whether you're looking to rent, buy, or customize a luxury camper van, I'm here to help.\n\nHave a question? Just ask, or click one of the quick topics below to get started on your next adventure!",
-  poweredBy: {},
+  poweredBy: {
+    show: false
+  },
   suggestions: [
     {
       prompt:

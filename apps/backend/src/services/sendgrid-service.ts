@@ -8,7 +8,8 @@ dotenv.config()
 
 // Get SendGrid API key from environment variables
 const API_KEY = process.env.SENDGRID_API_KEY
-const DEFAULT_TEMPLATE_ID = process.env.DEFAULT_SENDGRID_TEMPLATE_ID
+const DEFAULT_TEMPLATE_ID = 'd-010e0d2e7c14484e923e40f7ffab2fc1'
+const UNBRANDED_TEMPLATE_ID = 'd-7b58dc32ebc34bdab186cfd2b6b220a7'
 
 if (!API_KEY) {
   throw new Error(
@@ -18,10 +19,15 @@ if (!API_KEY) {
   sgMail.setApiKey(API_KEY)
 }
 
-if (!DEFAULT_TEMPLATE_ID) {
-  throw new Error(
-    'DEFAULT_SENDGRID_TEMPLATE_ID is not set in environment variables. Email functionality will not work.'
-  )
+/**
+ * Utility function to capitalize the first letter of a string
+ * Handles edge cases like empty strings and leading whitespace
+ */
+const capitalizeFirstLetter = (text: string): string => {
+  if (!text) return text
+  const trimmed = text.trim()
+  if (!trimmed) return text
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1)
 }
 
 /**
@@ -70,6 +76,7 @@ export interface EmailData {
     content: string
   }[]
   companyId: string
+  isUnbranded?: boolean
 }
 
 /**
@@ -78,29 +85,32 @@ export interface EmailData {
  * @returns Promise that resolves when the email is sent
  */
 export const sendInquiryEmail = async (
-  emailData: EmailData
+  {
+    userEmail,
+    subject,
+    conversationSummary,
+    recentMessages,
+    companyId,
+    isUnbranded = false
+  }: EmailData
 ): Promise<boolean> => {
   try {
     // Get company configuration to check for custom template ID
-    const companyConfig = await getChatConfigByCompanyId(emailData.companyId)
+    const companyConfig = await getChatConfigByCompanyId(companyId)
 
     if (!companyConfig) {
       logger.error(
-        `No company config found for company ID: ${emailData.companyId}`,
+        `No company config found for company ID: ${companyId}`,
         {
-          companyId: emailData.companyId,
+          companyId: companyId,
           service: 'sendgrid-service'
         }
       )
       return false
     }
 
-    // Use company template ID if available, otherwise use default
-    const templateId =
-      companyConfig?.sendgrid_template_id || DEFAULT_TEMPLATE_ID
-
     // Format recent messages for better readability in the email
-    const formattedMessages = emailData.recentMessages.map(msg => ({
+    const formattedMessages = recentMessages.map(msg => ({
       role: msg.role.charAt(0).toUpperCase() + msg.role.slice(1), // Capitalize role
       content: stripMarkdown(msg.content) // Strip markdown formatting
     }))
@@ -120,28 +130,33 @@ export const sendInquiryEmail = async (
     // This should never happen, but is required for type safety
     if (!supportEmail) {
       logger.error(
-        `No support email found for company ID: ${emailData.companyId}`,
+        `No support email found for company ID: ${companyId}`,
         {
-          companyId: emailData.companyId,
+          companyId: companyId,
           service: 'sendgrid-service'
         }
       )
       return false
     }
 
+    const templateId = isUnbranded ? UNBRANDED_TEMPLATE_ID : DEFAULT_TEMPLATE_ID
+
+    // Capitalize the first letter of the subject
+    const capitalizedSubject = capitalizeFirstLetter(subject)
+
     // Create the email with proper types
     const msg = {
       to: [{ email: supportEmail }],
       from: {
         email: 'no-reply@untap-ai.com',
-        name: 'Untap AI'
+        name: isUnbranded ? 'AI Assistant' : 'Untap AI'  
       },
       templateId,
       dynamicTemplateData: {
-        subject: emailData.subject,
-        conversationSummary: emailData.conversationSummary,
+        subject: capitalizedSubject,
+        conversationSummary,
         chatHistory,
-        userEmail: emailData.userEmail,
+        userEmail: userEmail,
         date: new Date().toLocaleDateString('en-US', {
           year: 'numeric',
           month: 'long',
@@ -158,8 +173,8 @@ export const sendInquiryEmail = async (
   } catch (error) {
     logger.error('Error sending email', {
       error: error as Error,
-      userEmail: emailData.userEmail,
-      companyId: emailData.companyId,
+      userEmail: userEmail,
+      companyId: companyId,
       service: 'sendgrid-service'
     })
     if (error.response) {

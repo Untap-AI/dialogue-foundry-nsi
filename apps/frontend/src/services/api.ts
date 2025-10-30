@@ -564,14 +564,16 @@ export class ChatApiService {
     {
       userEmail,
       subject,
-      conversationSummary
-    }: { userEmail: string; subject: string; conversationSummary: string }
+      conversationSummary,
+      isUnbranded = false
+    }: { userEmail: string; subject: string; conversationSummary: string; isUnbranded?: boolean }
   ): Promise<{ success: boolean; error?: string }> {
     try {
       await this.api.post(`/chats/${chatId}/send-email`, {
         userEmail,
         subject,
-        conversationSummary
+        conversationSummary,
+        isUnbranded
       })
       return { success: true }
     } catch (error) {

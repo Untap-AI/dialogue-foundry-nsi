@@ -121,7 +121,8 @@ export function useChatPersistence() {
     userEmail: string,
     toolCallId: string,
     subject: string,
-    conversationSummary: string
+    conversationSummary: string,
+    isUnbranded: boolean = false
   ) => {
     if (!chatId) {
       throw new Error('No chat session available')
@@ -131,7 +132,8 @@ export function useChatPersistence() {
       const result = await chatService.sendEmailRequest(chatId, {
         userEmail,
         subject,
-        conversationSummary
+        conversationSummary,
+        isUnbranded
       })
 
       if (!result.success) {
