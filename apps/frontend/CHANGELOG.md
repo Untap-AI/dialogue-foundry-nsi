@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.46
+
+### Patch Changes
+
+- font fmaily
+
 ## 0.4.45
 
 ### Patch Changes
