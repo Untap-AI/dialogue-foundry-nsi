@@ -1,6 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
 import { supabase } from '../lib/supabase-client'
+import { createFetchWithRetry } from '../lib/fetch-with-retry'
 import type { Database, TablesInsert, TablesUpdate } from '../types/database'
 
 dotenv.config()
@@ -15,6 +16,14 @@ const serviceSupabase =
         auth: {
           autoRefreshToken: false,
           persistSession: false
+        },
+        global: {
+          fetch: createFetchWithRetry({
+            maxRetries: 3,
+            initialDelayMs: 500,
+            maxDelayMs: 5000,
+            timeoutMs: 15000
+          })
         }
       })
     : undefined

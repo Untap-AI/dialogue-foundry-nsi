@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.47
+
+### Patch Changes
+
+- Text wrap
+
 ## 0.4.46
 
 ### Patch Changes
