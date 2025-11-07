@@ -35,6 +35,10 @@ export const ChatWindow = forwardRef<HTMLDivElement, ChatWindowProps>(
 
       return cn(baseClasses, "df:scale-0 df:opacity-0 df:translate-y-2 df:pointer-events-none")
     }, [isOpen])
+    
+    const windowStyle = {
+      bottom: 'calc(var(--df-widget-button-size) + var(--df-widget-button-gap)) !important'
+    }
 
     return (
       <div ref={ref} className={className} data-dialogue-foundry-id="chat-window" aria-hidden={!isOpen}>
