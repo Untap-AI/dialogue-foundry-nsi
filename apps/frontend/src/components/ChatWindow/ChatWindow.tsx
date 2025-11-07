@@ -37,7 +37,7 @@ export const ChatWindow = forwardRef<HTMLDivElement, ChatWindowProps>(
     }, [isOpen])
     
     const windowStyle = {
-      bottom: 'calc(var(--df-button-size) + var(--df-button-gap)) !important'
+      bottom: 'calc(var(--df-widget-button-size) + var(--df-widget-button-gap)) !important'
     }
 
     return (
