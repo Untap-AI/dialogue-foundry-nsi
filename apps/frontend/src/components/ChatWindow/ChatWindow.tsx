@@ -23,7 +23,7 @@ export const ChatWindow = forwardRef<HTMLDivElement, ChatWindowProps>(
     // Generate CSS class names based on component state
     const className = useMemo(() => {
       const baseClasses = cn(
-        "df:w-[385px] df:h-[555px] df:absolute df:max-w-[90vw] df:max-h-[80vh]",
+        "df:w-[385px] df:h-[555px] df:absolute df:bottom-[70px] df:max-w-[90vw] df:max-h-[80vh]",
         "df:rounded-[10px] df:shadow-xl df:flex df:flex-col df:overflow-hidden",
         "df:transition-all df:duration-300 df:ease-out df:delay-[50ms]",
         "df:bg-background df:text-foreground df:right-0 df:origin-bottom-right"
@@ -35,13 +35,9 @@ export const ChatWindow = forwardRef<HTMLDivElement, ChatWindowProps>(
 
       return cn(baseClasses, "df:scale-0 df:opacity-0 df:translate-y-2 df:pointer-events-none")
     }, [isOpen])
-    
-    const windowStyle = {
-      bottom: 'calc(var(--df-button-size) + var(--df-button-gap)) !important'
-    }
 
     return (
-      <div ref={ref} className={className} style={windowStyle} data-dialogue-foundry-id="chat-window" aria-hidden={!isOpen}>
+      <div ref={ref} className={className} data-dialogue-foundry-id="chat-window" aria-hidden={!isOpen}>
         <ChatHeader onClose={onClose} onNewChat={handleNewChat} />
         <ChatInterface 
           ref={chatInterfaceRef}
