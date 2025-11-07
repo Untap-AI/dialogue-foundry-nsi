@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.51
+
+### Patch Changes
+
+- Dynamic gap
+
 ## 0.4.50
 
 ### Patch Changes
