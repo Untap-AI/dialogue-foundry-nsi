@@ -63,7 +63,7 @@
   /* Chat Widget Dimensions 
    * Customize the chat button size and spacing by overriding these variables.
    * The icon size is calculated automatically at 50% of button size.
-   * The chat window will position itself based on these values. 
+   * The chat window will position itself based on these values.  
    */
   --widget-button-size: var(--df-button-size, 60px);
   --widget-button-gap: var(--df-button-gap, 10px);
