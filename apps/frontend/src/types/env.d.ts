@@ -3,7 +3,7 @@
 interface ImportMetaEnv {
   readonly DEV: boolean
   readonly PROD: boolean
-  readonly VITE_SENTRY_DSN: string
+  readonly VITE_HONEYBADGER_API_KEY: string
   readonly VITE_API_BASE_URL: string
 }
 

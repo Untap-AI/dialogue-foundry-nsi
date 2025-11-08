@@ -1,6 +1,6 @@
 import express from 'express'
 import { v4 as uuidv4 } from 'uuid'
-import { streamText, convertToModelMessages, tool, stepCountIs } from 'ai'
+import { streamText, convertToModelMessages, tool, stepCountIs, generateText } from 'ai'
 import { openai } from '@ai-sdk/openai'
 import { z } from 'zod'
 import {
@@ -37,6 +37,75 @@ import type { Message, ChatSettings } from '../services/openai-service'
 import { sendInquiryEmail } from '../services/sendgrid-service'
 
 const router = express.Router()
+
+/**
+ * Enhances a user query with conversation context for better semantic search.
+ * Uses conversation history to make follow-up questions more specific and standalone.
+ */
+async function enhanceQueryWithContext(
+  currentQuery: string,
+  recentMessages: Array<{ role: string; content: string }>
+): Promise<string> {
+  // If no conversation history, return the original query
+  if (recentMessages.length < 2) {
+    return currentQuery
+  }
+
+  try {
+    // Get last 6 messages for context (3 turns of conversation)
+    const contextMessages = recentMessages.slice(-6).map(msg => 
+      `${msg.role}: ${msg.content}`
+    ).join('\n')
+
+    const prompt = `Given this conversation:
+
+${contextMessages}
+
+The user just said: "${currentQuery}"
+
+Your task: Rewrite this as a concise, standalone search query. Add only the essential context needed from the conversation. Keep it focused and brief - this is for semantic search, not a detailed question.
+
+Example:
+- Conversation mentions "West Hills Vineyards" and "pricing plans"
+- User says: "What about the enterprise option?"
+- Good: "What is the enterprise pricing plan at West Hills Vineyards?"
+- Bad: "What are the details, features, pricing, and support options for the enterprise pricing plan at West Hills Vineyards?" (too verbose and adds topics not mentioned)
+
+Return ONLY the rewritten query, nothing else.`
+
+    const { text } = await generateText({
+      model: openai('gpt-5-nano'),
+      prompt,
+      temperature: 0,
+      providerOptions: {
+        openai: {
+          reasoningEffort: "minimal",
+          serviceTier: "priority"
+        }
+      }
+    })
+
+    const enhancedQuery = text.trim()
+    
+    // Log the enhancement for debugging
+    logger.info('Query enhanced for Pinecone', {
+      original: currentQuery,
+      enhanced: enhancedQuery
+    })
+    console.log('Query enhanced for Pinecone', {
+      original: currentQuery,
+      enhanced: enhancedQuery
+    })
+
+    return enhancedQuery || currentQuery
+  } catch (error) {
+    logger.warn('Error enhancing query with context, using original', {
+      error: error as Error,
+      query: currentQuery
+    })
+    return currentQuery
+  }
+}
 
 // Get a chat by ID with its messages (requires chat-specific authentication)
 router.get('/:chatId', authenticateChatAccess, async (req, res) => {
@@ -272,7 +341,13 @@ async function processStream(
   // Add Pinecone context if available
   if (chatConfig?.pinecone_index_name) {
     try {
-      const documents = await retrieveDocuments(chatConfig.pinecone_index_name, content)
+      // Enhance query with conversation context for better retrieval
+      const messagesForContext = previousMessages.map(msg => ({
+        role: msg.role,
+        content: msg.content
+      }))
+      const enhancedQuery = await enhanceQueryWithContext(content, messagesForContext)
+      const documents = await retrieveDocuments(chatConfig.pinecone_index_name, enhancedQuery)
       if (documents && documents.length > 0) {
         const contextFromDocs = formatDocumentsAsContext(documents)
         openaiMessages.unshift({ role: 'system', content: contextFromDocs })
@@ -481,16 +556,24 @@ router.post('/stream-ai-sdk', authenticateChatAccess, async (req: CustomRequest,
             }
           });
 
-  if (chatConfig?.pinecone_index_name) {
-    try {
-      const documents = await retrieveDocuments(chatConfig.pinecone_index_name, content)
-      if (documents && documents.length > 0) {
-        docsContext = formatDocumentsAsContext(documents)
-      }
-    } catch (retrievalError) {
-      console.error('Error during document retrieval:', retrievalError)
-    }
-  }
+          // Retrieve documents with enhanced query using conversation context
+          if (chatConfig?.pinecone_index_name) {
+            try {
+              // Get recent messages for context enhancement
+              const previousMessages = await getMessagesByChatId(chatId);
+              const messagesForContext = previousMessages.map(msg => ({
+                role: msg.role,
+                content: msg.content
+              }))
+              const enhancedQuery = await enhanceQueryWithContext(content, messagesForContext)
+              const documents = await retrieveDocuments(chatConfig.pinecone_index_name, enhancedQuery)
+              if (documents && documents.length > 0) {
+                docsContext = formatDocumentsAsContext(documents)
+              }
+            } catch (retrievalError) {
+              console.error('Error during document retrieval:', retrievalError)
+            }
+          }
         }
       }
     }

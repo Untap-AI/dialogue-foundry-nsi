@@ -2,6 +2,7 @@ import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
 import type { Database } from '../types/database'
 import { env } from 'process'
+import { createFetchWithRetry } from './fetch-with-retry'
 
 dotenv.config()
 
@@ -16,4 +17,14 @@ if (!supabaseUrl || !supabaseAnonKey) {
 
 console.info(`Connecting to Supabase at ${supabaseUrl} (${env} environment)`)
 
-export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey)
+// Create Supabase client with retry-enabled fetch
+export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
+  global: {
+    fetch: createFetchWithRetry({
+      maxRetries: 3,
+      initialDelayMs: 500,
+      maxDelayMs: 5000,
+      timeoutMs: 15000 // 15 second timeout for Supabase queries
+    })
+  }
+})

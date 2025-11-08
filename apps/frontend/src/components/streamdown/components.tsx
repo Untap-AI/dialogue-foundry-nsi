@@ -5,9 +5,8 @@ import { cn } from './utils';
 export const components: Options['components'] = {
   p: ({ node, children, className, ...props }) => (
     <p
-      className={cn('df:text-balance', className)}
+      className={className}
       data-streamdown="paragraph"
-      style={{ textWrap: 'pretty' } as React.CSSProperties}
       {...props}
     >
       {children}

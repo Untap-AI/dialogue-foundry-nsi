@@ -60,6 +60,15 @@
   /* Font Family */
   --font-family-sans: var(--df-font-family);
 
+  /* Chat Widget Dimensions 
+   * Customize the chat button size and spacing by overriding these variables.
+   * The icon size is calculated automatically at 50% of button size.
+   * The chat window will position itself based on these values.  
+   */
+  --widget-button-size: var(--df-button-size, 60px);
+  --widget-button-gap: var(--df-button-gap, 10px);
+  --widget-button-icon-size: var(--df-button-icon-size, calc(var(--df-button-size, 60px) * 0.5));
+
   /* Fixed Colors */
   --color-white: #ffffff;
   --color-gray-50: #f9fafb;
@@ -81,7 +90,7 @@
 
 /* Apply font family globally */
 #dialogue-foundry-app {
-  font-family: var(--df-font-family, var(--df-font-family-sans));
+  font-family: var(--df-font-family, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif);
 }
 
 /* Custom scrollbar styling for all devices */

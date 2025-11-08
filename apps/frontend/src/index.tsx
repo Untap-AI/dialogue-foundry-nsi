@@ -19,9 +19,9 @@ async function init(
     return
   }
 
-  // Initialize logger asynchronously
-  await initLogger({
-    dsn: import.meta.env.VITE_SENTRY_DSN
+  // Initialize logger asynchronously (for manual error tracking only)
+  initLogger({
+    apiKey: import.meta.env.VITE_HONEYBADGER_API_KEY
   })
 
   // Create React root

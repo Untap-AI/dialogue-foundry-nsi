@@ -113,11 +113,22 @@ export const ChatButton: React.FC<ChatButtonProps> = ({ onClick, isOpen }) => {
           "df:w-[60px] df:h-[60px] df:rounded-full df:shadow-lg df:transition-all df:duration-200 df:hover:scale-105 df:hover:shadow-xl df:active:scale-95",
           "df:bg-primary df:text-primary-foreground df:border-none df:p-0 df:m-0, df:[&_svg:not([class*='size-'])]:size-[30px]"
         )}
+        style={{
+          width: 'var(--df-widget-button-size) !important',
+          height: 'var(--df-widget-button-size) !important',
+        }}
         onClick={onClick}
         aria-label={isOpen ? 'Close chat' : 'Open chat'}
       >
         {/* Icon */}
-        <svg viewBox="0 0 24 24" className="df:fill-primary-foreground df:!h-[30px] df:!w-[30px]">
+        <svg 
+          viewBox="0 0 24 24" 
+          className="df:fill-primary-foreground"
+          style={{
+            width: 'var(--df-widget-button-icon-size) !important',
+            height: 'var(--df-widget-button-icon-size) !important',
+          }}
+        >
           <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H5.17L4 17.17V4h16v12z" />
           <path d="M7 9h10v2H7z" />
           <path d="M7 12h7v2H7z" />

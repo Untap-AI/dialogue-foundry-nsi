@@ -47,7 +47,7 @@ export const ChatHeader = ({ onClose }: ChatHeaderProps) => {
   return (
     <div 
       ref={headerRef} 
-      className={cn("df:flex df:items-center df:justify-between df:p-[15px] df:font-sans", themeClass)}
+      className={cn("df:flex df:items-center df:justify-between df:p-[15px]", themeClass)}
       data-dialogue-foundry-id="chat-header"
     >
       {/* Branding section */}
@@ -55,7 +55,7 @@ export const ChatHeader = ({ onClose }: ChatHeaderProps) => {
         {logoUrl && (
           <img src={logoUrl} alt="Brand Logo" className="df:h-[30px] df:max-h-[30px] df:mr-[10px]" />
         )}
-        <div className="df:font-bold df:text-base df:leading-[30px] df:font-sans">{title}</div>
+        <div className="df:font-bold df:text-base df:leading-[30px]">{title}</div>
       </div>
 
       {/* Controls */}
@@ -66,7 +66,7 @@ export const ChatHeader = ({ onClose }: ChatHeaderProps) => {
           size="icon"
           className={cn(
             "w-[28px] h-[28px] text-primary-foreground bg-white/20 rounded-sm",
-            "hover:bg-white/30 hover:text-primary-foreground font-sans"
+            "hover:bg-white/30 hover:text-primary-foreground"
           )}
           onClick={toggleMenu}
           data-chat-button
@@ -80,8 +80,7 @@ export const ChatHeader = ({ onClose }: ChatHeaderProps) => {
           size="icon"
           className={cn(
             "df:w-[28px] df:h-[28px] df:rounded-md",
-            buttonClass,
-            "df:font-sans"
+            buttonClass
           )}
           onClick={onClose}
           data-chat-button

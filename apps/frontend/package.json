@@ -1,7 +1,7 @@
 {
   "name": "@dialogue-foundry/frontend",
   "private": true,
-  "version": "0.4.45",
+  "version": "0.4.52",
   "type": "module",
   "repository": {
     "type": "git",
@@ -23,7 +23,7 @@
     "@radix-ui/react-scroll-area": "^1.2.10",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tooltip": "^1.2.8",
-    "@sentry/react": "^9.12.0",
+    "@honeybadger-io/js": "^6.9.1",
     "ai": "^5.0.28",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

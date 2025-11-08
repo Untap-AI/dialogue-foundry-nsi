@@ -1,5 +1,47 @@
 # @dialogue-foundry/frontend
 
+## 0.4.52
+
+### Patch Changes
+
+- honeybadger
+
+## 0.4.51
+
+### Patch Changes
+
+- Dynamic gap
+
+## 0.4.50
+
+### Patch Changes
+
+- Fix
+
+## 0.4.49
+
+### Patch Changes
+
+- revert
+
+## 0.4.48
+
+### Patch Changes
+
+- asdf
+
+## 0.4.47
+
+### Patch Changes
+
+- Text wrap
+
+## 0.4.46
+
+### Patch Changes
+
+- font fmaily
+
 ## 0.4.45
 
 ### Patch Changes
