@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.52
+
+### Patch Changes
+
+- honeybadger
+
 ## 0.4.51
 
 ### Patch Changes
