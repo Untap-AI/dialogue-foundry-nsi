@@ -2,10 +2,10 @@ import express from 'express'
 import cors from 'cors'
 import dotenv from 'dotenv'
 import rateLimit from 'express-rate-limit'
+import Honeybadger from '@honeybadger-io/js'
 import chatRoutes from './routes/chat-routes'
 import analyticsRoutes from './routes/analytics-routes'
 import { logger } from './lib/logger'
-import { setupExpressErrorHandler } from '@sentry/node'
 
 // Load environment variables
 dotenv.config()
@@ -22,6 +22,9 @@ app.set('trust proxy', 1)
 app.use(express.text({ type: 'text/plain' })) // Handle text/plain for sendBeacon
 app.use(express.json({ limit: '10mb' })) // Handle JSON requests
 app.use(express.urlencoded({ extended: true })) // Handle form data
+
+// Add Honeybadger request handler (must be after body parsers, before routes)
+app.use(Honeybadger.requestHandler as any)
 
 // Health check endpoint - placed at the top to ensure it's always accessible
 app.get('/health', (_, res) => {
@@ -48,7 +51,7 @@ const globalRateLimit = rateLimit({
 
 // Apply global rate limit to all requests BEFORE CORS
 // This ensures any rate limit error responses will have CORS headers
-app.use(globalRateLimit)
+app.use(globalRateLimit as any)
 
 // Configure CORS
 const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',')
@@ -109,7 +112,8 @@ app.use('/api/chats', chatRoutes)
 app.use('/api/analytics', analyticsRoutes)
 app.use('/api/events', analyticsRoutes)
 
-setupExpressErrorHandler(app);
+// Add Honeybadger error handler (must be after routes, before custom error handler)
+app.use(Honeybadger.errorHandler as any)
 
 // Apply the chat stream rate limiter to the streaming routes
 // applyStreamRateLimit(chatStreamRateLimit)
@@ -137,7 +141,7 @@ app.use(
     res: express.Response,
     next: express.NextFunction
   ) => {
-    // Log the error with our Sentry logger
+    // Log the error with our Honeybadger logger
     logger.error(err, {
       stack: err.stack,
       message: err.message,

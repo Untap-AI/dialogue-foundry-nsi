@@ -167,7 +167,7 @@ class FetchWrapper {
 
         const apiError = new ApiError(errorCode, false)
 
-        // Only log to Sentry for non-expiration errors
+        // Only log to Honeybadger for non-expiration errors
         if (errorCode !== ServiceErrorCodes.TOKEN_EXPIRED) {
           logger.captureException(apiError, {
             httpStatus: responseStatus,

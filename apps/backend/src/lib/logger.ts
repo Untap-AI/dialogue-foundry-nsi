@@ -1,10 +1,4 @@
-import {
-init,
-captureException,
-captureMessage,
-setContext,
-setUser,
-} from '@sentry/node'
+import Honeybadger from '@honeybadger-io/js'
 import dotenv from 'dotenv'
 
 dotenv.config()
@@ -15,36 +9,24 @@ const isDevelopment = environment === 'development'
 const isSmokebox = environment === 'smokebox'
 const isProduction = environment === 'production'
 
-// Only initialize Sentry in non-dev environments
+// Only initialize Honeybadger in non-dev environments
 if (!isDevelopment) {
-  const dsn = process.env.SENTRY_DSN
+  const apiKey = process.env.HONEYBADGER_API_KEY
 
-  if (!dsn && (isProduction || isSmokebox)) {
+  if (!apiKey && (isProduction || isSmokebox)) {
     console.warn(
-      'SENTRY_DSN is not defined in environment variables. Error tracking will be disabled.'
+      'HONEYBADGER_API_KEY is not defined in environment variables. Error tracking will be disabled.'
     )
   }
 
-  // Initialize Sentry with basic configuration
-  init({
-    dsn,
+  // Initialize Honeybadger with basic configuration
+  Honeybadger.configure({
+    apiKey: apiKey || '',
     environment,
-    enabled: !!dsn && !isDevelopment,
-    // Simplified config without problematic integrations
-    tracesSampleRate: isSmokebox ? 1.0 : 0.2
+    developmentEnvironments: ['development'],
+    enableUncaught: false, // We'll handle errors manually
+    enableUnhandledRejection: false // We'll handle rejections manually
   })
-
-  // Log captured console errors to Sentry manually instead of using the integration
-  const originalConsoleError = console.error
-  console.error = (...args: unknown[]): void => {
-    // Call the original console.error
-    originalConsoleError(...args)
-
-    // If this is an Error object, capture it in Sentry
-    if (args[0] instanceof Error && !isDevelopment) {
-      captureException(args[0])
-    }
-  }
 }
 
 // Type for error object
@@ -55,47 +37,45 @@ type ErrorWithStackAndMetadata = Error & {
 }
 
 /**
- * Structured logger that integrates with Sentry
+ * Structured logger that integrates with Honeybadger
  */
 class Logger {
   /**
-   * Log a debug message - only sent to Sentry in smokebox environment
+   * Log a debug message - only sent to Honeybadger in smokebox environment
    */
   debug(message: string, metadata?: Record<string, unknown>): void {
     console.debug(message, metadata || '')
 
-    // Only send debug logs to Sentry in smokebox environment
+    // Only send debug logs to Honeybadger in smokebox environment
     if (isSmokebox && !isDevelopment) {
-      captureMessage(message, {
-        level: 'debug',
-        extra: metadata
+      Honeybadger.notify(message, {
+        context: metadata
       })
     }
   }
 
   /**
-   * Log an info message - not sent to Sentry
+   * Log an info message - not sent to Honeybadger
    */
   info(message: string, metadata?: Record<string, unknown>): void {
     console.info(message, metadata || '')
   }
 
   /**
-   * Log a warning message - sent to Sentry in production and smokebox
+   * Log a warning message - sent to Honeybadger in production and smokebox
    */
   warn(message: string, metadata?: Record<string, unknown>): void {
     console.warn(message, metadata || '')
 
     if (!isDevelopment) {
-      captureMessage(message, {
-        level: 'warning',
-        extra: metadata
+      Honeybadger.notify(message, {
+        context: metadata
       })
     }
   }
 
   /**
-   * Log an error - sent to Sentry in production and smokebox
+   * Log an error - sent to Honeybadger in production and smokebox
    * @param error Error object or error message
    * @param metadata Additional context for the error
    */
@@ -107,9 +87,8 @@ class Logger {
       console.error(error, metadata || '')
 
       if (!isDevelopment) {
-        captureMessage(error, {
-          level: 'error',
-          extra: metadata
+        Honeybadger.notify(error, {
+          context: metadata
         })
       }
     } else {
@@ -122,19 +101,21 @@ class Logger {
       console.error(error.message, error.stack || '', combinedMetadata)
 
       if (!isDevelopment) {
-        captureException(error, {
-          extra: combinedMetadata
+        Honeybadger.notify(error, {
+          context: combinedMetadata
         })
       }
     }
   }
 
   /**
-   * Add context to Sentry for the current session/request
+   * Add context to Honeybadger for the current session/request
    */
   setContext(contextName: string, context: Record<string, unknown>): void {
     if (!isDevelopment) {
-      setContext(contextName, context)
+      Honeybadger.setContext({
+        [contextName]: context
+      })
     }
   }
 
@@ -143,7 +124,9 @@ class Logger {
    */
   setUser(user: { id: string; email?: string; username?: string }): void {
     if (!isDevelopment) {
-      setUser(user)
+      Honeybadger.setContext({
+        user
+      })
     }
   }
 }
