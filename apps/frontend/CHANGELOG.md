@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.54
+
+### Patch Changes
+
+- Only override on desktop
+
 ## 0.4.53
 
 ### Patch Changes
