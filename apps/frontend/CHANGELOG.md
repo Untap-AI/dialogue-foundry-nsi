@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.53
+
+### Patch Changes
+
+- popup relative to size
+
 ## 0.4.52
 
 ### Patch Changes
