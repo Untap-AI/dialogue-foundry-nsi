@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.55
+
+### Patch Changes
+
+- No default in prod
+
 ## 0.4.54
 
 ### Patch Changes

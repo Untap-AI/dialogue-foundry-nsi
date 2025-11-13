@@ -175,7 +175,7 @@ export function ConfigProvider({ children }: ConfigProviderProps) {
   }, [])
 
   const finalConfig = config ? {
-    ...defaultConfig,
+    ...(import.meta.env.DEV ? defaultConfig : {}),
     ...config,
     styles: {
       ...defaultConfig.styles,
