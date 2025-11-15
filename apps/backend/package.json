@@ -37,11 +37,11 @@
     "install:prod": "pnpm install --production"
   },
   "dependencies": {
-    "@ai-sdk/openai": "^2.0.23",
+    "@ai-sdk/openai": "^2.0.67",
     "@dialogue-foundry/tsconfig": "workspace:*",
+    "@honeybadger-io/js": "^6.9.1",
     "@pinecone-database/pinecone": "^5.1.1",
     "@sendgrid/mail": "^8.1.5",
-    "@honeybadger-io/js": "^6.9.1",
     "@supabase/supabase-js": "^2.49.1",
     "@types/cors": "^2.8.17",
     "@types/express": "^4.17.21",
@@ -55,7 +55,7 @@
     "express-rate-limit": "^7.5.0",
     "jsonwebtoken": "^9.0.2",
     "node-cache": "^5.1.2",
-    "openai": "^5.12.1",
+    "openai": "^6.9.0",
     "tsc": "^2.0.4",
     "typescript": "^5.3.3",
     "uuid": "^9.0.1",

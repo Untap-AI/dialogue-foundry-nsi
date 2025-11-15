@@ -35,7 +35,7 @@ export type ChatSettings = {
 
 // Default settings to use if none are provided
 export const DEFAULT_SETTINGS: Pick<ChatSettings, 'model'> = {
-  model: 'gpt-5',
+  model: 'gpt-5.1',
 }
 
 /**
@@ -101,7 +101,7 @@ export const generateStreamingChatCompletion = async (
       input: limitedMessages,
       instructions: systemPromptWithCurrentDate,
       reasoning: {
-        effort: "minimal"
+        effort: "none"
       },
       stream: true,
       text: {
@@ -112,7 +112,7 @@ export const generateStreamingChatCompletion = async (
       },
       service_tier: "priority"
       // Note: No tools are included here - this LLM focuses purely on content generation
-    } as ResponseCreateParams
+    } satisfies ResponseCreateParams
 
     // Create the response with streaming enabled
     const response = await openai.responses.create(requestOptions) as unknown as Stream<OpenAI.Responses.ResponseStreamEvent> & {
