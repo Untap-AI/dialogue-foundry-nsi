@@ -599,7 +599,7 @@ router.post('/stream-ai-sdk', authenticateChatAccess, async (req: CustomRequest,
     }
 
     const result = streamText({
-      model: openai('gpt-5.1'),
+      model: openai('gpt-5'),
       system: systemPrompt,
       messages: modelMessages,
       tools: shouldEnableEmailTool ? {
@@ -629,7 +629,7 @@ router.post('/stream-ai-sdk', authenticateChatAccess, async (req: CustomRequest,
       },
       providerOptions: {
         openai: {
-          reasoningEffort: "none",
+          reasoningEffort: "minimal",
           textVerbosity: "low",
           serviceTier: "priority"
         }
