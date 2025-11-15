@@ -53,26 +53,10 @@ const globalRateLimit = rateLimit({
 // This ensures any rate limit error responses will have CORS headers
 app.use(globalRateLimit as any)
 
-// Configure CORS
-const allowedOrigins = process.env.ALLOWED_ORIGINS?.split(',')
+// Configure CORS - Accept all origins
 app.use(
   cors({
-    origin: (thisOrigin, callback) => {
-      // Allow requests with no origin (like mobile apps or curl requests)
-      // eslint-disable-next-line no-null/no-null
-      if (!thisOrigin || !allowedOrigins) return callback(null, true)
-
-      if (allowedOrigins.indexOf(thisOrigin) === -1) {
-        logger.warn(
-          `CORS policy violation: ${thisOrigin} not in allowedOrigins`
-        )
-        const msg = `The CORS policy for this site does not allow access from the specified Origin: ${thisOrigin}`
-        return callback(new Error(msg), false)
-      }
-
-      // eslint-disable-next-line no-null/no-null
-      return callback(null, true)
-    },
+    origin: true, // Allow all origins
     credentials: true,
     // Add specific headers needed for sendBeacon and mobile requests
     allowedHeaders: [

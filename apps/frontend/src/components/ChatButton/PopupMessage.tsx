@@ -19,10 +19,19 @@ export const PopupMessage: React.FC<PopupMessageProps> = ({ buttonRef }) => {
     const offset = buttonHeight + 33
 
     return {
-      insetInlineEnd: '20px',
-      bottom: `${offset}px`
+      insetInlineEnd: `20px`,
+      bottom: `${offset}px`,
+      buttonHeight: buttonRect.height,
+      buttonWidth: buttonRect.width,
     }
   }, [buttonRef])
+
+
+  const {
+    insetInlineEnd,
+    bottom,
+    buttonWidth,
+  } = getPosition()
 
   return (
     <div 
@@ -31,11 +40,14 @@ export const PopupMessage: React.FC<PopupMessageProps> = ({ buttonRef }) => {
         "df:text-base df:bg-primary df:text-primary-foreground df:rounded-[10px] df:px-5 df:py-4",
         "df:shadow-[0_6px_16px_rgba(0,0,0,0.18)] df:max-w-80 df:md:max-w-[80vw]"
       )}
-      style={{ ...getPosition() }}
+      style={{ insetInlineEnd, bottom }}
       data-dialogue-foundry-id="popup-message"
     >
       <div>{popupMessage}</div>
-      <div className="df:absolute df:w-0 df:h-0 df:border-l-[10px] df:border-l-transparent df:border-r-[10px] df:border-r-transparent df:border-t-[10px] df:border-t-primary df:-bottom-[10px] df:right-5"></div>
+      <div 
+        className="df:absolute df:w-0 df:h-0 df:border-l-[10px] df:border-l-transparent df:border-r-[10px] df:border-r-transparent df:border-t-[10px] df:border-t-primary df:-bottom-[10px]"
+        style={{ insetInlineEnd: buttonWidth ? `${(buttonWidth / 2 - 10).toFixed(0)}px` : '20px' }}
+      ></div>
     </div>
   )
 }

@@ -1,5 +1,23 @@
 # @dialogue-foundry/frontend
 
+## 0.4.55
+
+### Patch Changes
+
+- No default in prod
+
+## 0.4.54
+
+### Patch Changes
+
+- Only override on desktop
+
+## 0.4.53
+
+### Patch Changes
+
+- popup relative to size
+
 ## 0.4.52
 
 ### Patch Changes

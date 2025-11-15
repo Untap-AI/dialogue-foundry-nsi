@@ -80,23 +80,12 @@ Return ONLY the rewritten query, nothing else.`
       providerOptions: {
         openai: {
           reasoningEffort: "minimal",
-          serviceTier: "priority"
         }
       }
     })
 
     const enhancedQuery = text.trim()
     
-    // Log the enhancement for debugging
-    logger.info('Query enhanced for Pinecone', {
-      original: currentQuery,
-      enhanced: enhancedQuery
-    })
-    console.log('Query enhanced for Pinecone', {
-      original: currentQuery,
-      enhanced: enhancedQuery
-    })
-
     return enhancedQuery || currentQuery
   } catch (error) {
     logger.warn('Error enhancing query with context, using original', {
@@ -610,7 +599,7 @@ router.post('/stream-ai-sdk', authenticateChatAccess, async (req: CustomRequest,
     }
 
     const result = streamText({
-      model: openai('gpt-5'),
+      model: openai('gpt-5.1'),
       system: systemPrompt,
       messages: modelMessages,
       tools: shouldEnableEmailTool ? {
@@ -640,7 +629,7 @@ router.post('/stream-ai-sdk', authenticateChatAccess, async (req: CustomRequest,
       },
       providerOptions: {
         openai: {
-          reasoningEffort: "minimal",
+          reasoningEffort: "none",
           textVerbosity: "low",
           serviceTier: "priority"
         }
