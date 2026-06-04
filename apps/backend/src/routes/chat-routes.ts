@@ -14,26 +14,50 @@ import {
   generateStreamingChatCompletion,
   DEFAULT_SETTINGS
 } from '../services/openai-service'
-import { 
-  detectEmailRequest, 
-  processUserEmailInMessage 
+import {
+  detectEmailRequest,
+  processUserEmailInMessage
 } from '../services/utils/email-detection'
 import { generateChatAccessToken } from '../lib/jwt-utils'
-import {
-  authenticateChatAccess,
-} from '../middleware/auth-middleware'
+import { authenticateChatAccess } from '../middleware/auth-middleware'
 import { getChatConfigByCompanyId } from '../db/chat-configs'
+import { isBotActive } from '../services/utils/chat-availability'
 import {
   retrieveDocuments,
   formatDocumentsAsContext
 } from '../services/pinecone-service'
 
 import { logger } from '../lib/logger'
+import { sendInquiryEmail } from '../services/sendgrid-service'
 import type { CustomRequest } from '../middleware/auth-middleware'
 import type { Message, ChatSettings } from '../services/openai-service'
-import { sendInquiryEmail } from '../services/sendgrid-service'
 
 const router = express.Router()
+
+// Public endpoint: report whether the bot is currently within its active hours.
+// Used by the widget to decide whether to render at all. Must be declared before
+// the `/:chatId` route so it isn't captured as a chat ID.
+router.get('/availability', async (req, res) => {
+  try {
+    const companyId = req.query.companyId
+
+    if (!companyId || typeof companyId !== 'string') {
+      return res.status(400).json({ error: 'Company ID is required' })
+    }
+
+    const chatConfig = await getChatConfigByCompanyId(companyId)
+    if (!chatConfig) {
+      return res.status(404).json({ error: 'Chat config not found' })
+    }
+
+    return res.json({ available: isBotActive(chatConfig) })
+  } catch (error) {
+    logger.error('Error checking chat availability', {
+      error: error as Error
+    })
+    return res.status(500).json({ error: 'Failed to check availability' })
+  }
+})
 
 // Get a chat by ID with its messages (requires chat-specific authentication)
 router.get('/:chatId', authenticateChatAccess, async (req, res) => {
@@ -91,7 +115,10 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ error: 'Chat config not found' })
     }
 
-    const userId = userIdParam === 'undefined' || userIdParam === undefined ? uuidv4() : userIdParam
+    const userId =
+      userIdParam === 'undefined' || userIdParam === undefined
+        ? uuidv4()
+        : userIdParam
 
     const chat = await createChatAdmin({
       name: chatName,
@@ -138,7 +165,12 @@ router.post('/:chatId/send-email', authenticateChatAccess, async (req, res) => {
     const { chatId } = req.params
     const { userEmail, subject, conversationSummary } = req.body
 
-    if (!chatId || !userEmail || subject === undefined || conversationSummary === undefined) {
+    if (
+      !chatId ||
+      !userEmail ||
+      subject === undefined ||
+      conversationSummary === undefined
+    ) {
       return res.status(400).json({ error: 'Missing required fields' })
     }
 
@@ -156,7 +188,9 @@ router.post('/:chatId/send-email', authenticateChatAccess, async (req, res) => {
 
     // Get recent messages for context (last 20, excluding system)
     const messages = await getMessagesByChatId(chatId)
-    const recentMessages = messages.slice(-20).filter(msg => msg.role !== 'system')
+    const recentMessages = messages
+      .slice(-20)
+      .filter(msg => msg.role !== 'system')
 
     const emailSent = await sendInquiryEmail({
       userEmail,
@@ -179,7 +213,7 @@ router.post('/:chatId/send-email', authenticateChatAccess, async (req, res) => {
           userEmail
         })
       }
-      
+
       return res.json({ success: true })
     } else {
       return res.status(500).json({ error: 'Failed to send email' })
@@ -280,10 +314,16 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
       return
     }
 
+    // Reject messages received outside the bot's configured active hours.
+    if (!isBotActive(chatConfig)) {
+      sendErrorEvent('The chatbot is currently offline', 'BOT_OFFLINE')
+      return
+    }
+
     // Get chat settings - using request parameters, chat config, or defaults
     // Check if user has already provided their email to avoid requesting it again
     const hasUserEmail = Boolean(chat.user_email)
-    
+
     const chatSettings: ChatSettings = {
       ...DEFAULT_SETTINGS,
       systemPrompt: chatConfig.system_prompt,
@@ -409,10 +449,12 @@ async function handleStreamRequest(req: CustomRequest, res: express.Response) {
         )
 
         if (emailDetectionResult?.success) {
-            if (!res.writableEnded) {
-              res.write(`data: ${JSON.stringify(emailDetectionResult.details)}\n\n`)
-              res.flushHeaders()
-            }
+          if (!res.writableEnded) {
+            res.write(
+              `data: ${JSON.stringify(emailDetectionResult.details)}\n\n`
+            )
+            res.flushHeaders()
+          }
         }
       }
     } catch (emailDetectionError) {
