@@ -81,30 +81,39 @@ export type Database = {
       }
       chat_configs: {
         Row: {
+          active_end_time: string | null
+          active_start_time: string | null
           company_id: string
           created_at: string
           pinecone_index_name: string | null
           sendgrid_template_id: string | null
           support_email: string | null
           system_prompt: string
+          timezone: string | null
           updated_at: string | null
         }
         Insert: {
+          active_end_time?: string | null
+          active_start_time?: string | null
           company_id: string
           created_at?: string
           pinecone_index_name?: string | null
           sendgrid_template_id?: string | null
           support_email?: string | null
           system_prompt: string
+          timezone?: string | null
           updated_at?: string | null
         }
         Update: {
+          active_end_time?: string | null
+          active_start_time?: string | null
           company_id?: string
           created_at?: string
           pinecone_index_name?: string | null
           sendgrid_template_id?: string | null
           support_email?: string | null
           system_prompt?: string
+          timezone?: string | null
           updated_at?: string | null
         }
         Relationships: [

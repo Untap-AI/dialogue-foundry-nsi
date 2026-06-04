@@ -4,6 +4,7 @@ import { ChatApiService } from '../services/api'
 import { logger } from '../services/logger'
 import { DefaultChatTransport, UIMessage } from 'ai'
 import { useConfig } from '../contexts/ConfigContext'
+import { useLanguage } from '../contexts/LanguageContext'
 
 export type ChatStatus = 'uninitialized' | 'loading' | 'initialized' | 'error'
 
@@ -14,6 +15,7 @@ export function useChatPersistence() {
   const [streamError, setStreamError] = useState<string | null>(null)
 
   const { chatConfig, welcomeMessage } = useConfig()
+  const { currentLanguage } = useLanguage()
   const {apiBaseUrl} = chatConfig
 
   // Get user's timezone
@@ -26,9 +28,11 @@ export function useChatPersistence() {
     }
   }, [])
 
+  // Create chat service with language-specific storage keys
+  // Each language gets its own chat session
   const chatService = useMemo(
-    () => new ChatApiService(chatConfig),
-    [chatConfig]
+    () => new ChatApiService(chatConfig, currentLanguage),
+    [chatConfig, currentLanguage]
   )
 
   const transport = useMemo(() => {
@@ -78,6 +82,8 @@ export function useChatPersistence() {
     setChatStatus('loading')
     
     try {
+      // Load existing chat or create new one
+      // (storage keys are language-specific, so each language has its own chat)
       const chatInit = await chatService.initializeChat(welcomeMessage)
       
       // Store initial messages first (before setting chatId to avoid race condition)

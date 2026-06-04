@@ -4,6 +4,7 @@ import { ChatWindow } from '../ChatWindow/ChatWindow'
 import { MobileChatModal } from '../MobileChatModal/MobileChatModal'
 import { useResizeObserver } from '../../hooks/useResizeObserver'
 import { useConfig } from '../../contexts/ConfigContext'
+import { useChatAvailability } from '../../hooks/useChatAvailability'
 import { useNavigationEvents } from '../../hooks/useNavigationEvents'
 import { cn } from '@/lib/utils'
 import type { ChatStatus } from '../../hooks/useChatPersistence'
@@ -14,6 +15,10 @@ export const ChatWidget = () => {
   const [chatStatus, setChatStatus] = useState<ChatStatus>('uninitialized')
 
   const { openOnLoad } = useConfig()
+
+  // Whether the bot is within its configured active hours. Hide the widget
+  // entirely when offline (or while we're still checking, to avoid a flash).
+  const availability = useChatAvailability()
 
   // Use the resize observer hook with a 150ms debounce delay
   // Fast enough to feel responsive, but not too frequent to cause performance issues
@@ -124,6 +129,12 @@ export const ChatWidget = () => {
     // Any additional logic needed when a new chat is created
     console.log('New chat created')
   }, [])
+
+  // Don't render anything outside the bot's active hours.
+  if (availability !== 'available') {
+    // eslint-disable-next-line no-null/no-null
+    return null
+  }
 
   return (
     <div 
