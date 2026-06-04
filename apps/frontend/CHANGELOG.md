@@ -1,5 +1,59 @@
 # @dialogue-foundry/frontend
 
+## 0.4.64
+
+### Patch Changes
+
+- Fix styles
+
+## 0.4.63
+
+### Patch Changes
+
+- Remove useEffect
+
+## 0.4.62
+
+### Patch Changes
+
+- language chats
+
+## 0.4.61
+
+### Patch Changes
+
+- Fiox infinite
+
+## 0.4.60
+
+### Patch Changes
+
+- language local storage
+
+## 0.4.59
+
+### Patch Changes
+
+- New chat with new language
+
+## 0.4.58
+
+### Patch Changes
+
+- Add de
+
+## 0.4.57
+
+### Patch Changes
+
+- languages
+
+## 0.4.56
+
+### Patch Changes
+
+- Disable input on streaming
+
 ## 0.4.55
 
 ### Patch Changes

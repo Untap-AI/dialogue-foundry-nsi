@@ -26,6 +26,7 @@ import {
   authenticateChatAccess,
 } from '../middleware/auth-middleware'
 import { getChatConfigByCompanyId } from '../db/chat-configs'
+import { isBotActive } from '../services/utils/chat-availability'
 import {
   retrieveDocuments,
   formatDocumentsAsContext
@@ -37,6 +38,31 @@ import type { Message, ChatSettings } from '../services/openai-service'
 import { sendInquiryEmail } from '../services/sendgrid-service'
 
 const router = express.Router()
+
+// Public endpoint: report whether the bot is currently within its active hours.
+// Used by the widget to decide whether to render at all. Must be declared before
+// the `/:chatId` route so it isn't captured as a chat ID.
+router.get('/availability', async (req, res) => {
+  try {
+    const companyId = req.query.companyId
+
+    if (!companyId || typeof companyId !== 'string') {
+      return res.status(400).json({ error: 'Company ID is required' })
+    }
+
+    const chatConfig = await getChatConfigByCompanyId(companyId)
+    if (!chatConfig) {
+      return res.status(404).json({ error: 'Chat config not found' })
+    }
+
+    return res.json({ available: isBotActive(chatConfig) })
+  } catch (error) {
+    logger.error('Error checking chat availability', {
+      error: error as Error
+    })
+    return res.status(500).json({ error: 'Failed to check availability' })
+  }
+})
 
 /**
  * Enhances a user query with conversation context for better semantic search.
@@ -504,6 +530,11 @@ router.post('/stream-ai-sdk', authenticateChatAccess, async (req: CustomRequest,
     const chatConfig = await getChatConfigByCompanyId(companyId as string);
     if (!chatConfig) {
       return res.status(400).json({ error: 'Company configuration not found' });
+    }
+
+    // Reject messages received outside the bot's configured active hours.
+    if (!isBotActive(chatConfig)) {
+      return res.status(403).json({ error: 'The chatbot is currently offline' });
     }
 
     let docsContext = ''
