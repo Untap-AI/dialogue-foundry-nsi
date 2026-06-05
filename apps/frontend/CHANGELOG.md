@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.66
+
+### Patch Changes
+
+- fea57f5: Allow the active-hours window (timezone, start, end) to be configured via the embed config, overriding the backend's configured hours and evaluating the window client-side.
+
 ## 0.4.65
 
 ### Patch Changes
