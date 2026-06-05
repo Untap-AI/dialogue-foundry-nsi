@@ -14,7 +14,7 @@ export function useChatPersistence() {
   const [initialMessages, setInitialMessages] = useState<UIMessage[]>([])
   const [streamError, setStreamError] = useState<string | null>(null)
 
-  const { chatConfig, welcomeMessage } = useConfig()
+  const { chatConfig, welcomeMessage, activeHours } = useConfig()
   const { currentLanguage } = useLanguage()
   const {apiBaseUrl} = chatConfig
 
@@ -55,11 +55,12 @@ export function useChatPersistence() {
             id: chatId || id,
             messages,
             timezone: userTimezone,
+            activeHours,
           },
         }
       }
     })
-  }, [apiBaseUrl, chatService, userTimezone, chatId])
+  }, [apiBaseUrl, chatService, userTimezone, chatId, activeHours])
 
   // Initialize useChat hook with dynamic transport
   const chat = useChat({
