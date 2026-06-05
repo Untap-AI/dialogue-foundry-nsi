@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.67
+
+### Patch Changes
+
+- Re-deploy the widget loader so it ships with a `no-cache` header, ensuring future releases reach users promptly instead of being held back by browser caching.
+
 ## 0.4.66
 
 ### Patch Changes
