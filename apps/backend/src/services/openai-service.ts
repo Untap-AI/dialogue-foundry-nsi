@@ -35,7 +35,7 @@ export type ChatSettings = {
 
 // Default settings to use if none are provided
 export const DEFAULT_SETTINGS: Pick<ChatSettings, 'model'> = {
-  model: 'gpt-5',
+  model: 'gpt-5.4',
 }
 
 /**

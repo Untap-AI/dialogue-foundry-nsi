@@ -630,7 +630,7 @@ router.post('/stream-ai-sdk', authenticateChatAccess, async (req: CustomRequest,
     }
 
     const result = streamText({
-      model: openai('gpt-5'),
+      model: openai('gpt-5.4'),
       system: systemPrompt,
       messages: modelMessages,
       tools: shouldEnableEmailTool ? {
