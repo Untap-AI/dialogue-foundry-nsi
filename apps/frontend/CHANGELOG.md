@@ -1,5 +1,11 @@
 # @dialogue-foundry/frontend
 
+## 0.4.65
+
+### Patch Changes
+
+- 2e6ef03: Hide the chat widget outside the bot's configured active hours
+
 ## 0.4.64
 
 ### Patch Changes
