@@ -38,6 +38,15 @@ export interface DialogueFoundryConfig {
 
   openOnLoad?: 'all' | 'mobile-only' | 'desktop-only' | 'none'
 
+  // Active hours window. When set, the widget is only shown while the current
+  // time (in the given IANA timezone) is inside the window. Overrides the DB
+  // config; omit to fall back to the backend's configured hours.
+  activeHours?: {
+    timezone: string
+    startTime: string
+    endTime: string
+  }
+
   poweredBy?: {
     text?: string
     url?: string

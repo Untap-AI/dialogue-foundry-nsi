@@ -30,7 +30,7 @@ import { isBotActive } from '../services/utils/chat-availability'
 import {
   retrieveDocuments,
   formatDocumentsAsContext
-} from '../services/pinecone-service'
+} from '../services/vector-service'
 
 import { logger } from '../lib/logger'
 import type { CustomRequest } from '../middleware/auth-middleware'
@@ -513,7 +513,7 @@ const requestUserEmailTool = tool({
 router.post('/stream-ai-sdk', authenticateChatAccess, async (req: CustomRequest, res) => {
 
   try {
-    const { id: chatId, messages, timezone } = req.body;
+    const { id: chatId, messages, timezone, activeHours } = req.body;
     const userId = req.user?.userId;
 
     if (!chatId || !userId) {
@@ -532,8 +532,16 @@ router.post('/stream-ai-sdk', authenticateChatAccess, async (req: CustomRequest,
       return res.status(400).json({ error: 'Company configuration not found' });
     }
 
-    // Reject messages received outside the bot's configured active hours.
-    if (!isBotActive(chatConfig)) {
+    // Reject messages received outside the bot's configured active hours. The
+    // embed config (sent in the request) overrides the DB-configured hours.
+    const hoursConfig = activeHours
+      ? {
+          timezone: activeHours.timezone,
+          active_start_time: activeHours.startTime,
+          active_end_time: activeHours.endTime
+        }
+      : chatConfig;
+    if (!isBotActive(hoursConfig)) {
       return res.status(403).json({ error: 'The chatbot is currently offline' });
     }
 
