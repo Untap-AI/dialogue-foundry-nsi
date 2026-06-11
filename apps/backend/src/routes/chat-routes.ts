@@ -30,7 +30,7 @@ import { isBotActive } from '../services/utils/chat-availability'
 import {
   retrieveDocuments,
   formatDocumentsAsContext
-} from '../services/pinecone-service'
+} from '../services/vector-service'
 
 import { logger } from '../lib/logger'
 import type { CustomRequest } from '../middleware/auth-middleware'
