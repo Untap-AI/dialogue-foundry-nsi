@@ -48,6 +48,7 @@
     "@types/jsonwebtoken": "^9.0.9",
     "@types/node": "^20.17.24",
     "@types/uuid": "^9.0.8",
+    "@upstash/vector": "^1.2.3",
     "ai": "^5.0.28",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",

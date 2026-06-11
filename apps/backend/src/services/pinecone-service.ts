@@ -4,21 +4,19 @@ import { logger } from '../lib/logger'
 
 dotenv.config()
 
-// Check for API key in environment variables
-const pineconeApiKey = process.env.PINECONE_API_KEY
-if (!pineconeApiKey) {
-  console.error('PINECONE_API_KEY is not set in environment variables')
-  process.exit(1)
-}
+// Lazily initialized so importing this module under VECTOR_PROVIDER=upstash
+// doesn't hard-exit when PINECONE_API_KEY is absent.
+let pinecone: Pinecone | undefined
 
-// Initialize Pinecone client
-const pinecone = new Pinecone({
-  apiKey: pineconeApiKey
-})
-
-type RetrievedDocument = {
-  text: string
-  url?: string | undefined
+const getPinecone = (): Pinecone => {
+  if (!pinecone) {
+    const pineconeApiKey = process.env.PINECONE_API_KEY
+    if (!pineconeApiKey) {
+      throw new Error('PINECONE_API_KEY is not set in environment variables')
+    }
+    pinecone = new Pinecone({ apiKey: pineconeApiKey })
+  }
+  return pinecone
 }
 
 /**
@@ -37,7 +35,7 @@ export const retrieveDocuments = async (
 ) => {
   try {
     // Get the index directly without caching
-    const index = pinecone.index(indexName).namespace('')
+    const index = getPinecone().index(indexName).namespace('')
 
     // Query the Pinecone index with the text query feature
     // This uses serverless Pinecone with auto-embedding
@@ -61,32 +59,11 @@ export const retrieveDocuments = async (
           text: fields.chunk_text,
         }
       })
-      .filter((doc) => doc !== undefined)
+      .filter((doc): doc is { text: string } => doc !== undefined)
 
     return documents
   } catch (error) {
     logger.error('Error retrieving documents from Pinecone:', error)
     return []
   }
-}
-
-/**
- * Formats retrieved documents as context for the LLM
- * @param documents The retrieved documents with URLs
- * @returns Formatted context string to append to the LLM prompt
- */
-export const formatDocumentsAsContext = (documents: RetrievedDocument[]) => {
-  if (!documents.length) return ''
-
-  // Create a formatted context string from the documents
-  const contextParts = documents.map((doc, index) => {
-    return `
-    [Document ${index + 1}]
-
-    ${doc.text}`
-  })
-
-  return `Relevant information from the knowledge base. Use the following information only to answer the user's question::
-  
-  ${contextParts.join('\n\n')}`
 }
