@@ -248,9 +248,10 @@ async function main() {
         Bucket: options.bucket,
         Key: versionTxtKey,
         Body: currentVersion,
-        ContentType: 'text/plain'
+        ContentType: 'text/plain',
+        CacheControl: 'no-cache'
       }).promise();
-      
+
       console.log(chalk.green(`✅ Created new folder at ${versionPath}`));
     } else if (shouldUpdateMajorMinor) {
       console.log(chalk.blue(`\n📤 Updating existing major.minor folder: s3://${options.bucket}/${versionPath}/`));
@@ -261,9 +262,10 @@ async function main() {
         Bucket: options.bucket,
         Key: versionTxtKey,
         Body: currentVersion,
-        ContentType: 'text/plain'
+        ContentType: 'text/plain',
+        CacheControl: 'no-cache'
       }).promise();
-      
+
       console.log(chalk.green(`✅ Updated existing folder at ${versionPath} to patch version ${patch}`));
     }
 
@@ -276,9 +278,10 @@ async function main() {
         Bucket: options.bucket,
         Key: latestVersionTxtKey,
         Body: currentVersion,
-        ContentType: 'text/plain'
+        ContentType: 'text/plain',
+        CacheControl: 'no-cache'
       }).promise();
-      
+
       console.log(chalk.green(`✅ Updated latest to ${currentVersion}`));
     }
 
@@ -325,7 +328,8 @@ async function deployToS3(s3: S3, bucket: string, sourcePath: string, s3Path: st
       Bucket: bucket,
       Key: key,
       Body: fs.readFileSync(filePath),
-      ContentType: getContentType(filePath)
+      ContentType: getContentType(filePath),
+      CacheControl: getCacheControl(filePath)
     };
     
     try {
@@ -334,6 +338,24 @@ async function deployToS3(s3: S3, bucket: string, sourcePath: string, s3Path: st
       throw new Error(`Failed to upload ${file}: ${error.message}`);
     }
   }
+}
+
+// Get the Cache-Control header for a file.
+//
+// The widget loader is embedded at a stable URL (e.g. `0.4/index.js`), so it
+// must be revalidated on every load or browsers heuristically cache it and
+// users keep running an old release. `version.txt` and any HTML entry are
+// markers that change every release, so they revalidate too. Everything else
+// the build emits is content-hashed and safe to cache indefinitely.
+function getCacheControl(filePath: string): string {
+  const base = path.basename(filePath).toLowerCase();
+  const ext = path.extname(filePath).toLowerCase();
+
+  if (base === 'index.js' || base === 'version.txt' || ext === '.html') {
+    return 'no-cache';
+  }
+
+  return 'public, max-age=31536000, immutable';
 }
 
 // Get content type based on file extension

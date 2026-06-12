@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useConfig } from '../contexts/ConfigContext'
 import { logger } from '../services/logger'
+import { isBotActive } from '../utils/chat-availability'
 
 export type AvailabilityStatus = 'checking' | 'available' | 'unavailable'
 
@@ -11,17 +12,27 @@ const AVAILABILITY_TIMEOUT_MS = 5000
 /**
  * Checks whether the bot is currently within its configured active hours.
  *
+ * When `activeHours` is set in the embed config the window is evaluated
+ * client-side with no network call. Otherwise it falls back to the backend's
+ * DB-configured hours via the availability endpoint.
+ *
  * Fails open: if the availability check errors out, times out, or returns an
  * error status, the bot is treated as available so a transient backend issue
  * never hides the widget.
  */
 export function useChatAvailability(): AvailabilityStatus {
-  const { chatConfig } = useConfig()
+  const { chatConfig, activeHours } = useConfig()
   const { apiBaseUrl, companyId } = chatConfig
   const [availabilityStatus, setAvailabilityStatus] =
     useState<AvailabilityStatus>('checking')
 
   useEffect(() => {
+    // Embed config takes precedence: evaluate the window locally, no fetch.
+    if (activeHours) {
+      setAvailabilityStatus(isBotActive(activeHours) ? 'available' : 'unavailable')
+      return
+    }
+
     let cancelled = false
     const controller = new AbortController()
     const timeoutId = setTimeout(
@@ -71,7 +82,7 @@ export function useChatAvailability(): AvailabilityStatus {
       clearTimeout(timeoutId)
       controller.abort()
     }
-  }, [apiBaseUrl, companyId])
+  }, [apiBaseUrl, companyId, activeHours])
 
   return availabilityStatus
 }

@@ -1,5 +1,23 @@
 # @dialogue-foundry/frontend
 
+## 0.4.67
+
+### Patch Changes
+
+- Re-deploy the widget loader so it ships with a `no-cache` header, ensuring future releases reach users promptly instead of being held back by browser caching.
+
+## 0.4.66
+
+### Patch Changes
+
+- fea57f5: Allow the active-hours window (timezone, start, end) to be configured via the embed config, overriding the backend's configured hours and evaluating the window client-side.
+
+## 0.4.65
+
+### Patch Changes
+
+- 2e6ef03: Hide the chat widget outside the bot's configured active hours
+
 ## 0.4.64
 
 ### Patch Changes
