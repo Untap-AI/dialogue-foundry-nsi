@@ -100,7 +100,7 @@ Example:
 Return ONLY the rewritten query, nothing else.`
 
     const { text } = await generateText({
-      model: openai('gpt-5-nano'),
+      model: openai('gpt-5.4-mini'),
       prompt,
       temperature: 0,
       providerOptions: {
@@ -638,7 +638,7 @@ router.post('/stream-ai-sdk', authenticateChatAccess, async (req: CustomRequest,
     }
 
     const result = streamText({
-      model: openai('gpt-5'),
+      model: openai('gpt-5.5'),
       system: systemPrompt,
       messages: modelMessages,
       tools: shouldEnableEmailTool ? {
