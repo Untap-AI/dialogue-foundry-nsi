@@ -24,7 +24,7 @@ const openai = new OpenAI({
 })
 
 // Email detection model settings
-const EMAIL_DETECTION_MODEL = 'gpt-5-mini'
+const EMAIL_DETECTION_MODEL = 'gpt-5.4-mini'
 
 // Tool definition for the email detection LLM
 const requestUserEmailTool = {
@@ -176,7 +176,7 @@ Do NOT call the function if:
         }
       ],
       reasoning: {
-        effort: "minimal"
+        effort: "low"
       },
       service_tier: "priority",
       tools: [requestUserEmailTool]
