@@ -35,7 +35,7 @@ export type ChatSettings = {
 
 // Default settings to use if none are provided
 export const DEFAULT_SETTINGS: Pick<ChatSettings, 'model'> = {
-  model: 'gpt-5',
+  model: 'gpt-5.5',
 }
 
 /**
@@ -101,7 +101,7 @@ export const generateStreamingChatCompletion = async (
       input: limitedMessages,
       instructions: systemPromptWithCurrentDate,
       reasoning: {
-        effort: "minimal"
+        effort: "low"
       },
       stream: true,
       text: {
