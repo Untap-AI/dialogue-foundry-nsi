@@ -1,34 +1,16 @@
-import { retrieveDocuments as pineconeRetrieveDocuments } from './pinecone-service'
 import { retrieveDocuments as upstashRetrieveDocuments } from './upstash-service'
-
-/**
- * Provider-agnostic vector retrieval facade.
- *
- * Dispatches to Pinecone or Upstash based on the VECTOR_PROVIDER env var
- * (default 'pinecone'). During the migration this lets us flip all companies to
- * Upstash with one env var and roll back instantly. The first argument is the
- * chat_configs.pinecone_index_name value — a Pinecone index name for Pinecone,
- * and the per-company namespace for Upstash.
- */
 
 type RetrievedDocument = {
   text: string
   url?: string | undefined
 }
 
-const vectorProvider = process.env.VECTOR_PROVIDER || 'pinecone'
-
 export const retrieveDocuments = async (
-  indexNameOrNamespace: string,
+  namespace: string,
   query: string,
   topK: number = 10,
-  filter?: Record<string, unknown>
 ): Promise<RetrievedDocument[]> => {
-  if (vectorProvider === 'upstash') {
-    return upstashRetrieveDocuments(indexNameOrNamespace, query, topK)
-  }
-
-  return pineconeRetrieveDocuments(indexNameOrNamespace, query, topK, filter)
+  return upstashRetrieveDocuments(namespace, query, topK)
 }
 
 /**

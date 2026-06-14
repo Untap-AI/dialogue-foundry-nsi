@@ -8,7 +8,7 @@ Chat configurations allow you to customize the behavior of your chatbot based on
 
 - **Domain**: A unique identifier (e.g., "example.com")
 - **System Prompt**: The instructions given to the AI model to guide its behavior
-- **Pinecone Index Name**: The name of the Pinecone index for vector search (optional)
+- **Upstash Vector Index Name**: The name of the Upstash Vector index for vector search (optional)
 
 ## Why Domain-Based Configuration?
 
@@ -75,7 +75,7 @@ Available commands:
 
 - `create`: Create a new configuration
   ```bash
-  pnpm chat-config-cli create example.com "You are a helpful assistant." my-pinecone-index
+  pnpm chat-config-cli create example.com "You are a helpful assistant." my-upstash-namespace
   ```
 
 - `update`: Update an existing configuration
@@ -99,7 +99,7 @@ The default configuration cannot be deleted.
 When a chat request is made:
 
 1. The system tries to find a configuration for the domain in the request (from the `domain` parameter or `Origin` header)
-2. If found, it uses that configuration's system prompt and Pinecone index
+2. If found, it uses that configuration's system prompt and Upstash Vector index
 3. If not found, it falls back to the default configuration
 4. If a chat has its own system prompt set, that takes precedence over the domain configuration
 
@@ -109,7 +109,7 @@ When adding a new customer:
 
 1. Create a new chat configuration for their domain:
    ```bash
-   pnpm chat-config-cli create customer-domain.com "Custom system prompt for this customer" customer-pinecone-index
+   pnpm chat-config-cli create customer-domain.com "Custom system prompt for this customer" customer-upstash-namespace
    ```
 
-2. The customer can immediately begin using the chat API, and it will automatically use their configured system prompt and Pinecone index. 
+2. The customer can immediately begin using the chat API, and it will automatically use their configured system prompt and Upstash Vector index. 
