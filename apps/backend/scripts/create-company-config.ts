@@ -3,13 +3,13 @@
 /**
  * Simple script to create a chat configuration for a company
  * This is useful for developers who need to create a chat configuration quickly
- * 
+ *
  * Usage:
- * npx ts-node scripts/create-company-config.ts <company_id> <pinecone_index_name> <system_prompt>
- * 
+ * npx ts-node scripts/create-company-config.ts <company_id> <vector_namespace> <system_prompt>
+ *
  * Example:
- * npx ts-node scripts/create-company-config.ts my-company my-company-index "You are an AI assistant for My Company."
- * 
+ * npx ts-node scripts/create-company-config.ts my-company my-company-namespace "You are an AI assistant for My Company."
+ *
  * If system prompt contains spaces, enclose in quotes.
  */
 
@@ -17,7 +17,6 @@ import { createClient } from '@supabase/supabase-js'
 import dotenv from 'dotenv'
 import readline from 'readline'
 
-// Load environment variables
 dotenv.config()
 
 const supabaseUrl = process.env.SUPABASE_URL
@@ -28,7 +27,6 @@ if (!supabaseUrl || !supabaseServiceKey) {
   process.exit(1)
 }
 
-// Create a Supabase client with the service role key
 const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   auth: {
     autoRefreshToken: false,
@@ -36,9 +34,8 @@ const supabase = createClient(supabaseUrl, supabaseServiceKey, {
   }
 })
 
-async function createChatConfig(companyId: string, pineconeIndexName: string, systemPrompt: string): Promise<void> {
+async function createChatConfig(companyId: string, vectorNamespace: string, systemPrompt: string): Promise<void> {
   try {
-    // Check if the configuration already exists
     const { data: existingConfig } = await supabase
       .from('chat_configs')
       .select('*')
@@ -48,19 +45,18 @@ async function createChatConfig(companyId: string, pineconeIndexName: string, sy
     if (existingConfig) {
       console.log(`Configuration for company ID "${companyId}" already exists.`)
       console.log(`Would you like to update it? (y/n)`)
-      
+
       const rl = readline.createInterface({
         input: process.stdin,
         output: process.stdout
       })
-      
+
       rl.question('', async (answer: string) => {
         if (answer.toLowerCase() === 'y') {
-          // Update the existing configuration
           const { error } = await supabase
             .from('chat_configs')
             .update({
-              pinecone_index_name: pineconeIndexName,
+              pinecone_index_name: vectorNamespace,
               system_prompt: systemPrompt,
               updated_at: new Date().toISOString()
             })
@@ -75,21 +71,20 @@ async function createChatConfig(companyId: string, pineconeIndexName: string, sy
         } else {
           console.log('Update canceled.')
         }
-        
+
         rl.close()
         process.exit(0)
       })
-      
-      return // Wait for readline input
+
+      return
     }
 
-    // Create a new configuration
     const { data, error } = await supabase
       .from('chat_configs')
       .insert([
         {
           company_id: companyId,
-          pinecone_index_name: pineconeIndexName,
+          pinecone_index_name: vectorNamespace,
           system_prompt: systemPrompt,
           created_at: new Date().toISOString(),
           updated_at: new Date().toISOString()
@@ -115,16 +110,15 @@ async function createChatConfig(companyId: string, pineconeIndexName: string, sy
 function printUsage(): void {
   console.log(`
   Usage:
-    npx ts-node scripts/create-company-config.ts <company_id> <pinecone_index_name> <system_prompt>
-  
+    npx ts-node scripts/create-company-config.ts <company_id> <vector_namespace> <system_prompt>
+
   Example:
-    npx ts-node scripts/create-company-config.ts my-company my-company-index "You are an AI assistant for My Company."
-  
+    npx ts-node scripts/create-company-config.ts my-company my-company-namespace "You are an AI assistant for My Company."
+
   If system prompt contains spaces, enclose in quotes.
   `)
 }
 
-// Main
 if (process.argv.length < 5) {
   console.error("Error: Missing required arguments.")
   printUsage()
@@ -132,7 +126,7 @@ if (process.argv.length < 5) {
 }
 
 const companyId = process.argv[2]
-const pineconeIndexName = process.argv[3]
+const vectorNamespace = process.argv[3]
 const systemPrompt = process.argv[4]
 
-createChatConfig(companyId, pineconeIndexName, systemPrompt) 
+createChatConfig(companyId, vectorNamespace, systemPrompt)

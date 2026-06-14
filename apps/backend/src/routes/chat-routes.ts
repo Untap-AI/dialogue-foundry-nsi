@@ -353,7 +353,6 @@ async function processStream(
     { role: 'user', content }
   ]
 
-  // Add Pinecone context if available
   if (chatConfig?.pinecone_index_name) {
     try {
       // Enhance query with conversation context for better retrieval
