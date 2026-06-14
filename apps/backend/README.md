@@ -72,7 +72,7 @@ npm start
 - REST API for chat interactions
 - Persistent chat and message storage with Supabase
 - Integration with OpenAI for AI responses
-- Document retrieval with Pinecone vector database
+- Document retrieval with Upstash Vector database
 - User identification to maintain chat history between sessions
 - CORS protection for security
 - JWT-based authentication for secure chat access
@@ -82,7 +82,7 @@ npm start
 - Node.js (v14+)
 - Supabase account (for database)
 - OpenAI API key
-- Pinecone API key (for document retrieval)
+- Upstash Vector credentials (for document retrieval)
 
 ## API Endpoints
 
@@ -129,35 +129,36 @@ function ChatComponent() {
 }
 ```
 
-## Pinecone Vector Database Integration
+## Upstash Vector Database Integration
 
-The application integrates with Pinecone for document retrieval during chat interactions:
+The application integrates with Upstash Vector for document retrieval during chat interactions:
 
-1. Each company in the system can have its own Pinecone index configured
-2. When a user sends a message, the system queries the Pinecone index for relevant documents
+1. Each company in the system can have its own Upstash namespace configured
+2. When a user sends a message, the system queries the namespace for relevant documents
 3. Retrieved documents are added as context for the LLM, improving responses with domain-specific knowledge
 
 ### Configuration
 
-To use the Pinecone integration:
+To use the Upstash Vector integration:
 
-1. Add your Pinecone API key to your environment variables:
+1. Add your Upstash Vector credentials to your environment variables:
    ```
-   PINECONE_API_KEY=your-pinecone-api-key
+   UPSTASH_VECTOR_REST_URL=your-upstash-vector-rest-url
+   UPSTASH_VECTOR_REST_TOKEN=your-upstash-vector-rest-token
    ```
 
-2. Configure a Pinecone index for each company in the `chat_configs` table:
+2. Configure a namespace for each company in the `chat_configs` table (stored in the `pinecone_index_name` column — legacy name, pending DB migration):
    ```sql
-   UPDATE chat_configs SET pinecone_index_name = 'your-index-name' WHERE company_id = 'your-company-id';
+   UPDATE chat_configs SET pinecone_index_name = 'your-namespace' WHERE company_id = 'your-company-id';
    ```
 
-3. Ensure documents in your Pinecone index include a 'text' field containing the document content
+3. Ensure documents in your Upstash index include a `data` field containing the document text
 
 ### Document Structure
 
-Documents in Pinecone should include the following metadata:
-- `text`: The document content (required)
-- Additional metadata fields can be used for filtering (optional)
+Documents in Upstash Vector should include:
+- `data`: The document text (used for server-side embedding)
+- `metadata.url`: Optional URL of the source page
 
 ## License
 
