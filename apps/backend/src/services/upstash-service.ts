@@ -4,8 +4,8 @@ import { logger } from '../lib/logger'
 
 dotenv.config()
 
-// Lazily initialized so importing this module under VECTOR_PROVIDER=pinecone
-// doesn't require Upstash credentials to be set.
+// Lazily initialized so importing this module doesn't require Upstash credentials
+// at startup if they are not yet set.
 let index: Index | undefined
 
 const getIndex = (): Index => {
@@ -24,9 +24,8 @@ const getIndex = (): Index => {
 
 /**
  * Retrieves documents from the company's Upstash namespace based on the query.
- * Uses Upstash's built-in embedding model (raw text via the `data` field), so
- * the namespace mirrors the company's former Pinecone index name.
- * @param namespace The company's namespace (the chat_configs.pinecone_index_name value)
+ * Uses Upstash's built-in embedding model (raw text via the `data` field).
+ * @param namespace The company's namespace
  * @param query The user's query to find similar documents
  * @param topK Number of documents to retrieve (default: 10)
  * @returns Array of retrieved documents

@@ -38,9 +38,6 @@ importers:
       '@honeybadger-io/js':
         specifier: ^6.9.1
         version: 6.12.3
-      '@pinecone-database/pinecone':
-        specifier: ^5.1.1
-        version: 5.1.1
       '@sendgrid/mail':
         specifier: ^8.1.5
         version: 8.1.5
@@ -87,8 +84,8 @@ importers:
         specifier: ^5.1.2
         version: 5.1.2
       openai:
-        specifier: ^6.9.0
-        version: 6.9.0(ws@8.18.1)(zod@4.1.5)
+        specifier: ^6.42.0
+        version: 6.42.0(ws@8.18.1)(zod@4.1.5)
       tsc:
         specifier: ^2.0.4
         version: 2.0.4
@@ -1089,10 +1086,6 @@ packages:
   '@opentelemetry/api@1.9.0':
     resolution: {integrity: sha512-3giAOQvZiH5F9bMlMiv8+GSPMeqg0dbaeo58/0SlA9sxSqZhnUtxzX9/2FzyhS9sWQf5S0GJE0AKBrFqjpeYcg==}
     engines: {node: '>=8.0.0'}
-
-  '@pinecone-database/pinecone@5.1.1':
-    resolution: {integrity: sha512-2JwnY28qb2AQi3fLlBfiXhV6e4ZEF0/0HNLdoFWoSPcty6Eu7+354M8mo/Hj0Hi7y3TCDkSCXq2dgmbcDSmCFQ==}
-    engines: {node: '>=18.0.0'}
 
   '@pkgjs/parseargs@0.11.0':
     resolution: {integrity: sha512-+1VkjdD0QBLPodGrJUeqarH8VAIvQODIbwh9XpP5Syisf7YoQgsJKPNFoqqLQlu+VQ/tVSshMR6loPMn8U+dPg==}
@@ -3925,9 +3918,8 @@ packages:
     resolution: {integrity: sha512-7x81NCL719oNbsq/3mh+hVrAWmFuEYUqrq/Iw3kUzH8ReypT9QQ0BLoJS7/G9k6N81XjW4qHWtjWwe/9eLy1EQ==}
     engines: {node: '>=12'}
 
-  openai@6.9.0:
-    resolution: {integrity: sha512-n2sJRYmM+xfJ0l3OfH8eNnIyv3nQY7L08gZQu3dw6wSdfPtKAk92L83M2NIP5SS8Cl/bsBBG3yKzEOjkx0O+7A==}
-    hasBin: true
+  openai@6.42.0:
+    resolution: {integrity: sha512-1WFEt/uXMXOLhYRNkgJWo08Y2YNvNwpVU72K7ibrWgWpNOXd4VojXLbe6SQ4bLiUQ3Y8jz4IiyVkylJCL1DtZg==}
     peerDependencies:
       ws: ^8.18.0
       zod: ^3.25 || ^4.0
@@ -6018,8 +6010,6 @@ snapshots:
   '@open-draft/until@2.1.0': {}
 
   '@opentelemetry/api@1.9.0': {}
-
-  '@pinecone-database/pinecone@5.1.1': {}
 
   '@pkgjs/parseargs@0.11.0':
     optional: true
@@ -9155,7 +9145,7 @@ snapshots:
       is-docker: 2.2.1
       is-wsl: 2.2.0
 
-  openai@6.9.0(ws@8.18.1)(zod@4.1.5):
+  openai@6.42.0(ws@8.18.1)(zod@4.1.5):
     optionalDependencies:
       ws: 8.18.1
       zod: 4.1.5

@@ -1,32 +1,15 @@
-import { retrieveDocuments as pineconeRetrieveDocuments } from './pinecone-service'
 import { retrieveDocuments as upstashRetrieveDocuments } from './upstash-service'
-
-/**
- * Provider-agnostic vector retrieval facade — NSI fork.
- *
- * Dispatches to Pinecone or Upstash based on the VECTOR_PROVIDER env var
- * (default 'pinecone'). NSI: f-code extraction lives here so both providers
- * get the same metadata filter built from the user's query automatically.
- */
 
 type RetrievedDocument = {
   text: string
   url?: string | undefined
 }
 
-const vectorProvider = process.env.VECTOR_PROVIDER || 'pinecone'
-
 const extractFCodes = (query: string): string[] => {
   const fCodeRegex = /f\d{5,7}/gi
   const matches = query.match(fCodeRegex)
   if (!matches) return []
   return [...new Set(matches.map(code => code.toLowerCase()))]
-}
-
-const buildPineconeFilter = (fCodes: string[]): Record<string, unknown> | undefined => {
-  if (fCodes.length === 0) return undefined
-  if (fCodes.length === 1) return { f_code: fCodes[0] }
-  return { $or: fCodes.map(code => ({ f_code: code })) }
 }
 
 const buildUpstashFilter = (fCodes: string[]): string | undefined => {
@@ -36,21 +19,16 @@ const buildUpstashFilter = (fCodes: string[]): string | undefined => {
 }
 
 export const retrieveDocuments = async (
-  indexNameOrNamespace: string,
+  namespace: string,
   query: string,
-  topK: number = 10
+  topK: number = 10,
 ): Promise<RetrievedDocument[]> => {
   const fCodes = extractFCodes(query)
-
-  if (vectorProvider === 'upstash') {
-    return upstashRetrieveDocuments(indexNameOrNamespace, query, topK, buildUpstashFilter(fCodes))
-  }
-
-  return pineconeRetrieveDocuments(indexNameOrNamespace, query, topK, buildPineconeFilter(fCodes))
+  return upstashRetrieveDocuments(namespace, query, topK, buildUpstashFilter(fCodes))
 }
 
 /**
- * Formats retrieved documents as context for the LLM. Provider-agnostic.
+ * Formats retrieved documents as context for the LLM.
  * @param documents The retrieved documents
  * @returns Formatted context string to append to the LLM prompt
  */
